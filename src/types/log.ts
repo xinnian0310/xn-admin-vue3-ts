@@ -33,3 +33,17 @@ export interface OperLog {
   costTime?: number
   operTime: string
 }
+
+export interface ExceptionLog {
+  id: number
+  requestMethod?: string
+  requestUrl?: string
+  method?: string
+  className?: string
+  exceptionName?: string
+  message?: string
+  stackTrace?: string
+  operatorName?: string
+  ip?: string
+  createdAt: string
+}

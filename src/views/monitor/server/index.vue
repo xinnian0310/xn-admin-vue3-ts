@@ -10,6 +10,42 @@
         </div>
       </div>
 
+      <!-- 配套组件 -->
+      <div class="infra-section">
+        <div class="info-card__header infra-title">
+          <el-icon><Monitor /></el-icon>
+          <span>配套组件</span>
+          <span class="infra-hint" v-if="infra.projectRoot">根目录 {{ infra.projectRoot }}</span>
+        </div>
+        <el-row :gutter="12">
+          <el-col :xs="24" :sm="12" :md="8" :lg="4" v-for="item in infraCards" :key="item.key">
+            <div class="infra-card" :class="'is-' + (item.status || 'unknown').toLowerCase()">
+              <div class="infra-card__head">
+                <span class="infra-card__name">{{ item.title }}</span>
+                <el-tag size="small" :type="statusTagType(item.status)" effect="plain">
+                  {{ item.status || '—' }}
+                </el-tag>
+              </div>
+              <div class="infra-card__endpoint" :title="item.endpoint">{{ item.endpoint || '—' }}</div>
+              <div class="infra-card__msg" :title="item.message">{{ item.message || '—' }}</div>
+              <div class="infra-card__actions">
+                <el-button
+                  v-if="item.restartable && item.status !== 'UP' && item.status !== 'DISABLED'"
+                  type="primary"
+                  size="small"
+                  :loading="restarting === item.key"
+                  @click="onRestart(item.key, item.title)"
+                >
+                  重启
+                </el-button>
+                <span v-else-if="item.key === 'backend'" class="infra-card__note">本服务</span>
+                <span v-else-if="item.status === 'UP'" class="infra-card__note">运行中</span>
+              </div>
+            </div>
+          </el-col>
+        </el-row>
+      </div>
+
       <!-- 使用率仪表盘 -->
       <el-row :gutter="16">
         <el-col :xs="24" :sm="8" v-for="g in gauges" :key="g.key">
@@ -83,13 +119,14 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { Refresh, Cpu, Coin, Files } from '@element-plus/icons-vue'
+import { Refresh, Cpu, Coin, Files, Monitor } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GaugeChart } from 'echarts/charts'
-import { getServerMonitor } from '@/api/monitor'
-import type { ServerMonitor } from '@/types'
+import { getInfraStatus, getServerMonitor, restartInfra } from '@/api/monitor'
+import type { InfraComponent, InfraStatus, ServerMonitor } from '@/types'
 
 use([CanvasRenderer, GaugeChart])
 
@@ -97,6 +134,7 @@ defineOptions({ name: 'MonitorServer' })
 
 const loading = ref(false)
 const autoRefresh = ref(false)
+const restarting = ref('')
 let timer: ReturnType<typeof setInterval> | null = null
 
 const emptyData: ServerMonitor = {
@@ -106,7 +144,38 @@ const emptyData: ServerMonitor = {
   system: { osName: '', osArch: '', osVersion: '', hostName: '', ip: '', userDir: '', availableProcessors: 0 },
   disks: [],
 }
+const emptyComp = (): InfraComponent => ({
+  enabled: false,
+  status: '—',
+  endpoint: '',
+  message: '',
+  restartable: false,
+})
+const emptyInfra = (): InfraStatus => ({
+  redis: emptyComp(),
+  minio: emptyComp(),
+  nacos: emptyComp(),
+  kkfileview: emptyComp(),
+  backend: emptyComp(),
+})
 const data = ref<ServerMonitor>({ ...emptyData })
+const infra = ref<InfraStatus>(emptyInfra())
+
+const infraCards = computed(() => [
+  { key: 'redis', title: 'Redis', ...infra.value.redis },
+  { key: 'minio', title: 'MinIO', ...infra.value.minio },
+  { key: 'nacos', title: 'Nacos', ...infra.value.nacos },
+  { key: 'kkfileview', title: 'kkFileView', ...infra.value.kkfileview },
+  { key: 'backend', title: 'Backend', ...infra.value.backend },
+])
+
+function statusTagType(status?: string) {
+  const s = (status || '').toUpperCase()
+  if (s === 'UP') return 'success'
+  if (s === 'DOWN') return 'danger'
+  if (s === 'DISABLED') return 'info'
+  return 'warning'
+}
 
 const gauges = computed(() => [
   {
@@ -195,10 +264,49 @@ function formatUptime(seconds: number) {
 async function load() {
   loading.value = true
   try {
-    const res = await getServerMonitor()
-    data.value = res.data
+    const [serverRes, infraRes] = await Promise.all([getServerMonitor(), getInfraStatus()])
+    data.value = serverRes.data
+    infra.value = infraRes.data
   } finally {
     loading.value = false
+  }
+}
+
+async function loadInfraOnly() {
+  try {
+    const res = await getInfraStatus()
+    infra.value = res.data
+  } catch {
+    /* ignore poll errors */
+  }
+}
+
+async function onRestart(name: string, title: string) {
+  try {
+    await ElMessageBox.confirm(
+      `确定重启 ${title}？将先释放端口再后台拉起，完成后请稍候查看状态。`,
+      '一键重启',
+      { type: 'warning', confirmButtonText: '重启', cancelButtonText: '取消' },
+    )
+  } catch {
+    return
+  }
+  restarting.value = name
+  try {
+    const res = await restartInfra(name)
+    ElMessage.success(res.data?.message || '已发送重启指令')
+    const deadline = Date.now() + 90_000
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 2000))
+      await loadInfraOnly()
+      const card = infraCards.value.find((c) => c.key === name)
+      if (card?.status === 'UP') {
+        ElMessage.success(`${title} 已恢复`)
+        break
+      }
+    }
+  } finally {
+    restarting.value = ''
   }
 }
 
@@ -242,6 +350,77 @@ onBeforeUnmount(() => {
 .server-actions__label {
   color: var(--app-text-muted);
   font-size: 13px;
+}
+
+.infra-section {
+  margin-bottom: 20px;
+}
+
+.infra-title {
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.infra-hint {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--app-text-muted);
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.infra-card {
+  border: 1px solid var(--app-border-color);
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 132px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--el-bg-color);
+  margin-bottom: 12px;
+}
+
+.infra-card.is-up {
+  border-color: color-mix(in srgb, #67c23a 45%, var(--app-border-color));
+}
+
+.infra-card.is-down {
+  border-color: color-mix(in srgb, #f56c6c 50%, var(--app-border-color));
+}
+
+.infra-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.infra-card__name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.infra-card__endpoint,
+.infra-card__msg {
+  font-size: 12px;
+  color: var(--app-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.infra-card__actions {
+  margin-top: auto;
+  min-height: 28px;
+}
+
+.infra-card__note {
+  font-size: 12px;
+  color: var(--app-text-muted);
 }
 
 .gauge-card {

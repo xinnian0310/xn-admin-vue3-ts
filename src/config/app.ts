@@ -1,14 +1,13 @@
 /**
  * 应用全局配置
  *
+ * - 本地默认值在此定义；后端「系统配置」启动时 merge 覆盖
  * - 项目名称 / 副标题 / 页脚：改 app.name、app.subtitle、app.footer
- * - favicon / 侧栏 Logo：改 app.favicon、app.logo、app.logoWidth / logoHeight（null 表示按比例自适应；图片放 public/）
- * - UI 行为（弹窗高度等）在此集中管理
- * - Element Plus 组件尺寸只改 ui.elementPlus.size，页面/组件不要再写 size
- * - 布局区域字号由此写入 CSS 变量
- * - 后续 MinIO、第三方服务地址等也可放在这里
- * - 若改为后端「系统配置」下发，启动时 merge 覆盖本配置即可
+ * - favicon / 侧栏 Logo：改 app.favicon、app.logo、app.logoWidth / logoHeight
+ * - UI 行为、Element Plus 尺寸、布局字号集中管理
+ * - 主题色由 theme store 管理，不在此覆盖
  */
+import { reactive } from 'vue'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
 import type { Language } from 'element-plus/es/locale'
@@ -32,81 +31,33 @@ const elementPlusLocales: Record<ElementPlusLocale, Language> = {
   en,
 }
 
-export const appConfig = {
-  /**
-   * 应用基础信息
-   * 改这里即可统一侧栏 Logo、登录页标题、浏览器标签等展示名
-   */
+/** 本地默认（与后端 AppConfigVO 默认值保持一致） */
+export const defaultAppConfig = {
   app: {
-    /** 项目名称（侧栏 / 顶栏 Logo、登录页主标题） */
     name: '心念后台管理系统',
-    /** 公司名称 */
     company: '心念科技',
-    /** 副标题（登录页说明文案等） */
     subtitle: '心念科技',
-    /**
-     * 浏览器标签页图标（favicon）
-     * 图片放 public/，路径以 / 开头，如 '/favicon.svg'
-     * 留空则不覆盖 index.html 中的默认值
-     */
     favicon: '/favicon.svg',
-    /**
-     * 侧栏 / 顶栏品牌 Logo
-     * 图片放 public/，路径以 / 开头，如 '/logo.svg'、'/logo.png'
-     * 支持 svg / png / jpg / webp；留空则使用内置 Monitor 图标兜底
-     */
     logo: '/logo.svg',
-    /**
-     * Logo 宽度（px）
-     * 设为 null 时按原图比例自适应（需同时给出 logoHeight）
-     */
     logoWidth: 28 as number | null,
-    /** Logo 显示高度（px）；设为 null 时按原图比例自适应（需同时给出 logoWidth） */
     logoHeight: null as number | null,
-    /**
-     * 主内容区底部产品信息（main 下方页脚）
-     * 留空则不显示页脚
-     */
     footer: '心念后台管理系统 · 心念科技 · Copyright © 2026',
   },
-
-  /**
-   * 登录会话策略（与后端 JWT 配合）
-   * - 固定过期：后端 app.jwt.expiration（当前 24h）
-   * - 空闲超时：无操作达到 idleTimeoutMs 自动登出
-   * - 滑动续期：有操作且距上次续期超过 refreshIntervalMs 时调用 /auth/refresh 换新 token
-   */
   session: {
-    /** 是否启用空闲超时自动登出 */
     idleLogoutEnabled: true,
-    /** 空闲超时时长（毫秒），默认 30 分钟 */
     idleTimeoutMs: 30 * 60 * 1000,
-    /** 是否启用滑动续期 */
     slidingRefreshEnabled: true,
-    /** 有操作时的最小续期间隔（毫秒），默认 5 分钟，避免频繁打接口 */
     refreshIntervalMs: 5 * 60 * 1000,
-    /** 空闲检测轮询间隔（毫秒） */
     idleCheckIntervalMs: 30 * 1000,
   },
-
   ui: {
     dialog: {
-      /** 弹窗最大高度，超出后仅内容区（body）滚动，弹窗外壳不滚动；弹窗本身上下居中 */
       maxHeight: '95vh',
     },
-    /**
-     * 后台布局模式
-     * - side：经典左侧菜单（默认）
-     * - top：顶部横向菜单
-     * - mix：顶栏一级 + 左侧子菜单
-     * - columns：左侧图标栏 + 二级侧栏
-     * 切换后刷新即可生效；后续也可接到「系统设置」页面
-     */
     layout: {
       mode: 'side' as LayoutMode,
       /**
-       * 侧栏 / 顶栏菜单配色（写入 CSS 变量）
-       * 改这里即可统一调整，不必改各布局组件
+       * 侧栏 / 顶栏菜单配色默认值（仅作文档/兜底；运行时主题由 theme store 写入 CSS）
        */
       sidebar: {
         bg: '#409eff',
@@ -119,72 +70,39 @@ export const appConfig = {
         border: 'rgba(255, 255, 255, 0.18)',
         railBg: '#337ecc',
       },
-      /** 顶栏：Element Plus 主色 */
       header: {
         bg: '#409eff',
         text: 'rgba(255, 255, 255, 0.95)',
         border: 'rgba(255, 255, 255, 0.15)',
       },
     },
-    /**
-     * 布局区域字号（写入 CSS 变量后由各区域读取）
-     * 修改此处即可统一调整左侧菜单 / 顶栏 / 标签栏 / 正文
-     */
     fontSize: {
-      /** 左侧菜单 */
       sidebar: '14px',
-      /** 顶部 header */
       header: '14px',
-      /** tags-view 标签栏 */
       tagsView: '14px',
-      /** main 正文区域 */
       main: '14px',
     },
-    /** tags-view 标签栏尺寸 */
     tagsView: {
-      /** 标签栏高度 */
       height: '40px',
     },
-    /**
-     * Element Plus Config Provider 全局配置
-     * @see https://element-plus.org/zh-CN/component/config-provider.html
-     * 全局组件尺寸只改这里的 size；页面与组件不要再传 size
-     */
     elementPlus: {
-      /** 语言包：zh-cn | en */
       locale: 'zh-cn' as ElementPlusLocale,
-      /** 全局组件尺寸：large | default | small（唯一入口） */
       size: 'default' as ElementPlusSize,
-      /** 弹层初始 z-index */
       zIndex: 2000,
-      /** 组件类名前缀（配合 $namespace） */
       namespace: 'el',
-      /** 按钮相关 */
       button: {
-        /** 两个汉字之间是否自动插入空格 */
         autoInsertSpace: false,
       },
-      /** 消息提示相关 */
       message: {
-        /** 同时显示的消息最大数量 */
         max: 3,
       },
-      /** 对话框相关（Element Plus >= 2.10.7） */
       dialog: {
-        /** 垂直居中 */
         alignCenter: true,
-        /** 可拖拽 */
         draggable: true,
-        /** 拖拽时是否限制在可视区域内 */
         overflow: false,
       },
     },
   },
-
-  /**
-   * 对象存储 / 文件服务
-   * 敏感密钥勿放前端明文，正式环境应由后端代理或下发临时凭证
-   */
   storage: {
     minio: {
       endpoint: '',
@@ -194,7 +112,118 @@ export const appConfig = {
   },
 }
 
-export type AppConfig = typeof appConfig
+export type AppConfig = {
+  app: {
+    name: string
+    company: string
+    subtitle: string
+    favicon: string
+    logo: string
+    logoWidth: number | null
+    logoHeight: number | null
+    footer: string
+  }
+  session: {
+    idleLogoutEnabled: boolean
+    idleTimeoutMs: number
+    slidingRefreshEnabled: boolean
+    refreshIntervalMs: number
+    idleCheckIntervalMs: number
+  }
+  ui: {
+    dialog: { maxHeight: string }
+    layout: {
+      mode: LayoutMode
+      sidebar: {
+        bg: string
+        bgElevated: string
+        text: string
+        textActive: string
+        active: string
+        activeBg: string
+        hoverBg: string
+        border: string
+        railBg: string
+      }
+      header: {
+        bg: string
+        text: string
+        border: string
+      }
+    }
+    fontSize: {
+      sidebar: string
+      header: string
+      tagsView: string
+      main: string
+    }
+    tagsView: { height: string }
+    elementPlus: {
+      locale: ElementPlusLocale
+      size: ElementPlusSize
+      zIndex: number
+      namespace: string
+      button: { autoInsertSpace: boolean }
+      message: { max: number }
+      dialog: {
+        alignCenter: boolean
+        draggable: boolean
+        overflow: boolean
+      }
+    }
+  }
+  storage: {
+    minio: {
+      endpoint: string
+      bucket: string
+      region: string
+    }
+  }
+}
+
+function cloneDefault(): AppConfig {
+  return JSON.parse(JSON.stringify(defaultAppConfig)) as AppConfig
+}
+
+/** 运行时配置（可被后端下发覆盖，响应式） */
+export const appConfig: AppConfig = reactive(cloneDefault())
+
+/** 深合并：仅用 remote 中非 undefined 的字段覆盖 target */
+export function deepMergeAppConfig<T extends Record<string, unknown>>(target: T, remote: unknown): T {
+  if (remote == null || typeof remote !== 'object' || Array.isArray(remote)) {
+    return target
+  }
+  const src = remote as Record<string, unknown>
+  for (const key of Object.keys(src)) {
+    const value = src[key]
+    if (value === undefined) continue
+    const current = (target as Record<string, unknown>)[key]
+    if (
+      value !== null
+      && typeof value === 'object'
+      && !Array.isArray(value)
+      && current !== null
+      && typeof current === 'object'
+      && !Array.isArray(current)
+    ) {
+      deepMergeAppConfig(current as Record<string, unknown>, value)
+    } else {
+      ;(target as Record<string, unknown>)[key] = value
+    }
+  }
+  return target
+}
+
+/** 用远端配置覆盖运行时 appConfig，并重新 apply 样式 */
+export function applyRemoteAppConfig(remote: Partial<AppConfig> | null | undefined) {
+  if (!remote) return
+  deepMergeAppConfig(appConfig as unknown as Record<string, unknown>, remote)
+  if (remote.app) {
+    if ('logoWidth' in remote.app) appConfig.app.logoWidth = remote.app.logoWidth ?? null
+    if ('logoHeight' in remote.app) appConfig.app.logoHeight = remote.app.logoHeight ?? null
+  }
+  applyAppConfig(appConfig)
+}
 
 /** 解析给 el-config-provider 使用的 props */
 export function getElementPlusProviderProps(config: AppConfig = appConfig) {
@@ -322,7 +351,6 @@ export function applyLayoutTheme(
   root.style.setProperty('--app-color-primary-dark-2', scale['dark-2'])
   root.style.setProperty('--app-color-primary-rgb', scale.rgb)
 
-  // 同步 Element Plus：xnButton / xnSearch / xnTable / TreePanel 等自动跟随
   root.style.setProperty('--el-color-primary', scale.primary)
   root.style.setProperty('--el-color-primary-light-3', scale['light-3'])
   root.style.setProperty('--el-color-primary-light-5', scale['light-5'])

@@ -1,8 +1,37 @@
 import request from '@/utils/request'
 import type { ApiResponse, LoginResult, User } from '@/types'
 
-export function login(username: string, password: string) {
-  return request.post<any, ApiResponse<LoginResult>>('/auth/login', { username, password })
+export interface CaptchaPayload {
+  captchaId: string
+  captchaType: 'IMAGE' | 'SLIDER'
+  imageBase64?: string | null
+}
+
+export interface LoginPayload {
+  username: string
+  password: string
+  captchaId?: string
+  captchaCode?: string
+}
+
+export function login(data: LoginPayload) {
+  return request.post<any, ApiResponse<LoginResult>>('/auth/login', data)
+}
+
+export function logout(token?: string) {
+  return request.post<any, ApiResponse<null>>(
+    '/auth/logout',
+    null,
+    token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+  )
+}
+
+export function fetchCaptcha() {
+  return request.get<any, ApiResponse<CaptchaPayload | null>>('/auth/captcha')
+}
+
+export function verifySliderCaptcha(captchaId: string, percent: number) {
+  return request.post<any, ApiResponse<null>>('/auth/captcha/slider', { captchaId, percent })
 }
 
 /** 滑动续期：换发新 JWT */

@@ -59,7 +59,7 @@ async function doIdleLogout() {
   loggingOut = true
   try {
     const { useUserStore } = await import('@/stores/user')
-    useUserStore().logout()
+    await useUserStore().logout()
     ElMessage.warning('长时间未操作，已自动退出登录')
     if (router.currentRoute.value.path !== '/login') {
       await router.push('/login')

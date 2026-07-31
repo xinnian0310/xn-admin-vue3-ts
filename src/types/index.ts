@@ -20,7 +20,7 @@ export type { DictType, DictTypeForm, DictData, DictDataForm } from './dict'
 export type { LoginPageConfig, LoginPageConfigForm, LoginCaptchaType, LoginBackgroundFit } from './login-page'
 export { BACKGROUND_FIT_OPTIONS, resolveBackgroundSize } from './login-page'
 export { DICT_LIST_CLASS_OPTIONS } from './dict'
-export type { LoginLog, OperLog } from './log'
+export type { LoginLog, OperLog, ExceptionLog } from './log'
 
 export interface Role {
   id: number
@@ -29,6 +29,8 @@ export interface Role {
   description?: string
   status: number
   builtIn: boolean
+  /** ALL | UNIT_AND_CHILDREN | UNIT | SELF */
+  dataScope?: string
 }
 
 export interface RoleDetail extends Role {
@@ -167,6 +169,26 @@ export interface ServerMonitor {
   disks: { name: string; type: string; total: number; used: number; free: number; usage: number }[]
 }
 
+export interface InfraComponent {
+  name?: string
+  enabled: boolean
+  status: string
+  endpoint?: string
+  message?: string
+  restartable?: boolean
+}
+
+export interface InfraStatus {
+  redis: InfraComponent
+  minio: InfraComponent
+  nacos: InfraComponent
+  kkfileview: InfraComponent
+  backend: InfraComponent
+  restartEnabled?: boolean
+  projectRoot?: string
+  startCommand?: string
+}
+
 export interface UserForm {
   username: string
   password?: string
@@ -220,11 +242,137 @@ export interface MyNotice {
   publisherName?: string
 }
 
+export type MessageStatus = 'DRAFT' | 'SENT'
+
+export interface Message {
+  id: number
+  title: string
+  content: string
+  status: MessageStatus
+  senderId?: number
+  senderName?: string
+  sentAt?: string
+  createdAt?: string
+  updatedAt?: string
+  readCount?: number
+  totalCount?: number
+}
+
+export interface MessageForm {
+  title: string
+  content: string
+}
+
+export interface MessageSendForm {
+  userIds?: number[]
+  sendToAll?: boolean
+}
+
+export interface MessageReader {
+  userId: number
+  username?: string
+  nickname?: string
+  readAt?: string
+}
+
+export interface MyMessage {
+  id: number
+  title: string
+  content: string
+  status: MessageStatus
+  sentAt?: string
+  senderName?: string
+  read: boolean
+  readAt?: string
+  receivedAt?: string
+}
+
+export interface FileInfo {
+  id?: number
+  path: string
+  name: string
+  storedName?: string
+  extension?: string
+  contentType?: string
+  size: number
+  directory: boolean
+  lastModified?: string
+  storage?: 'local' | 'minio' | string
+  bucket?: string
+  url?: string
+  previewUrl?: string
+  uploader?: string
+  prefix?: string
+}
+
+export interface FileTreeNode {
+  id: string
+  label: string
+  path: string
+  children?: FileTreeNode[]
+}
+
+export interface FileBrowseResult {
+  storage: string
+  prefix: string
+  dirs: FileInfo[]
+  files: FileInfo[]
+}
+
+export interface Job {
+  id: number
+  name: string
+  jobKey: string
+  cron: string
+  invokeTarget: string
+  status: number
+  remark?: string
+  concurrent?: boolean
+  lastRunAt?: string
+  lastStatus?: string
+  lastMessage?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface JobForm {
+  name: string
+  jobKey: string
+  cron: string
+  invokeTarget: string
+  status?: number
+  remark?: string
+  concurrent?: boolean
+}
+
+export interface RedisMonitor {
+  status: 'ENABLED' | 'DISABLED' | 'ERROR'
+  message?: string
+  host?: string
+  port?: number
+  keyCount?: number
+  info?: Record<string, string>
+  sampleKeys?: string[]
+}
+
+export interface SqlRecord {
+  sql: string
+  durationMs?: number | null
+  executedAt?: string
+}
+
+export interface SqlMonitor {
+  queryCount: number
+  bufferSize: number
+  records: SqlRecord[]
+}
+
 export interface RoleForm {
   code: string
   name: string
   description?: string
   status?: number
+  dataScope?: string
 }
 
 export interface SysUnit {

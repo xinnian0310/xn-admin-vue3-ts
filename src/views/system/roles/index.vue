@@ -69,6 +69,10 @@
           </div>
           <div class="role-card__body">
             <div class="role-card__row">
+              <span class="label">数据权限</span>
+              <span>{{ dataScopeLabel(row.dataScope) }}</span>
+            </div>
+            <div class="role-card__row">
               <span class="label">描述</span>
               <span>{{ row.description || '—' }}</span>
             </div>
@@ -130,10 +134,36 @@ const queryForm = ref<SearchForm>({})
 const viewMode = ref<'table' | 'card'>('table')
 const selected = ref<Role[]>([])
 
+function dataScopeLabel(scope?: string) {
+  switch (scope) {
+    case 'ALL':
+      return '全部数据'
+    case 'UNIT':
+      return '仅本单位'
+    case 'SELF':
+      return '仅本人'
+    case 'UNIT_AND_CHILDREN':
+    default:
+      return '本单位及下级'
+  }
+}
+
 const columns: TableColumnItem[] = [
   { type: 'selection', width: 50, fixed: true },
   { prop: 'name', label: '名称', minWidth: 140 },
   { prop: 'code', label: '编码', minWidth: 140 },
+  {
+    prop: 'dataScope',
+    label: '数据权限',
+    minWidth: 140,
+    type: 'tag',
+    options: [
+      { value: 'ALL', label: '全部数据', type: 'danger' },
+      { value: 'UNIT_AND_CHILDREN', label: '本单位及下级', type: 'success' },
+      { value: 'UNIT', label: '仅本单位', type: 'warning' },
+      { value: 'SELF', label: '仅本人', type: 'info' },
+    ],
+  },
   { prop: 'description', label: '描述', minWidth: 200, showOverflowTooltip: true },
   {
     prop: 'builtIn',

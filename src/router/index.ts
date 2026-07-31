@@ -100,7 +100,7 @@ router.beforeEach(async (to) => {
       }
     } catch {
       // 获取用户信息失败（token 失效/过期），清除登录态避免 /login 与目标页互相跳转死循环
-      userStore.logout()
+      userStore.logout(false)
       return '/login'
     }
   }

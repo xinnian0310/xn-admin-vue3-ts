@@ -133,8 +133,8 @@ async function handleCommand(command: string) {
       return
     }
     noticeStore.stopRealtime()
-    userStore.logout()
-    router.push('/login')
+    await userStore.logout()
+    await router.push('/login')
     return
   }
   if (command === 'profile') {

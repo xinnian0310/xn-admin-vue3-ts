@@ -11,8 +11,12 @@ interface CompiledApi {
 /** 不受接口守卫约束的路径（登录、注册表本身） */
 const WHITELIST = new Set([
   '/api/auth/login',
+  '/api/auth/logout',
+  '/api/auth/captcha',
+  '/api/auth/captcha/slider',
   '/api/auth/api-registry',
   '/api/login-page-configs/active',
+  '/api/system-config/public',
 ])
 
 let compiledApis: CompiledApi[] = []

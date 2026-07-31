@@ -7,8 +7,9 @@
 </template>
 
 <script setup lang="ts">
-import { getElementPlusProviderProps } from '@/config/app'
+import { computed } from 'vue'
+import { appConfig, getElementPlusProviderProps } from '@/config/app'
 import ThemeDialog from '@/components/ThemePicker/ThemeDialog.vue'
 
-const elementPlusConfig = getElementPlusProviderProps()
+const elementPlusConfig = computed(() => getElementPlusProviderProps(appConfig))
 </script>

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { User } from '@/types'
-import { getApiRegistry, getCurrentUser, login as loginApi, refreshToken as refreshTokenApi, updateCurrentUser } from '@/api/auth'
+import { getApiRegistry, getCurrentUser, login as loginApi, logout as logoutApi, refreshToken as refreshTokenApi, updateCurrentUser } from '@/api/auth'
 import type { ProfileUpdatePayload } from '@/api/auth'
 import { usePermissionStore } from '@/stores/permission'
 import { useTagsViewStore } from '@/stores/tagsView'
@@ -60,9 +60,14 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function login(username: string, password: string) {
+  async function login(username: string, password: string, captcha?: { captchaId?: string; captchaCode?: string }) {
     clearSessionViews()
-    const res = await loginApi(username, password)
+    const res = await loginApi({
+      username,
+      password,
+      captchaId: captcha?.captchaId,
+      captchaCode: captcha?.captchaCode,
+    })
     setAuth(res.data.token, res.data.user)
     await loadRegistry()
     startSessionGuard()
@@ -98,12 +103,25 @@ export const useUserStore = defineStore('user', () => {
     return res.data
   }
 
-  function logout() {
+  /**
+   * 退出登录。先清理本地态（保证可立即跳转登录页），再尽力通知服务端拉黑 token。
+   * @param remote 是否调用服务端 /auth/logout；401 场景应传 false
+   */
+  async function logout(remote = true) {
+    const currentToken = token.value
     stopSessionGuard()
     useNoticeStore().stopRealtime()
     clearSessionViews()
     clearAuth()
     resetDynamicRoutes()
+
+    if (remote && currentToken) {
+      try {
+        await logoutApi(currentToken)
+      } catch {
+        // 本地已退出，忽略服务端失败
+      }
+    }
   }
 
   return {

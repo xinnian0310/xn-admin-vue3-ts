@@ -16,6 +16,7 @@
 | `size` | `number \| string` | `16` | 尺寸 |
 | `color` | `string` | — | 颜色 |
 
+
 ## 依赖
 
 - `@/utils/icons`：`parseIcon`、`resolveElementIcon`、`getSvgRaw`

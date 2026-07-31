@@ -49,10 +49,10 @@ export const changelogTypeMeta: Record<ChangelogType, { label: string; tag: 'suc
 
 export const homeConfig = {
   intro: {
-    title: '心念后台管理系统',
+    title: '心念科技',
     version: 'v1.3.0',
     description:
-      '心念科技出品的中后台前后端一体解决方案，内置 RBAC 权限、动态路由菜单、数据字典化配置与系统监控，助你快速搭建企业级管理平台。',
+      '心念科技，以“心有所念，码有所成”为理念，专注于IT开发与软件创新。我们致力于将每一个想法转化为可靠的软件产品，通过技术赋能企业数字化发展，提供软件定制开发、系统建设、小程序开发及智能化应用解决方案。心有所念，技术同行，让每一个创意都拥有实现的可能。',
     features: [
       { icon: 'Lock', title: 'RBAC 权限', desc: '用户 / 角色 / 单位 / 权限内容四级模型，接口与按钮级管控' },
       { icon: 'Guide', title: '动态路由', desc: '菜单与路由由后端下发，前端零改动即可增删页面' },

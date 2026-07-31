@@ -29,14 +29,17 @@
               maxlength="6"
               @keyup.enter="handleLogin"
             />
-            <canvas
-              ref="captchaCanvas"
+            <img
+              v-if="captchaImage"
+              :src="captchaImage"
               class="captcha-canvas"
-              width="110"
-              height="40"
               title="点击刷新"
-              @click="refreshImageCaptcha"
+              alt="验证码"
+              @click="refreshCaptcha"
             />
+            <div v-else class="captcha-canvas captcha-placeholder" title="点击刷新" @click="refreshCaptcha">
+              刷新
+            </div>
           </div>
         </el-form-item>
 
@@ -70,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Lock } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -78,6 +81,7 @@ import { ElMessage } from 'element-plus'
 import { appConfig } from '@/config/app'
 import { useUserStore } from '@/stores/user'
 import { getActive } from '@/api/login-page'
+import { fetchCaptcha, verifySliderCaptcha } from '@/api/auth'
 import type { LoginBackgroundFit, LoginCaptchaType } from '@/types'
 import { resolveBackgroundSize } from '@/types'
 
@@ -85,7 +89,6 @@ const router = useRouter()
 const userStore = useUserStore()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
-const captchaCanvas = ref<HTMLCanvasElement>()
 
 const backgroundUrl = ref<string | null>(null)
 const backgroundFit = ref<LoginBackgroundFit>('COVER')
@@ -93,8 +96,9 @@ const boxX = ref(50)
 const boxY = ref(50)
 const captchaEnabled = ref(false)
 const captchaType = ref<LoginCaptchaType | null>(null)
+const captchaId = ref('')
+const captchaImage = ref('')
 
-const imageCaptchaCode = ref('')
 const sliderPercent = ref(0)
 const sliderOk = ref(false)
 const sliding = ref(false)
@@ -134,19 +138,7 @@ const rules = computed<FormRules>(() => {
     password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
   }
   if (captchaEnabled.value && captchaType.value === 'IMAGE') {
-    base.captcha = [
-      { required: true, message: '请输入验证码', trigger: 'blur' },
-      {
-        validator: (_r, value, callback) => {
-          if (String(value || '').toLowerCase() !== imageCaptchaCode.value.toLowerCase()) {
-            callback(new Error('验证码不正确'))
-            return
-          }
-          callback()
-        },
-        trigger: 'blur',
-      },
-    ]
+    base.captcha = [{ required: true, message: '请输入验证码', trigger: 'blur' }]
   }
   if (captchaEnabled.value && captchaType.value === 'SLIDER') {
     base.sliderOk = [
@@ -165,46 +157,23 @@ const rules = computed<FormRules>(() => {
   return base
 })
 
-function randomCode(len = 4) {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  let out = ''
-  for (let i = 0; i < len; i++) {
-    out += chars[Math.floor(Math.random() * chars.length)]
-  }
-  return out
-}
-
-function refreshImageCaptcha() {
-  imageCaptchaCode.value = randomCode(4)
+async function refreshCaptcha() {
+  if (!captchaEnabled.value) return
   form.captcha = ''
-  nextTick(() => drawCaptcha())
-}
-
-function drawCaptcha() {
-  const canvas = captchaCanvas.value
-  if (!canvas) return
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
-  const w = canvas.width
-  const h = canvas.height
-  ctx.fillStyle = '#f0f4f8'
-  ctx.fillRect(0, 0, w, h)
-  for (let i = 0; i < 4; i++) {
-    ctx.strokeStyle = `rgba(${Math.random() * 160},${Math.random() * 160},${Math.random() * 160},0.6)`
-    ctx.beginPath()
-    ctx.moveTo(Math.random() * w, Math.random() * h)
-    ctx.lineTo(Math.random() * w, Math.random() * h)
-    ctx.stroke()
-  }
-  const code = imageCaptchaCode.value
-  for (let i = 0; i < code.length; i++) {
-    ctx.save()
-    ctx.font = `bold ${22 + Math.random() * 4}px sans-serif`
-    ctx.fillStyle = `rgb(${40 + Math.random() * 100},${40 + Math.random() * 100},${40 + Math.random() * 100})`
-    ctx.translate(16 + i * 22, 28)
-    ctx.rotate((Math.random() - 0.5) * 0.4)
-    ctx.fillText(code[i], 0, 0)
-    ctx.restore()
+  resetSlider()
+  try {
+    const res = await fetchCaptcha()
+    const data = res.data
+    if (!data) {
+      captchaId.value = ''
+      captchaImage.value = ''
+      return
+    }
+    captchaId.value = data.captchaId
+    captchaType.value = data.captchaType
+    captchaImage.value = data.imageBase64 || ''
+  } catch {
+    ElMessage.error('获取验证码失败')
   }
 }
 
@@ -231,15 +200,21 @@ function onSliderMove(e: PointerEvent) {
   sliderPercent.value = Math.min(100, Math.max(0, slideStartPercent.value + delta))
 }
 
-function onSliderEnd() {
+async function onSliderEnd() {
   sliding.value = false
   window.removeEventListener('pointermove', onSliderMove)
   window.removeEventListener('pointerup', onSliderEnd)
   if (sliderPercent.value >= 92) {
     sliderPercent.value = 100
-    sliderOk.value = true
-    form.sliderOk = true
-    formRef.value?.clearValidate('sliderOk')
+    try {
+      await verifySliderCaptcha(captchaId.value, 100)
+      sliderOk.value = true
+      form.sliderOk = true
+      formRef.value?.clearValidate('sliderOk')
+    } catch {
+      resetSlider()
+      await refreshCaptcha()
+    }
   } else {
     resetSlider()
   }
@@ -256,9 +231,8 @@ async function loadPageConfig() {
     boxY.value = cfg.boxY ?? 50
     captchaEnabled.value = !!cfg.captchaEnabled
     captchaType.value = (cfg.captchaType as LoginCaptchaType) || null
-    if (captchaEnabled.value && captchaType.value === 'IMAGE') {
-      await nextTick()
-      refreshImageCaptcha()
+    if (captchaEnabled.value) {
+      await refreshCaptcha()
     }
   } catch {
     // 无配置或接口失败时使用默认样式
@@ -271,15 +245,15 @@ async function handleLogin() {
     if (!valid) return
     loading.value = true
     try {
-      await userStore.login(form.username, form.password)
+      await userStore.login(form.username, form.password, {
+        captchaId: captchaEnabled.value ? captchaId.value : undefined,
+        captchaCode: captchaEnabled.value && captchaType.value === 'IMAGE' ? form.captcha : undefined,
+      })
       ElMessage.success('登录成功')
       router.push('/dashboard')
     } catch {
-      if (captchaEnabled.value && captchaType.value === 'IMAGE') {
-        refreshImageCaptcha()
-      }
-      if (captchaEnabled.value && captchaType.value === 'SLIDER') {
-        resetSlider()
+      if (captchaEnabled.value) {
+        await refreshCaptcha()
       }
     } finally {
       loading.value = false
@@ -356,6 +330,16 @@ onUnmounted(() => {
   cursor: pointer;
   border: 1px solid var(--el-border-color);
   flex-shrink: 0;
+  object-fit: cover;
+}
+
+.captcha-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f4f8;
+  color: #909399;
+  font-size: 13px;
 }
 
 .slider-wrap {

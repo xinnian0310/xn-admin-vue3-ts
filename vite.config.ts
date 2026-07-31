@@ -13,6 +13,7 @@ export default defineConfig({
     include: ['exceljs'],
   },
   server: {
+    host: '0.0.0.0',
     port: 8848,
     open: true,
     proxy: {
@@ -21,6 +22,14 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/uploads': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/swagger-ui': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/v3/api-docs': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
