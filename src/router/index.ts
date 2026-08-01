@@ -62,7 +62,21 @@ router.beforeEach(async (to) => {
     return '/login'
   }
   if (to.path === '/login' && userStore.token) {
+    if (userStore.user?.mustChangePassword) {
+      return { path: '/profile', query: { forcePwd: '1' } }
+    }
     return '/dashboard'
+  }
+
+  // 强制改密：仅允许个人中心与退出相关公共页
+  if (
+    userStore.token &&
+    userStore.user?.mustChangePassword &&
+    to.path !== '/profile' &&
+    to.path !== '/login' &&
+    to.path !== '/403'
+  ) {
+    return { path: '/profile', query: { forcePwd: '1' } }
   }
 
   // 先注册动态路由，再决定是否无权限（避免硬刷时被通配路由抢先打到 403）

@@ -6,6 +6,15 @@ export interface SecurityPolicy {
   lockMinutes: number
   rateLimitPerMinute: number
   captchaTtlSeconds: number
+  pwdMinLength: number
+  pwdMaxLength: number
+  pwdRequireUpper: boolean
+  pwdRequireLower: boolean
+  pwdRequireDigit: boolean
+  pwdRequireSpecial: boolean
+  pwdExpireDays: number
+  pwdForceChangeFirst: boolean
+  pwdHistoryCount: number
   updatedAt?: string | null
 }
 

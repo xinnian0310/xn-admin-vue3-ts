@@ -35,6 +35,10 @@
         </el-tree>
       </slot>
     </el-scrollbar>
+
+    <div v-if="$slots.footer" class="tree-panel__footer">
+      <slot name="footer" />
+    </div>
   </div>
 </template>
 
@@ -162,6 +166,12 @@ defineExpose({
 .tree-panel__scroll {
   flex: 1;
   min-height: 0;
+}
+
+.tree-panel__footer {
+  flex-shrink: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-border-color, #ebeef5);
 }
 
 .tree-panel__scroll :deep(.el-scrollbar__bar.is-vertical) {

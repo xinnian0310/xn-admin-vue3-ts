@@ -86,6 +86,8 @@ export interface User {
   unitName?: string
   postId?: number | null
   postName?: string
+  /** 需强制修改密码（首次/管理员重置/已过期） */
+  mustChangePassword?: boolean
   createdAt: string
   updatedAt: string
 }

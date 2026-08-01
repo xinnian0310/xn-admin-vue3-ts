@@ -59,6 +59,23 @@ export function changePassword(data: { oldPassword: string; newPassword: string 
   return request.put<any, ApiResponse<null>>('/auth/me/password', data)
 }
 
+export interface PasswordRules {
+  minLength: number
+  maxLength: number
+  requireUpper: boolean
+  requireLower: boolean
+  requireDigit: boolean
+  requireSpecial: boolean
+  expireDays: number
+  forceChangeFirst: boolean
+  historyCount: number
+  tip: string
+}
+
+export function getPasswordRules() {
+  return request.get<any, ApiResponse<PasswordRules>>('/auth/password-rules')
+}
+
 export function uploadAvatar(file: File) {
   const form = new FormData()
   form.append('file', file)

@@ -16,6 +16,15 @@
     </div>
 
     <el-alert
+      v-if="forcePwd"
+      type="warning"
+      :closable="false"
+      show-icon
+      class="profile-page__alert"
+      title="按安全策略要求，请先修改密码后再继续使用系统"
+    />
+
+    <el-alert
       v-if="!canEdit"
       type="warning"
       :closable="false"
@@ -106,8 +115,9 @@
               type="password"
               show-password
               autocomplete="new-password"
-              placeholder="6-50 位新密码"
+              :placeholder="pwdPlaceholder"
             />
+            <div v-if="pwdRulesTip" class="form-tip">{{ pwdRulesTip }}</div>
           </el-form-item>
           <el-form-item label="确认密码" prop="confirmPassword">
             <el-input
@@ -136,16 +146,19 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Refresh } from '@element-plus/icons-vue'
 import { ElMessage, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus'
 import { storeToRefs } from 'pinia'
-import { changePassword, uploadAvatar } from '@/api/auth'
+import { changePassword, getPasswordRules, uploadAvatar, type PasswordRules } from '@/api/auth'
 import { usePermissionStore } from '@/stores/permission'
 import { useUserStore } from '@/stores/user'
 import { formatDateTime } from '@/utils/datetime'
 
 defineOptions({ name: 'Profile' })
 
+const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 const permissionStore = usePermissionStore()
 const { isSuperAdmin } = storeToRefs(permissionStore)
@@ -156,9 +169,19 @@ const pwdSaving = ref(false)
 const avatarUploading = ref(false)
 const formRef = ref<FormInstance>()
 const pwdFormRef = ref<FormInstance>()
+const passwordRules = ref<PasswordRules | null>(null)
 
 const canEdit = computed(() => !isSuperAdmin.value)
 const user = computed(() => userStore.user)
+const forcePwd = computed(
+  () => route.query.forcePwd === '1' || !!user.value?.mustChangePassword,
+)
+const pwdRulesTip = computed(() => passwordRules.value?.tip || '')
+const pwdPlaceholder = computed(() => {
+  const min = passwordRules.value?.minLength ?? 6
+  const max = passwordRules.value?.maxLength ?? 50
+  return `${min}-${max} 位新密码`
+})
 
 const form = reactive({
   username: '',
@@ -186,7 +209,38 @@ const pwdRules: FormRules = {
   oldPassword: [{ required: true, message: '请输入原密码', trigger: 'blur' }],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, max: 50, message: '密码长度需在6-50之间', trigger: 'blur' },
+    {
+      validator: (_rule, value, callback) => {
+        if (!value) {
+          callback()
+          return
+        }
+        const min = passwordRules.value?.minLength ?? 6
+        const max = passwordRules.value?.maxLength ?? 50
+        if (value.length < min || value.length > max) {
+          callback(new Error(`密码长度需在${min}-${max}之间`))
+          return
+        }
+        if (passwordRules.value?.requireUpper && !/[A-Z]/.test(value)) {
+          callback(new Error('密码须包含大写字母'))
+          return
+        }
+        if (passwordRules.value?.requireLower && !/[a-z]/.test(value)) {
+          callback(new Error('密码须包含小写字母'))
+          return
+        }
+        if (passwordRules.value?.requireDigit && !/\d/.test(value)) {
+          callback(new Error('密码须包含数字'))
+          return
+        }
+        if (passwordRules.value?.requireSpecial && !/[^A-Za-z0-9]/.test(value)) {
+          callback(new Error('密码须包含特殊字符'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur',
+    },
   ],
   confirmPassword: [
     { required: true, message: '请确认新密码', trigger: 'blur' },
@@ -288,7 +342,11 @@ async function handleChangePassword() {
     pwdForm.newPassword = ''
     pwdForm.confirmPassword = ''
     pwdFormRef.value?.clearValidate()
+    await userStore.fetchProfile()
     ElMessage.success('密码已修改')
+    if (route.query.forcePwd === '1') {
+      router.replace('/dashboard')
+    }
   } catch (e: unknown) {
     const msg =
       e && typeof e === 'object' && 'message' in e
@@ -319,8 +377,18 @@ async function handleAvatarUpload(options: UploadRequestOptions) {
   }
 }
 
+async function loadPasswordRules() {
+  try {
+    const res = await getPasswordRules()
+    passwordRules.value = res.data
+  } catch {
+    passwordRules.value = null
+  }
+}
+
 onMounted(() => {
   loadProfile()
+  loadPasswordRules()
 })
 </script>
 
@@ -381,6 +449,13 @@ onMounted(() => {
 .profile-page__pwd {
   padding-top: 8px;
   border-top: 1px solid var(--app-border-color, #ebeef5);
+}
+
+.form-tip {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--app-text-muted, #909399);
 }
 
 @media (max-width: 768px) {

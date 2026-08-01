@@ -17,6 +17,7 @@
           show-password
           :placeholder="editingId ? '留空则不修改密码' : '请输入密码'"
         />
+        <div class="form-tip">{{ editingId ? `修改时须符合策略：${pwdTip}` : pwdTip }}</div>
       </el-form-item>
       <el-form-item label="昵称" prop="nickname">
         <el-input v-model="form.nickname" />
@@ -73,6 +74,7 @@
 import { computed, reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
+import { getPasswordRules, type PasswordRules } from '@/api/auth'
 import { getOptions as getRoleOptions } from '@/api/role'
 import { getTree as getUnitTree } from '@/api/unit'
 import { getOptions as getPostOptions } from '@/api/post'
@@ -94,9 +96,11 @@ const submitting = ref(false)
 const roleOptions = ref<Role[]>([])
 const unitOptions = ref<SysUnit[]>([])
 const postOptions = ref<Post[]>([])
+const passwordRules = ref<PasswordRules | null>(null)
 const formRef = ref<FormInstance>()
 
 const dialogTitle = computed(() => saveDialogTitle(mode.value, '用户'))
+const pwdTip = computed(() => passwordRules.value?.tip || '不少于 6 位')
 
 const availableRoles = computed(() =>
   isSuperAdmin.value ? roleOptions.value : roleOptions.value.filter((r) => r.code !== 'SUPER_ADMIN'),
@@ -121,11 +125,35 @@ const rules: FormRules = {
       validator: (_rule, value, callback) => {
         if (mode.value === 'add' && !value) {
           callback(new Error('请输入密码'))
-        } else if (value && value.length < 6) {
-          callback(new Error('密码长度不能少于6位'))
-        } else {
-          callback()
+          return
         }
+        if (!value) {
+          callback()
+          return
+        }
+        const min = passwordRules.value?.minLength ?? 6
+        const max = passwordRules.value?.maxLength ?? 50
+        if (value.length < min || value.length > max) {
+          callback(new Error(`密码长度需在${min}-${max}之间`))
+          return
+        }
+        if (passwordRules.value?.requireUpper && !/[A-Z]/.test(value)) {
+          callback(new Error('密码须包含大写字母'))
+          return
+        }
+        if (passwordRules.value?.requireLower && !/[a-z]/.test(value)) {
+          callback(new Error('密码须包含小写字母'))
+          return
+        }
+        if (passwordRules.value?.requireDigit && !/\d/.test(value)) {
+          callback(new Error('密码须包含数字'))
+          return
+        }
+        if (passwordRules.value?.requireSpecial && !/[^A-Za-z0-9]/.test(value)) {
+          callback(new Error('密码须包含特殊字符'))
+          return
+        }
+        callback()
       },
       trigger: 'blur',
     },
@@ -170,6 +198,14 @@ async function ensureOptions() {
   if (!postOptions.value.length) {
     const res = await getPostOptions()
     postOptions.value = res.data || []
+  }
+  if (!passwordRules.value) {
+    try {
+      const res = await getPasswordRules()
+      passwordRules.value = res.data
+    } catch {
+      passwordRules.value = null
+    }
   }
 }
 

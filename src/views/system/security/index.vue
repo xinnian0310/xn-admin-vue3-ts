@@ -7,8 +7,9 @@
     @page-change="applyLocalPage"
   >
     <template #aside>
-      <TreePanel title="登录防护" width="360px" :filterable="false">
+      <TreePanel title="安全策略" width="380px" :filterable="false">
         <el-form :model="form" label-width="140px" class="security-aside-form" @submit.prevent>
+          <div class="section-title">登录防护</div>
           <el-form-item label="失败锁定阈值">
             <el-input-number v-model="form.maxFailures" :min="1" :max="50" controls-position="right" />
             <span class="hint">次</span>
@@ -35,18 +36,57 @@
             />
             <span class="hint">秒</span>
           </el-form-item>
+
+          <div class="section-title">密码策略</div>
+          <el-form-item label="最小长度">
+            <el-input-number v-model="form.pwdMinLength" :min="6" :max="50" controls-position="right" />
+            <span class="hint">位</span>
+          </el-form-item>
+          <el-form-item label="最大长度">
+            <el-input-number v-model="form.pwdMaxLength" :min="6" :max="50" controls-position="right" />
+            <span class="hint">位</span>
+          </el-form-item>
+          <el-form-item label="必须大写字母">
+            <el-switch v-model="form.pwdRequireUpper" />
+          </el-form-item>
+          <el-form-item label="必须小写字母">
+            <el-switch v-model="form.pwdRequireLower" />
+          </el-form-item>
+          <el-form-item label="必须数字">
+            <el-switch v-model="form.pwdRequireDigit" />
+          </el-form-item>
+          <el-form-item label="必须特殊字符">
+            <el-switch v-model="form.pwdRequireSpecial" />
+          </el-form-item>
+          <el-form-item label="密码有效期">
+            <el-input-number v-model="form.pwdExpireDays" :min="0" :max="3650" controls-position="right" />
+            <span class="hint">天（0=不过期）</span>
+          </el-form-item>
+          <el-form-item label="历史密码限制">
+            <el-input-number v-model="form.pwdHistoryCount" :min="0" :max="20" controls-position="right" />
+            <span class="hint">次（0=不限制）</span>
+          </el-form-item>
+          <el-form-item label="新建/重置强制改密">
+            <el-switch v-model="form.pwdForceChangeFirst" />
+          </el-form-item>
+
           <el-form-item v-if="form.updatedAt" label="最近更新">
             <span class="muted">{{ form.updatedAt }}</span>
           </el-form-item>
           <p class="security-aside-tip">
-            保存后立即生效。图形/滑块验证码开关请在「登录页设置」中配置。
+            保存后立即生效。验证码开关请在「登录页设置」中配置；超级管理员不受强制改密/过期约束。
           </p>
         </el-form>
-      </TreePanel>
-    </template>
 
-    <template #search>
-      <xnButton :list-item="buttonItems" :selected="selected" @button-click="buttonClick" />
+        <template #footer>
+          <xnButton
+            class="security-aside-actions"
+            :list-item="buttonItems"
+            :selected="selected"
+            @button-click="buttonClick"
+          />
+        </template>
+      </TreePanel>
     </template>
 
     <template #table>
@@ -118,6 +158,15 @@ const form = reactive({
   lockMinutes: 15,
   rateLimitPerMinute: 30,
   captchaTtlSeconds: 120,
+  pwdMinLength: 6,
+  pwdMaxLength: 50,
+  pwdRequireUpper: false,
+  pwdRequireLower: false,
+  pwdRequireDigit: false,
+  pwdRequireSpecial: false,
+  pwdExpireDays: 0,
+  pwdForceChangeFirst: true,
+  pwdHistoryCount: 0,
   updatedAt: '' as string | null,
 })
 
@@ -149,6 +198,15 @@ async function loadPolicy() {
   form.lockMinutes = data.lockMinutes
   form.rateLimitPerMinute = data.rateLimitPerMinute
   form.captchaTtlSeconds = data.captchaTtlSeconds
+  form.pwdMinLength = data.pwdMinLength ?? 6
+  form.pwdMaxLength = data.pwdMaxLength ?? 50
+  form.pwdRequireUpper = !!data.pwdRequireUpper
+  form.pwdRequireLower = !!data.pwdRequireLower
+  form.pwdRequireDigit = !!data.pwdRequireDigit
+  form.pwdRequireSpecial = !!data.pwdRequireSpecial
+  form.pwdExpireDays = data.pwdExpireDays ?? 0
+  form.pwdForceChangeFirst = data.pwdForceChangeFirst !== false
+  form.pwdHistoryCount = data.pwdHistoryCount ?? 0
   form.updatedAt = data.updatedAt || ''
 }
 
@@ -168,11 +226,24 @@ async function loadData() {
 }
 
 async function handleSave() {
+  if (form.pwdMaxLength < form.pwdMinLength) {
+    ElMessage.warning('密码最大长度不能小于最小长度')
+    return
+  }
   const res = await updateSecurityPolicy({
     maxFailures: form.maxFailures,
     lockMinutes: form.lockMinutes,
     rateLimitPerMinute: form.rateLimitPerMinute,
     captchaTtlSeconds: form.captchaTtlSeconds,
+    pwdMinLength: form.pwdMinLength,
+    pwdMaxLength: form.pwdMaxLength,
+    pwdRequireUpper: form.pwdRequireUpper,
+    pwdRequireLower: form.pwdRequireLower,
+    pwdRequireDigit: form.pwdRequireDigit,
+    pwdRequireSpecial: form.pwdRequireSpecial,
+    pwdExpireDays: form.pwdExpireDays,
+    pwdForceChangeFirst: form.pwdForceChangeFirst,
+    pwdHistoryCount: form.pwdHistoryCount,
   })
   form.updatedAt = res.data.updatedAt || form.updatedAt
   ElMessage.success('保存成功，已立即生效')
@@ -209,17 +280,36 @@ onMounted(loadData)
 }
 
 .security-aside-form :deep(.el-form-item) {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .security-aside-form :deep(.el-input-number) {
-  width: 140px;
+  width: 120px;
+}
+
+.section-title {
+  margin: 4px 0 12px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-text-primary, #303133);
+}
+
+.section-title + .el-form-item {
+  margin-top: 0;
+}
+
+.section-title:not(:first-child) {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-border-color, #ebeef5);
 }
 
 .hint {
   margin-left: 8px;
   color: var(--el-text-color-secondary);
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .muted {
@@ -233,5 +323,13 @@ onMounted(loadData)
   font-size: 12px;
   line-height: 1.5;
   color: var(--app-text-muted, #909399);
+}
+
+.security-aside-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
 }
 </style>

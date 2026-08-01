@@ -279,15 +279,20 @@ async function handleLogin() {
     if (!valid) return;
     loading.value = true;
     try {
-      await userStore.login(form.username, form.password, {
+      const data = await userStore.login(form.username, form.password, {
         captchaId: captchaEnabled.value ? captchaId.value : undefined,
         captchaCode:
           captchaEnabled.value && captchaType.value === "IMAGE"
             ? form.captcha
             : undefined,
       });
-      ElMessage.success("登录成功");
-      router.push("/dashboard");
+      if (data.user?.mustChangePassword) {
+        ElMessage.warning("请先修改密码后再使用系统");
+        router.push({ path: "/profile", query: { forcePwd: "1" } });
+      } else {
+        ElMessage.success("登录成功");
+        router.push("/dashboard");
+      }
     } catch {
       if (captchaEnabled.value) {
         await refreshCaptcha();
