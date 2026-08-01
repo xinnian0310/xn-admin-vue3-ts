@@ -48,10 +48,23 @@ export interface ProfileUpdatePayload {
   email?: string
   phone?: string
   password?: string
+  avatar?: string
 }
 
 export function updateCurrentUser(data: ProfileUpdatePayload) {
   return request.put<any, ApiResponse<User>>('/auth/me', data)
+}
+
+export function changePassword(data: { oldPassword: string; newPassword: string }) {
+  return request.put<any, ApiResponse<null>>('/auth/me/password', data)
+}
+
+export function uploadAvatar(file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  return request.post<any, ApiResponse<User>>('/auth/me/avatar', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
 }
 
 export function getAuthMenus() {

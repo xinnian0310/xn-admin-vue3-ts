@@ -3,7 +3,6 @@ import type { ApiResponse } from '@/types'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 import { isApiRegistered, isRegistryLoaded, isWhitelisted } from '@/utils/api-guard'
-import { showBackendUnavailableTip } from '@/utils/backend-down-tip'
 import { normalizeDateTimes } from '@/utils/datetime'
 
 const request = axios.create({
@@ -37,18 +36,6 @@ request.interceptors.request.use((config) => {
   return config
 })
 
-function maybeTipBackendDown(status?: number, hasResponse?: boolean) {
-  // 无响应：后端未启动 / 网络断开；404/502/503：服务异常或网关问题
-  if (!hasResponse || status === 404 || status === 502 || status === 503) {
-    const reason = !hasResponse
-      ? '无法连接后端（网络错误或服务未启动）。'
-      : status === 404
-        ? '接口返回 404，可能是后端未启动、代理未就绪，或接口路径不存在。'
-        : `接口返回 ${status}，后端或网关暂时不可用。`
-    showBackendUnavailableTip(reason)
-  }
-}
-
 request.interceptors.response.use(
   (response) => {
     const res = response.data as ApiResponse<unknown>
@@ -64,7 +51,6 @@ request.interceptors.response.use(
   },
   (error) => {
     const status = error.response?.status as number | undefined
-    const hasResponse = !!error.response
     if (status === 401) {
       void import('@/stores/user').then(({ useUserStore }) => {
         useUserStore().logout(false)
@@ -76,7 +62,6 @@ request.interceptors.response.use(
     } else if (status === 423 || status === 429) {
       ElMessage.error(error.response?.data?.message || (status === 429 ? '请求过于频繁' : '账号已锁定'))
     } else {
-      maybeTipBackendDown(status, hasResponse)
       const message = error.response?.data?.message || error.message || '网络错误'
       ElMessage.error(message)
     }

@@ -6,7 +6,7 @@
         <div class="server-actions">
           <span class="server-actions__label">自动刷新</span>
           <el-switch v-model="autoRefresh" @change="toggleAuto" />
-          <el-button :icon="Refresh" @click="load">刷新</el-button>
+          <el-button v-permission="'server:refresh'" :icon="Refresh" @click="load">刷新</el-button>
         </div>
       </div>
 
@@ -31,6 +31,7 @@
               <div class="infra-card__actions">
                 <el-button
                   v-if="item.restartable && item.status !== 'UP' && item.status !== 'DISABLED'"
+                  v-permission="'server:restart'"
                   type="primary"
                   size="small"
                   :loading="restarting === item.key"

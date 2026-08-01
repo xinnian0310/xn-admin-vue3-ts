@@ -64,6 +64,10 @@
 
         <slot v-else />
       </div>
+
+      <div v-if="$slots.footer" class="page-layout__footer">
+        <slot name="footer" />
+      </div>
     </div>
   </div>
 </template>
@@ -322,6 +326,27 @@ watch(
   padding: 8px 16px;
   flex-shrink: 0;
   background: var(--app-card-bg, #fff);
+  border-top: 1px solid var(--app-border-color, #ebeef5);
+}
+
+.page-layout__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 12px 16px;
+  background: var(--app-card-bg, #fff);
+  border-top: 1px solid var(--app-border-color, #ebeef5);
+}
+
+.page-layout:not(.is-with-aside) .page-layout__footer {
+  border: 1px solid var(--app-border-color, #e4e7ed);
+  border-top: 1px solid var(--app-border-color, #ebeef5);
+}
+
+.page-layout.is-with-aside .page-layout__footer {
+  border: none;
   border-top: 1px solid var(--app-border-color, #ebeef5);
 }
 </style>

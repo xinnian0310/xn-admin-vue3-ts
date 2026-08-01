@@ -153,10 +153,11 @@ import xnTable from '@/components/xnTable/xnTable.vue'
 import XnImportDialog from '@/components/xnImport/xnImportDialog.vue'
 import UserSave from './save.vue'
 import { usePageUi } from '@/composables/usePageUi'
-import { list, batchRemove, remove, updateStatus, importUsers } from '@/api/user'
+import { list, batchRemove, remove, updateStatus, importUsers, exportUsers } from '@/api/user'
 import { getOptions as getRoleOptions } from '@/api/role'
 import { getTree as getUnitTree } from '@/api/unit'
-import type { Role, SysUnit, User } from '@/types'
+import { getOptions as getPostOptions } from '@/api/post'
+import type { Post, Role, SysUnit, User } from '@/types'
 import type { ExcelImportColumn } from '@/types/excel'
 import type { SearchForm } from '@/types/search'
 import type { SaveMode } from '@/types/save'
@@ -184,6 +185,7 @@ const viewMode = ref<'table' | 'card'>('table')
 const selected = ref<User[]>([])
 
 const roles = ref<Role[]>([])
+const posts = ref<Post[]>([])
 const unitNodes = ref<SysUnit[]>([])
 const unitKeyword = ref('')
 /** null 表示未选单位（查全部） */
@@ -215,6 +217,9 @@ const userImportColumns = computed<ExcelImportColumn[]>(() => {
   const unitExample =
     unitOptions.find((o) => o.value === 'TECH_RD1')?.label || unitOptions[0]?.label || '研发一部'
 
+  const postOptions = posts.value.map((p) => ({ label: p.name, value: p.code }))
+  const postExample = postOptions.find((o) => o.value === 'staff')?.label || postOptions[0]?.label || '普通员工'
+
   return [
     { key: 'username', title: '用户名', required: true, example: 'zhangsan', width: 14 },
     { key: 'password', title: '密码', example: 'User123456', width: 14 },
@@ -236,6 +241,13 @@ const userImportColumns = computed<ExcelImportColumn[]>(() => {
       options: unitOptions,
     },
     {
+      key: 'postCode',
+      title: '岗位',
+      example: postExample,
+      width: 14,
+      options: postOptions,
+    },
+    {
       key: 'status',
       title: '状态',
       example: '启用',
@@ -253,6 +265,7 @@ const columns: TableColumnItem[] = [
   { prop: 'username', label: '用户名', minWidth: 120 },
   { prop: 'nickname', label: '昵称', minWidth: 120 },
   { prop: 'unitName', label: '单位', minWidth: 140 },
+  { prop: 'postName', label: '岗位', minWidth: 120 },
   { prop: 'email', label: '邮箱', minWidth: 180 },
   { prop: 'phone', label: '手机号', minWidth: 130 },
   { type: 'slot', slot: 'roles', prop: 'roleList', label: '角色', minWidth: 160 },
@@ -318,6 +331,10 @@ function buttonClick(action: string) {
     importRef.value?.open()
     return
   }
+  if (action === 'export') {
+    handleExport()
+    return
+  }
   if (action === 'edit') {
     if (selected.value.length !== 1) {
       ElMessage.warning('请选择一项操作')
@@ -336,6 +353,22 @@ function buttonClick(action: string) {
   }
   if (action === 'delete') {
     handleBatchDelete()
+  }
+}
+
+async function handleExport() {
+  try {
+    await exportUsers({
+      keyword: String(queryForm.value.FuzzyWord ?? '').trim() || undefined,
+      roleId:
+        queryForm.value.roleId === '' || queryForm.value.roleId == null
+          ? undefined
+          : Number(queryForm.value.roleId),
+      unitId: selectedUnitId.value ?? undefined,
+    })
+    ElMessage.success('导出成功')
+  } catch (e: unknown) {
+    ElMessage.error(e instanceof Error ? e.message : '导出失败')
   }
 }
 
@@ -358,6 +391,7 @@ async function handleImportUsers(rows: Record<string, string>[]) {
     phone: row.phone || undefined,
     roleCodes: row.roleCodes || undefined,
     unitCode: row.unitCode || undefined,
+    postCode: row.postCode || undefined,
     status: row.status === '' || row.status == null ? undefined : Number(row.status),
   }))
   const res = await importUsers(payload)
@@ -374,6 +408,11 @@ function onUnitNodeClick(data: UnitTreeNode) {
 async function loadRoles() {
   const res = await getRoleOptions()
   roles.value = res.data || []
+}
+
+async function loadPosts() {
+  const res = await getPostOptions()
+  posts.value = res.data || []
 }
 
 async function loadUnits() {
@@ -461,7 +500,7 @@ async function handleStatusChange(row: User, enabled: boolean) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadRoles(), loadUnits()])
+  await Promise.all([loadRoles(), loadUnits(), loadPosts()])
   await loadData()
 })
 </script>

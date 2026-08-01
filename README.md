@@ -43,7 +43,7 @@ npm run preview  # 预览构建产物
 
 ```
 src/
-├── api/            # 接口模块（auth、user、role、route、notice…）
+├── api/            # 接口模块（auth、user、role、route、notice、logs…）
 ├── components/     # 通用组件（各目录含 README.md）
 ├── composables/    # usePageUi、useCrudApi
 ├── config/         # 应用 / 菜单 / 主题 / 首页配置
@@ -52,8 +52,8 @@ src/
 ├── router/         # 静态路由 + 动态注册与守卫
 ├── stores/         # user、permission、menu、tagsView、theme、notice
 ├── types/          # 类型定义
-├── utils/          # request、icons、excel、route-register…
-└── views/          # 业务页面
+├── utils/          # request、icons、excel、download、route-register…
+└── views/          # 业务页面（含 system/logs 登录/操作/异常日志）
 ```
 
 ## 通用组件
@@ -93,10 +93,12 @@ PageLayout
 
 - JWT 登录与会话刷新；`v-permission` 按钮级权限
 - 动态菜单 / 路由注册（后端路由 + 视图懒加载）
-- 角色、权限、用户、单位、字典、公告、登录页配置
+- 角色、权限、用户、单位、字典、公告、站内信、登录页配置、系统配置、安全策略
 - 页面标签栏、多布局模式、主题（含自定义色与背景）
-- 表格列个性化、Excel 导入导出
-- 在线用户 / 服务监控、登录与操作日志
+- 表格列个性化、Excel 导入；日志 CSV 导出
+- 系统监控：在线用户 / 服务 / Redis / SQL
+- 日志管理：登录日志、操作日志、异常日志（查询、删除、清空、导出）
+- 文件管理、定时任务、接口文档页
 - 公告 WebSocket 推送（`/ws`）
 
 ## 环境与约定
@@ -104,5 +106,6 @@ PageLayout
 - 路径别名：`@` → `src/`
 - 鉴权 Token 由 `utils/request` 注入；未登录跳转登录页
 - CRUD 列表优先用 `xnTable` 的 `api` 模式对接 `src/api/*.ts` 标准接口
+- 日志等特殊导出走 `utils/download.ts`（带鉴权拉取文件流）
 
 更完整的仓库说明见 [根 README](../README.md)。

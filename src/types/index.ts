@@ -17,6 +17,9 @@ export type {
 } from './table'
 export type { CrudApi, CrudApiModule, CrudSaveExpose } from './crud'
 export type { DictType, DictTypeForm, DictData, DictDataForm } from './dict'
+export type { Post, PostForm } from './post'
+export type { JobLog } from './job-log'
+export type { RecycleBinItem } from './recycle'
 export type { LoginPageConfig, LoginPageConfigForm, LoginCaptchaType, LoginBackgroundFit } from './login-page'
 export { BACKGROUND_FIT_OPTIONS, resolveBackgroundSize } from './login-page'
 export { DICT_LIST_CLASS_OPTIONS } from './dict'
@@ -71,6 +74,7 @@ export interface User {
   nickname: string
   email: string
   phone: string
+  avatar?: string
   status: number
   role?: string
   roleList?: Role[]
@@ -80,6 +84,8 @@ export interface User {
   permissions?: string[]
   unitId?: number | null
   unitName?: string
+  postId?: number | null
+  postName?: string
   createdAt: string
   updatedAt: string
 }
@@ -198,6 +204,7 @@ export interface UserForm {
   status: number
   roleIds: number[]
   unitId?: number | null
+  postId?: number | null
 }
 
 export type NoticeStatus = 'DRAFT' | 'PUBLISHED' | 'REVOKED'
@@ -356,6 +363,7 @@ export interface RedisMonitor {
 }
 
 export interface SqlRecord {
+  id?: number
   sql: string
   durationMs?: number | null
   executedAt?: string

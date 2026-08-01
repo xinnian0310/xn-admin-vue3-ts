@@ -1,85 +1,196 @@
 <template>
-  <div class="page-card" v-loading="loading">
-    <div class="page-header">
-      <h2 class="page-title">缓存监控</h2>
-      <div class="redis-actions">
-        <el-tag :type="statusTag" effect="light" round>{{ statusLabel }}</el-tag>
-        <el-button :icon="Refresh" @click="load">刷新</el-button>
-        <el-button type="danger" :disabled="data?.status !== 'ENABLED'" @click="handleFlush">
-          清空当前库
-        </el-button>
-      </div>
-    </div>
-
-    <el-alert
-      v-if="data?.message"
-      :title="data.message"
-      :type="data.status === 'ERROR' ? 'error' : 'info'"
-      show-icon
-      :closable="false"
-      class="redis-alert"
-    />
-
-    <el-descriptions v-if="data" :column="3" border class="redis-desc">
-      <el-descriptions-item label="状态">{{ data.status }}</el-descriptions-item>
-      <el-descriptions-item label="地址">{{ data.host }}:{{ data.port }}</el-descriptions-item>
-      <el-descriptions-item label="Key 数量">{{ data.keyCount ?? '—' }}</el-descriptions-item>
-    </el-descriptions>
-
-    <el-table v-if="data?.sampleKeys?.length" :data="keyRows" border stripe class="redis-keys">
-      <el-table-column type="index" label="#" width="55" align="center" />
-      <el-table-column prop="key" label="Key" min-width="280" show-overflow-tooltip />
-      <el-table-column label="操作" width="100" align="center">
-        <template #default="{ row }">
-          <el-button type="danger" link @click="handleDeleteKey(row.key)">删除</el-button>
+  <PageLayout
+    v-model:page="page"
+    v-model:page-size="size"
+    :total="total"
+    :loading="loading"
+    @page-change="applyLocalPage"
+  >
+    <template #search>
+      <xnSearch :search-item="searchItems" @query-form="inquires" @reset="reset" />
+    </template>
+    <template #toolbar>
+      <xnButton :list-item="toolbarButtons" :selected="selected" @button-click="buttonClick" />
+    </template>
+    <template #toolbar-extra>
+      <el-tag :type="statusTag" effect="light" round>{{ statusLabel }}</el-tag>
+      <el-tag v-if="monitor" effect="plain" round>
+        {{ monitor.host }}:{{ monitor.port }} · Key {{ monitor.keyCount ?? 0 }}
+      </el-tag>
+    </template>
+    <template #table>
+      <xnTable
+        v-model:page="page"
+        v-model:page-size="size"
+        :data="tableData"
+        :total="total"
+        :loading="loading"
+        table-key="monitor:redis"
+        entity-name="缓存键"
+        name-field="key"
+        :columns="columns"
+        :action-items="tableButtonItems"
+        stripe
+        @selection-change="selectionChangeHandle"
+        @page-change="applyLocalPage"
+      >
+        <template #actions="{ row }">
+          <xnTableActions :items="tableButtonItems" :row="row" @action-click="onTableAction" />
         </template>
-      </el-table-column>
-    </el-table>
-    <el-empty v-else-if="data?.status === 'ENABLED'" description="暂无 Key 样本" :image-size="80" />
-  </div>
+      </xnTable>
+    </template>
+  </PageLayout>
+
+  <el-dialog v-model="detailVisible" :title="detailTitle" width="640px" destroy-on-close>
+    <el-descriptions v-if="currentKey" :column="1" border>
+      <el-descriptions-item label="Key">
+        <code class="redis-key">{{ currentKey }}</code>
+      </el-descriptions-item>
+      <el-descriptions-item label="状态">{{ monitor?.status || '—' }}</el-descriptions-item>
+      <el-descriptions-item label="地址">
+        {{ monitor ? `${monitor.host}:${monitor.port}` : '—' }}
+      </el-descriptions-item>
+    </el-descriptions>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnSearch from '@/components/xnSearch/xnSearch.vue'
+import xnButton from '@/components/xnButton/xnButton.vue'
+import xnTableActions from '@/components/xnButton/xnTableActions.vue'
+import xnTable from '@/components/xnTable/xnTable.vue'
+import { usePageUi } from '@/composables/usePageUi'
 import { deleteRedisKey, flushRedis, getRedisMonitor } from '@/api/monitor'
 import type { RedisMonitor } from '@/types'
+import type { SearchForm } from '@/types/search'
+import type { TableColumnItem } from '@/types/table'
 
 defineOptions({ name: 'MonitorRedis' })
 
-const loading = ref(false)
-const data = ref<RedisMonitor | null>(null)
+interface RedisKeyRow {
+  key: string
+}
 
-const keyRows = computed(() => (data.value?.sampleKeys || []).map((key) => ({ key })))
+/** 权限内容：redis:view/update/delete；table-view/table-edit/table-delete */
+const { searchItems, buttonItems, tableButtonItems } = usePageUi('/monitor/redis')
+
+const loading = ref(false)
+const monitor = ref<RedisMonitor | null>(null)
+const allData = ref<RedisKeyRow[]>([])
+const tableData = ref<RedisKeyRow[]>([])
+const total = ref(0)
+const page = ref(1)
+const size = ref(10)
+const queryForm = ref<SearchForm>({})
+const selected = ref<RedisKeyRow[]>([])
+const detailVisible = ref(false)
+const currentKey = ref('')
+const detailTitle = ref('缓存详情')
+
+const toolbarButtons = computed(() =>
+  buttonItems.value.map((item) => {
+    if (item.action === 'delete' && monitor.value?.status !== 'ENABLED') {
+      return { ...item, disabled: true }
+    }
+    return item
+  }),
+)
 
 const statusLabel = computed(() => {
-  if (data.value?.status === 'ENABLED') return '已连接'
-  if (data.value?.status === 'ERROR') return '连接失败'
+  if (monitor.value?.status === 'ENABLED') return '已连接'
+  if (monitor.value?.status === 'ERROR') return '连接失败'
   return '未启用'
 })
 
 const statusTag = computed(() => {
-  if (data.value?.status === 'ENABLED') return 'success'
-  if (data.value?.status === 'ERROR') return 'danger'
+  if (monitor.value?.status === 'ENABLED') return 'success'
+  if (monitor.value?.status === 'ERROR') return 'danger'
   return 'info'
 })
 
-async function load() {
+const columns: TableColumnItem[] = [
+  { type: 'selection', width: 50, fixed: true },
+  { prop: 'key', label: 'Key', minWidth: 280, showOverflowTooltip: true },
+  { type: 'slot', slot: 'actions', label: '操作', width: 140, fixed: 'right' },
+]
+
+function selectionChangeHandle(rows: unknown[]) {
+  selected.value = rows as RedisKeyRow[]
+}
+
+function applyLocalPage() {
+  const kw = String(queryForm.value.FuzzyWord ?? '').trim().toLowerCase()
+  let rows = allData.value
+  if (kw) {
+    rows = rows.filter((r) => r.key.toLowerCase().includes(kw))
+  }
+  total.value = rows.length
+  const start = (page.value - 1) * size.value
+  tableData.value = rows.slice(start, start + size.value)
+}
+
+async function loadData() {
   loading.value = true
   try {
     const res = await getRedisMonitor()
-    data.value = res.data
+    monitor.value = res.data
+    allData.value = (res.data.sampleKeys || []).map((key) => ({ key }))
+    if (res.data.message && res.data.status !== 'ENABLED') {
+      ElMessage[res.data.status === 'ERROR' ? 'error' : 'info'](res.data.message)
+    }
+    applyLocalPage()
   } finally {
     loading.value = false
   }
 }
 
+function openDetail(key: string, editable: boolean) {
+  currentKey.value = key
+  detailTitle.value = editable ? '编辑缓存键' : '查看缓存键'
+  detailVisible.value = true
+}
+
+async function buttonClick(action: string) {
+  if (action === 'view' || action === 'edit') {
+    if (selected.value.length !== 1) {
+      ElMessage.warning('请选择一个 Key')
+      return
+    }
+    openDetail(selected.value[0].key, action === 'edit')
+  } else if (action === 'delete') {
+    if (selected.value.length) {
+      await ElMessageBox.confirm(
+        `确定删除选中的 ${selected.value.length} 个 Key 吗？`,
+        '删除确认',
+        { type: 'warning' },
+      )
+      for (const row of selected.value) {
+        await deleteRedisKey(row.key)
+      }
+      ElMessage.success('删除成功')
+      loadData()
+    } else {
+      await handleFlush()
+    }
+  }
+}
+
+function onTableAction(payload: { action: string; row: Record<string, unknown> }) {
+  const key = String(payload.row.key ?? '')
+  if (payload.action === 'view') openDetail(key, false)
+  else if (payload.action === 'edit') openDetail(key, true)
+  else if (payload.action === 'delete') handleDeleteKey(key)
+}
+
 async function handleDeleteKey(key: string) {
+  if (!key) return
   await ElMessageBox.confirm(`确定删除 Key「${key}」吗？`, '删除确认', { type: 'warning' })
   await deleteRedisKey(key)
   ElMessage.success('删除成功')
-  load()
+  loadData()
 }
 
 async function handleFlush() {
@@ -88,25 +199,27 @@ async function handleFlush() {
   })
   await flushRedis()
   ElMessage.success('已清空')
-  load()
+  loadData()
 }
 
-onMounted(load)
+function inquires(form: SearchForm) {
+  queryForm.value = form
+  page.value = 1
+  applyLocalPage()
+}
+
+function reset() {
+  queryForm.value = {}
+  page.value = 1
+  applyLocalPage()
+}
+
+onMounted(loadData)
 </script>
 
 <style scoped>
-.redis-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.redis-alert {
-  margin-bottom: 16px;
-}
-.redis-desc {
-  margin-bottom: 16px;
-}
-.redis-keys {
-  margin-top: 8px;
+.redis-key {
+  font-family: monospace;
+  word-break: break-all;
 }
 </style>

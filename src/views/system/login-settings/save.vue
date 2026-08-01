@@ -206,7 +206,6 @@
           </el-form-item>
         </el-form>
 
-        <div class="login-tip">默认账号：admin / admin123</div>
         <div v-if="mode !== 'view'" class="drag-hint">按住拖动调整位置</div>
       </div>
     </div>
@@ -260,8 +259,8 @@ const form = reactive<LoginPageConfigForm>({
 })
 
 const previewForm = reactive({
-  username: 'admin',
-  password: 'admin123',
+  username: 'SuperAdmin',
+  password: '',
   captcha: '',
 })
 
@@ -640,13 +639,6 @@ defineExpose({ open })
 
 .login-btn {
   width: 100%;
-}
-
-.login-tip {
-  margin-top: 16px;
-  text-align: center;
-  color: #909399;
-  font-size: var(--app-font-size-main);
 }
 
 .drag-hint {

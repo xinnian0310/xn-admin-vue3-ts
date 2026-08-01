@@ -51,3 +51,11 @@ export function markRead(id: number) {
 export function unreadCount() {
   return request.get<any, ApiResponse<{ count: number }>>('/messages/unread-count')
 }
+
+export function removeMine(id: number) {
+  return request.delete<any, ApiResponse<null>>(`/messages/mine/${id}`)
+}
+
+export function batchRemoveMine(ids: number[]) {
+  return request.post<any, ApiResponse<{ count: number }>>('/messages/mine/batch-delete', { ids })
+}

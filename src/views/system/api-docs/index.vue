@@ -9,6 +9,7 @@
         </el-radio-group>
         <el-button
           v-if="mode === 'registry'"
+          v-permission="'api-docs:view'"
           :icon="Refresh"
           :loading="loading"
           @click="loadApis"

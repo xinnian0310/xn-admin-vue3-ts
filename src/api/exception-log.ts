@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { buildQueryString, downloadWithAuth } from '@/utils/download'
 import type { ApiResponse, ExceptionLog, PageResult } from '@/types'
 
 export type ExceptionLogListParams = {
@@ -27,4 +28,9 @@ export function batchRemove(ids: number[]) {
 
 export function clean() {
   return request.delete<any, ApiResponse<void>>('/logs/exception/clean')
+}
+
+export function exportExceptionLogs(params?: Omit<ExceptionLogListParams, 'page' | 'size'>) {
+  const qs = buildQueryString({ ...(params || {}) })
+  return downloadWithAuth(`/api/logs/exception/export${qs}`, 'exception-logs.csv')
 }

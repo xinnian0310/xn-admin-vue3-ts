@@ -50,6 +50,11 @@
           style="width: 100%"
         />
       </el-form-item>
+      <el-form-item label="岗位" prop="postId">
+        <el-select v-model="form.postId" clearable filterable placeholder="请选择岗位" style="width: 100%">
+          <el-option v-for="p in postOptions" :key="p.id" :label="p.name" :value="p.id" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-radio-group v-model="form.status">
           <el-radio :value="1">启用</el-radio>
@@ -70,9 +75,10 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { getOptions as getRoleOptions } from '@/api/role'
 import { getTree as getUnitTree } from '@/api/unit'
+import { getOptions as getPostOptions } from '@/api/post'
 import { create, get, update } from '@/api/user'
 import { usePermission } from '@/directives/permission'
-import type { Role, SysUnit, UserForm } from '@/types'
+import type { Post, Role, SysUnit, UserForm } from '@/types'
 import { saveDialogTitle, type SaveMode } from '@/types/save'
 
 defineOptions({ name: 'UsersSave' })
@@ -87,6 +93,7 @@ const editingId = ref<number | null>(null)
 const submitting = ref(false)
 const roleOptions = ref<Role[]>([])
 const unitOptions = ref<SysUnit[]>([])
+const postOptions = ref<Post[]>([])
 const formRef = ref<FormInstance>()
 
 const dialogTitle = computed(() => saveDialogTitle(mode.value, '用户'))
@@ -104,6 +111,7 @@ const form = reactive<UserForm>({
   status: 1,
   roleIds: [],
   unitId: undefined,
+  postId: undefined,
 })
 
 const rules: FormRules = {
@@ -133,6 +141,7 @@ function resetForm() {
   form.status = 1
   form.roleIds = []
   form.unitId = undefined
+  form.postId = undefined
   editingId.value = null
   formRef.value?.clearValidate()
 }
@@ -146,6 +155,7 @@ async function loadDetail(id: number) {
   form.status = res.data.status
   form.roleIds = (res.data.roleList || []).map((r) => r.id)
   form.unitId = res.data.unitId ?? undefined
+  form.postId = res.data.postId ?? undefined
 }
 
 async function ensureOptions() {
@@ -156,6 +166,10 @@ async function ensureOptions() {
   if (!unitOptions.value.length) {
     const res = await getUnitTree()
     unitOptions.value = res.data || []
+  }
+  if (!postOptions.value.length) {
+    const res = await getPostOptions()
+    postOptions.value = res.data || []
   }
 }
 

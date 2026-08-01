@@ -10,7 +10,7 @@
           :loading="saving"
           @click="handleSave"
         >
-          保存
+          保存资料
         </el-button>
       </div>
     </div>
@@ -26,56 +26,110 @@
 
     <div class="profile-page__body">
       <div class="profile-page__avatar">
-        <el-avatar :size="72">{{ avatarText }}</el-avatar>
+        <el-avatar :size="88" :src="avatarUrl">{{ avatarText }}</el-avatar>
         <div class="profile-page__name">{{ form.nickname || form.username || '-' }}</div>
         <div class="profile-page__role">{{ roleText }}</div>
+        <el-upload
+          v-if="canEdit"
+          :show-file-list="false"
+          :http-request="handleAvatarUpload"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+        >
+          <el-button size="small" :loading="avatarUploading">更换头像</el-button>
+        </el-upload>
       </div>
 
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="88px"
-        class="profile-page__form"
-        :disabled="!canEdit"
-      >
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" disabled />
-        </el-form-item>
-        <el-form-item label="昵称" prop="nickname">
-          <el-input v-model="form.nickname" maxlength="50" placeholder="请输入昵称" />
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" maxlength="100" placeholder="请输入邮箱" />
-        </el-form-item>
-        <el-form-item label="手机" prop="phone">
-          <el-input v-model="form.phone" maxlength="20" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="新密码" prop="password">
-          <el-input
-            v-model="form.password"
-            type="password"
-            show-password
-            maxlength="50"
-            placeholder="不修改请留空"
-            autocomplete="new-password"
-          />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-tag :type="user?.status === 1 ? 'success' : 'info'" size="small">
-            {{ user?.status === 1 ? '启用' : '停用' }}
-          </el-tag>
-        </el-form-item>
-        <el-form-item label="角色">
-          <span>{{ roleText }}</span>
-        </el-form-item>
-        <el-form-item label="创建时间">
-          <span>{{ formatTime(user?.createdAt) }}</span>
-        </el-form-item>
-        <el-form-item label="更新时间">
-          <span>{{ formatTime(user?.updatedAt) }}</span>
-        </el-form-item>
-      </el-form>
+      <div class="profile-page__panels">
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="rules"
+          label-width="88px"
+          class="profile-page__form"
+          :disabled="!canEdit"
+        >
+          <el-form-item label="用户名">
+            <el-input v-model="form.username" disabled />
+          </el-form-item>
+          <el-form-item label="昵称" prop="nickname">
+            <el-input v-model="form.nickname" maxlength="50" placeholder="请输入昵称" />
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="form.email" maxlength="100" placeholder="请输入邮箱" />
+          </el-form-item>
+          <el-form-item label="手机" prop="phone">
+            <el-input v-model="form.phone" maxlength="20" placeholder="请输入手机号" />
+          </el-form-item>
+          <el-form-item label="单位">
+            <span>{{ user?.unitName || '—' }}</span>
+          </el-form-item>
+          <el-form-item label="岗位">
+            <span>{{ user?.postName || '—' }}</span>
+          </el-form-item>
+          <el-form-item label="状态">
+            <el-tag :type="user?.status === 1 ? 'success' : 'info'" size="small">
+              {{ user?.status === 1 ? '启用' : '停用' }}
+            </el-tag>
+          </el-form-item>
+          <el-form-item label="角色">
+            <span>{{ roleText }}</span>
+          </el-form-item>
+          <el-form-item label="创建时间">
+            <span>{{ formatTime(user?.createdAt) }}</span>
+          </el-form-item>
+          <el-form-item label="更新时间">
+            <span>{{ formatTime(user?.updatedAt) }}</span>
+          </el-form-item>
+        </el-form>
+
+        <el-form
+          ref="pwdFormRef"
+          :model="pwdForm"
+          :rules="pwdRules"
+          label-width="88px"
+          class="profile-page__form profile-page__pwd"
+          :disabled="!canEdit"
+        >
+          <div class="profile-page__section-title">修改密码</div>
+          <el-form-item label="原密码" prop="oldPassword">
+            <el-input
+              v-model="pwdForm.oldPassword"
+              type="password"
+              show-password
+              autocomplete="current-password"
+              placeholder="请输入原密码"
+            />
+          </el-form-item>
+          <el-form-item label="新密码" prop="newPassword">
+            <el-input
+              v-model="pwdForm.newPassword"
+              type="password"
+              show-password
+              autocomplete="new-password"
+              placeholder="6-50 位新密码"
+            />
+          </el-form-item>
+          <el-form-item label="确认密码" prop="confirmPassword">
+            <el-input
+              v-model="pwdForm.confirmPassword"
+              type="password"
+              show-password
+              autocomplete="new-password"
+              placeholder="再次输入新密码"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button
+              type="warning"
+              :disabled="!canEdit || pwdSaving"
+              :loading="pwdSaving"
+              @click="handleChangePassword"
+            >
+              确认修改密码
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
   </div>
 </template>
@@ -83,8 +137,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus'
 import { storeToRefs } from 'pinia'
+import { changePassword, uploadAvatar } from '@/api/auth'
 import { usePermissionStore } from '@/stores/permission'
 import { useUserStore } from '@/stores/user'
 import { formatDateTime } from '@/utils/datetime'
@@ -97,7 +152,10 @@ const { isSuperAdmin } = storeToRefs(permissionStore)
 
 const loading = ref(false)
 const saving = ref(false)
+const pwdSaving = ref(false)
+const avatarUploading = ref(false)
 const formRef = ref<FormInstance>()
+const pwdFormRef = ref<FormInstance>()
 
 const canEdit = computed(() => !isSuperAdmin.value)
 const user = computed(() => userStore.user)
@@ -107,7 +165,12 @@ const form = reactive({
   nickname: '',
   email: '',
   phone: '',
-  password: '',
+})
+
+const pwdForm = reactive({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
 })
 
 const rules: FormRules = {
@@ -117,15 +180,20 @@ const rules: FormRules = {
     { max: 100, message: '邮箱不能超过100个字符', trigger: 'blur' },
   ],
   phone: [{ max: 20, message: '手机号不能超过20个字符', trigger: 'blur' }],
-  password: [
+}
+
+const pwdRules: FormRules = {
+  oldPassword: [{ required: true, message: '请输入原密码', trigger: 'blur' }],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 50, message: '密码长度需在6-50之间', trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
     {
       validator: (_rule, value, callback) => {
-        if (!value) {
-          callback()
-          return
-        }
-        if (String(value).length < 6 || String(value).length > 50) {
-          callback(new Error('密码长度需在6-50之间'))
+        if (value !== pwdForm.newPassword) {
+          callback(new Error('两次输入的密码不一致'))
           return
         }
         callback()
@@ -139,6 +207,8 @@ const avatarText = computed(() => {
   const name = form.nickname || form.username || 'U'
   return name.charAt(0).toUpperCase()
 })
+
+const avatarUrl = computed(() => user.value?.avatar || undefined)
 
 const roleText = computed(() => {
   if (user.value?.roleList?.length) {
@@ -157,7 +227,6 @@ function syncForm() {
   form.nickname = user.value?.nickname || ''
   form.email = user.value?.email || ''
   form.phone = user.value?.phone || ''
-  form.password = ''
 }
 
 watch(user, syncForm, { immediate: true })
@@ -188,9 +257,7 @@ async function handleSave() {
       nickname: form.nickname,
       email: form.email,
       phone: form.phone,
-      password: form.password || undefined,
     })
-    form.password = ''
     ElMessage.success('保存成功')
   } catch (e: unknown) {
     const msg =
@@ -200,6 +267,55 @@ async function handleSave() {
     ElMessage.error(msg || '保存失败')
   } finally {
     saving.value = false
+  }
+}
+
+async function handleChangePassword() {
+  if (!canEdit.value) {
+    ElMessage.warning('超级管理员禁止修改密码')
+    return
+  }
+  const valid = await pwdFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+
+  pwdSaving.value = true
+  try {
+    await changePassword({
+      oldPassword: pwdForm.oldPassword,
+      newPassword: pwdForm.newPassword,
+    })
+    pwdForm.oldPassword = ''
+    pwdForm.newPassword = ''
+    pwdForm.confirmPassword = ''
+    pwdFormRef.value?.clearValidate()
+    ElMessage.success('密码已修改')
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'message' in e
+        ? String((e as { message?: string }).message)
+        : '修改失败'
+    ElMessage.error(msg || '修改失败')
+  } finally {
+    pwdSaving.value = false
+  }
+}
+
+async function handleAvatarUpload(options: UploadRequestOptions) {
+  avatarUploading.value = true
+  try {
+    const res = await uploadAvatar(options.file as File)
+    await userStore.fetchProfile()
+    ElMessage.success('头像已更新')
+    options.onSuccess?.(res as never)
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'message' in e
+        ? String((e as { message?: string }).message)
+        : '上传失败'
+    ElMessage.error(msg || '上传失败')
+    options.onError?.(e as never)
+  } finally {
+    avatarUploading.value = false
   }
 }
 
@@ -248,8 +364,23 @@ onMounted(() => {
   text-align: center;
 }
 
-.profile-page__form {
-  max-width: 520px;
+.profile-page__panels {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 560px;
+}
+
+.profile-page__section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--app-text-primary, #303133);
+}
+
+.profile-page__pwd {
+  padding-top: 8px;
+  border-top: 1px solid var(--app-border-color, #ebeef5);
 }
 
 @media (max-width: 768px) {

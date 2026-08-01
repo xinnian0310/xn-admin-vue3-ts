@@ -92,8 +92,8 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   ArrowLeft,
   ArrowRight,
@@ -104,197 +104,203 @@ import {
   DArrowRight,
   FullScreen,
   RefreshRight,
-} from '@element-plus/icons-vue'
-import { useTagsViewStore } from '@/stores/tagsView'
-import type { TagView } from '@/types/menu'
+} from "@element-plus/icons-vue";
+import { useTagsViewStore } from "@/stores/tagsView";
+import type { TagView } from "@/types/menu";
 
 type MenuCommand =
-  | 'refresh'
-  | 'close'
-  | 'closeLeft'
-  | 'closeRight'
-  | 'closeAll'
-  | 'fullscreen'
-  | 'openWindow'
+  | "refresh"
+  | "close"
+  | "closeLeft"
+  | "closeRight"
+  | "closeAll"
+  | "fullscreen"
+  | "openWindow";
 
-const route = useRoute()
-const router = useRouter()
-const tagsViewStore = useTagsViewStore()
-const scrollRef = ref<HTMLElement>()
-const showArrows = ref(false)
-const canScrollLeft = ref(false)
-const canScrollRight = ref(false)
+const route = useRoute();
+const router = useRouter();
+const tagsViewStore = useTagsViewStore();
+const scrollRef = ref<HTMLElement>();
+const showArrows = ref(false);
+const canScrollLeft = ref(false);
+const canScrollRight = ref(false);
 
-let resizeObserver: ResizeObserver | null = null
+let resizeObserver: ResizeObserver | null = null;
 
 function isActive(tag: TagView) {
-  return tag.path === route.path
+  return tag.path === route.path;
 }
 
 function hasClosableLeft(tag: TagView) {
-  const index = tagsViewStore.visitedViews.findIndex((v) => v.path === tag.path)
-  if (index <= 0) return false
-  return tagsViewStore.visitedViews.slice(0, index).some((v) => !v.affix)
+  const index = tagsViewStore.visitedViews.findIndex(
+    (v) => v.path === tag.path,
+  );
+  if (index <= 0) return false;
+  return tagsViewStore.visitedViews.slice(0, index).some((v) => !v.affix);
 }
 
 function hasClosableRight(tag: TagView) {
-  const index = tagsViewStore.visitedViews.findIndex((v) => v.path === tag.path)
-  if (index === -1) return false
-  return tagsViewStore.visitedViews.slice(index + 1).some((v) => !v.affix)
+  const index = tagsViewStore.visitedViews.findIndex(
+    (v) => v.path === tag.path,
+  );
+  if (index === -1) return false;
+  return tagsViewStore.visitedViews.slice(index + 1).some((v) => !v.affix);
 }
 
 function hasClosableAny() {
-  return tagsViewStore.visitedViews.some((v) => !v.affix)
+  return tagsViewStore.visitedViews.some((v) => !v.affix);
 }
 
 function handleClick(tag: TagView) {
   if (tag.path !== route.path) {
-    router.push(tag.path)
+    router.push(tag.path);
   }
 }
 
 function ensureRouteAlive(fallback: TagView) {
   if (!tagsViewStore.visitedViews.some((v) => v.path === route.path)) {
-    router.push(fallback.path)
+    router.push(fallback.path);
   }
 }
 
 function handleClose(tag: TagView) {
-  const views = tagsViewStore.visitedViews
-  const index = views.findIndex((v) => v.path === tag.path)
-  tagsViewStore.delView(tag)
+  const views = tagsViewStore.visitedViews;
+  const index = views.findIndex((v) => v.path === tag.path);
+  tagsViewStore.delView(tag);
 
   if (tag.path !== route.path) {
-    nextTick(updateScrollState)
-    return
+    nextTick(updateScrollState);
+    return;
   }
 
   if (views.length <= 1) {
-    router.push('/dashboard')
-    return
+    router.push("/dashboard");
+    return;
   }
 
-  const nextTag = views[index + 1] || views[index - 1]
+  const nextTag = views[index + 1] || views[index - 1];
   if (nextTag) {
-    router.push(nextTag.path)
+    router.push(nextTag.path);
   } else {
-    router.push('/dashboard')
+    router.push("/dashboard");
   }
 }
 
 async function handleRefresh(tag: TagView) {
   if (tag.path !== route.path) {
-    await router.push(tag.path)
+    await router.push(tag.path);
   }
-  tagsViewStore.delCachedView(tag.name)
-  await router.replace({ path: `/redirect${tag.path}`, query: route.query })
+  tagsViewStore.delCachedView(tag.name);
+  await router.replace({ path: `/redirect${tag.path}`, query: route.query });
 }
 
 async function handleFullscreen(tag: TagView) {
   if (tag.path !== route.path) {
-    await router.push(tag.path)
+    await router.push(tag.path);
   }
-  tagsViewStore.setFullscreen(true)
+  tagsViewStore.setFullscreen(true);
 }
 
 function handleOpenWindow(tag: TagView) {
-  const { href } = router.resolve(tag.path)
-  window.open(href, '_blank')
+  const { href } = router.resolve(tag.path);
+  window.open(href, "_blank");
 }
 
 async function onMenuCommand(command: string | number | object, tag: TagView) {
-  await handleMenuCommand(command as MenuCommand, tag)
+  await handleMenuCommand(command as MenuCommand, tag);
 }
 
 async function handleMenuCommand(command: MenuCommand, tag: TagView) {
   switch (command) {
-    case 'refresh':
-      await handleRefresh(tag)
-      break
-    case 'close':
-      handleClose(tag)
-      break
-    case 'closeLeft':
-      tagsViewStore.delLeftViews(tag)
-      ensureRouteAlive(tag)
-      break
-    case 'closeRight':
-      tagsViewStore.delRightViews(tag)
-      ensureRouteAlive(tag)
-      break
-    case 'closeAll':
-      tagsViewStore.delAllViews()
-      ensureRouteAlive(tagsViewStore.visitedViews[0] || tag)
-      break
-    case 'fullscreen':
-      await handleFullscreen(tag)
-      break
-    case 'openWindow':
-      handleOpenWindow(tag)
-      break
+    case "refresh":
+      await handleRefresh(tag);
+      break;
+    case "close":
+      handleClose(tag);
+      break;
+    case "closeLeft":
+      tagsViewStore.delLeftViews(tag);
+      ensureRouteAlive(tag);
+      break;
+    case "closeRight":
+      tagsViewStore.delRightViews(tag);
+      ensureRouteAlive(tag);
+      break;
+    case "closeAll":
+      tagsViewStore.delAllViews();
+      ensureRouteAlive(tagsViewStore.visitedViews[0] || tag);
+      break;
+    case "fullscreen":
+      await handleFullscreen(tag);
+      break;
+    case "openWindow":
+      handleOpenWindow(tag);
+      break;
   }
-  await nextTick()
-  updateScrollState()
+  await nextTick();
+  updateScrollState();
 }
 
 function updateScrollState() {
-  const el = scrollRef.value
+  const el = scrollRef.value;
   if (!el) {
-    showArrows.value = false
-    canScrollLeft.value = false
-    canScrollRight.value = false
-    return
+    showArrows.value = false;
+    canScrollLeft.value = false;
+    canScrollRight.value = false;
+    return;
   }
-  const overflow = el.scrollWidth > el.clientWidth + 1
-  showArrows.value = overflow
-  canScrollLeft.value = el.scrollLeft > 1
-  canScrollRight.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
+  const overflow = el.scrollWidth > el.clientWidth + 1;
+  showArrows.value = overflow;
+  canScrollLeft.value = el.scrollLeft > 1;
+  canScrollRight.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
 }
 
 function scrollBy(direction: -1 | 1) {
-  const el = scrollRef.value
-  if (!el) return
-  const step = Math.max(160, Math.floor(el.clientWidth * 0.6))
-  el.scrollBy({ left: direction * step, behavior: 'smooth' })
+  const el = scrollRef.value;
+  if (!el) return;
+  const step = Math.max(160, Math.floor(el.clientWidth * 0.6));
+  el.scrollBy({ left: direction * step, behavior: "smooth" });
 }
 
 function scrollActiveIntoView() {
-  const activeEl = scrollRef.value?.querySelector('.tags-view__item.is-active') as HTMLElement | null
-  activeEl?.scrollIntoView({ inline: 'nearest', block: 'nearest' })
-  updateScrollState()
+  const activeEl = scrollRef.value?.querySelector(
+    ".tags-view__item.is-active",
+  ) as HTMLElement | null;
+  activeEl?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  updateScrollState();
 }
 
 watch(
   () => route.path,
   async () => {
-    await nextTick()
-    scrollActiveIntoView()
+    await nextTick();
+    scrollActiveIntoView();
   },
-)
+);
 
 watch(
   () => tagsViewStore.visitedViews.length,
   async () => {
-    await nextTick()
-    updateScrollState()
+    await nextTick();
+    updateScrollState();
   },
-)
+);
 
 onMounted(() => {
-  updateScrollState()
-  const el = scrollRef.value
-  if (el && typeof ResizeObserver !== 'undefined') {
-    resizeObserver = new ResizeObserver(() => updateScrollState())
-    resizeObserver.observe(el)
+  updateScrollState();
+  const el = scrollRef.value;
+  if (el && typeof ResizeObserver !== "undefined") {
+    resizeObserver = new ResizeObserver(() => updateScrollState());
+    resizeObserver.observe(el);
   }
-  window.addEventListener('resize', updateScrollState)
-})
+  window.addEventListener("resize", updateScrollState);
+});
 
 onBeforeUnmount(() => {
-  resizeObserver?.disconnect()
-  resizeObserver = null
-  window.removeEventListener('resize', updateScrollState)
-})
+  resizeObserver?.disconnect();
+  resizeObserver = null;
+  window.removeEventListener("resize", updateScrollState);
+});
 </script>
 
 <style scoped>
@@ -370,7 +376,9 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   border: none;
   border-right: 1px solid var(--app-tags-border);
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   outline: none;
 }
 

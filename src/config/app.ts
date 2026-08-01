@@ -110,6 +110,12 @@ export const defaultAppConfig = {
       region: '',
     },
   },
+  logRetention: {
+    loginDays: 90,
+    operDays: 90,
+    exceptionDays: 90,
+    jobDays: 90,
+  },
 }
 
 export type AppConfig = {
@@ -178,6 +184,12 @@ export type AppConfig = {
       bucket: string
       region: string
     }
+  }
+  logRetention: {
+    loginDays: number
+    operDays: number
+    exceptionDays: number
+    jobDays: number
   }
 }
 

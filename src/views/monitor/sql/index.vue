@@ -1,64 +1,197 @@
 <template>
-  <div class="page-card" v-loading="loading">
-    <div class="page-header">
-      <h2 class="page-title">SQL 监控</h2>
-      <div class="sql-actions">
-        <el-tag effect="light" round>累计 {{ data?.queryCount ?? 0 }} 条</el-tag>
-        <el-button :icon="Refresh" @click="load">刷新</el-button>
-        <el-button type="danger" @click="handleClean">清空缓冲</el-button>
-      </div>
-    </div>
+  <PageLayout
+    v-model:page="page"
+    v-model:page-size="size"
+    :total="total"
+    :loading="loading"
+    @page-change="applyLocalPage"
+  >
+    <template #search>
+      <xnSearch :search-item="searchItems" @query-form="inquires" @reset="reset" />
+    </template>
+    <template #toolbar>
+      <xnButton :list-item="buttonItems" :selected="selected" @button-click="buttonClick" />
+    </template>
+    <template #toolbar-extra>
+      <el-tag effect="light" round>累计 {{ queryCount }} 条</el-tag>
+    </template>
+    <template #table>
+      <xnTable
+        v-model:page="page"
+        v-model:page-size="size"
+        :data="tableData"
+        :total="total"
+        :loading="loading"
+        table-key="monitor:sql"
+        entity-name="SQL"
+        name-field="sql"
+        :columns="columns"
+        :action-items="tableButtonItems"
+        stripe
+        @selection-change="selectionChangeHandle"
+        @page-change="applyLocalPage"
+      >
+        <template #executedAt="{ row }">
+          {{ formatDateTime(row.executedAt) }}
+        </template>
+        <template #durationMs="{ row }">
+          {{ row.durationMs ?? '—' }}
+        </template>
+        <template #actions="{ row }">
+          <xnTableActions :items="tableButtonItems" :row="row" @action-click="onTableAction" />
+        </template>
+      </xnTable>
+    </template>
+  </PageLayout>
 
-    <el-table :data="data?.records || []" border stripe max-height="620">
-      <el-table-column type="index" label="#" width="55" align="center" />
-      <el-table-column prop="executedAt" label="执行时间" width="170">
-        <template #default="{ row }">{{ formatDateTime(row.executedAt) }}</template>
-      </el-table-column>
-      <el-table-column prop="durationMs" label="耗时(ms)" width="100" align="center">
-        <template #default="{ row }">{{ row.durationMs ?? '—' }}</template>
-      </el-table-column>
-      <el-table-column prop="sql" label="SQL" min-width="420" show-overflow-tooltip />
-      <template #empty>
-        <el-empty description="暂无 SQL 记录" :image-size="90" />
-      </template>
-    </el-table>
-  </div>
+  <el-dialog v-model="detailVisible" title="SQL 详情" width="780px" destroy-on-close>
+    <el-descriptions v-if="current" :column="1" border>
+      <el-descriptions-item label="执行时间">
+        {{ formatDateTime(current.executedAt) }}
+      </el-descriptions-item>
+      <el-descriptions-item label="耗时(ms)">
+        {{ current.durationMs ?? '—' }}
+      </el-descriptions-item>
+      <el-descriptions-item label="SQL">
+        <pre class="sql-detail">{{ current.sql }}</pre>
+      </el-descriptions-item>
+    </el-descriptions>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { cleanSqlMonitor, getSqlMonitor } from '@/api/monitor'
-import type { SqlMonitor } from '@/types'
+import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnSearch from '@/components/xnSearch/xnSearch.vue'
+import xnButton from '@/components/xnButton/xnButton.vue'
+import xnTableActions from '@/components/xnButton/xnTableActions.vue'
+import xnTable from '@/components/xnTable/xnTable.vue'
+import { usePageUi } from '@/composables/usePageUi'
+import { cleanSqlMonitor, getSqlMonitor, removeSqlRecord } from '@/api/monitor'
+import type { SqlRecord } from '@/types'
+import type { SearchForm } from '@/types/search'
+import type { TableColumnItem } from '@/types/table'
 import { formatDateTime } from '@/utils/datetime'
 
 defineOptions({ name: 'MonitorSql' })
 
+/** 权限内容：sql:view/update/delete；table-view/table-edit/table-delete */
+const { searchItems, buttonItems, tableButtonItems } = usePageUi('/monitor/sql')
+
 const loading = ref(false)
-const data = ref<SqlMonitor | null>(null)
+const allData = ref<SqlRecord[]>([])
+const tableData = ref<SqlRecord[]>([])
+const total = ref(0)
+const page = ref(1)
+const size = ref(10)
+const queryCount = ref(0)
+const queryForm = ref<SearchForm>({})
+const selected = ref<SqlRecord[]>([])
+const detailVisible = ref(false)
+const current = ref<SqlRecord | null>(null)
 let timer: ReturnType<typeof setInterval> | null = null
 
-async function load() {
+const columns: TableColumnItem[] = [
+  { type: 'selection', width: 50, fixed: true },
+  { type: 'slot', slot: 'executedAt', prop: 'executedAt', label: '执行时间', width: 170 },
+  { type: 'slot', slot: 'durationMs', prop: 'durationMs', label: '耗时(ms)', width: 100 },
+  { prop: 'sql', label: 'SQL', minWidth: 420, showOverflowTooltip: true },
+  { type: 'slot', slot: 'actions', label: '操作', width: 140, fixed: 'right' },
+]
+
+function selectionChangeHandle(rows: unknown[]) {
+  selected.value = rows as SqlRecord[]
+}
+
+function applyLocalPage() {
+  const kw = String(queryForm.value.FuzzyWord ?? '').trim().toLowerCase()
+  let rows = allData.value
+  if (kw) {
+    rows = rows.filter((r) => String(r.sql || '').toLowerCase().includes(kw))
+  }
+  total.value = rows.length
+  const start = (page.value - 1) * size.value
+  tableData.value = rows.slice(start, start + size.value)
+}
+
+async function loadData() {
   loading.value = true
   try {
     const res = await getSqlMonitor()
-    data.value = res.data
+    allData.value = res.data.records || []
+    queryCount.value = res.data.queryCount ?? allData.value.length
+    applyLocalPage()
   } finally {
     loading.value = false
   }
 }
 
-async function handleClean() {
-  await ElMessageBox.confirm('确定清空 SQL 监控缓冲吗？', '清空确认', { type: 'warning' })
-  await cleanSqlMonitor()
-  ElMessage.success('已清空')
-  load()
+function openDetail(row: SqlRecord) {
+  current.value = row
+  detailVisible.value = true
+}
+
+async function buttonClick(action: string) {
+  if (action === 'view' || action === 'edit') {
+    if (selected.value.length !== 1) {
+      ElMessage.warning('请选择一条 SQL 记录')
+      return
+    }
+    openDetail(selected.value[0])
+  } else if (action === 'delete') {
+    if (selected.value.length) {
+      await ElMessageBox.confirm(
+        `确定删除选中的 ${selected.value.length} 条 SQL 记录吗？`,
+        '删除确认',
+        { type: 'warning' },
+      )
+      for (const row of selected.value) {
+        if (row.id != null) await removeSqlRecord(row.id)
+      }
+      ElMessage.success('删除成功')
+      loadData()
+    } else {
+      await ElMessageBox.confirm('确定清空全部 SQL 监控缓冲吗？', '清空确认', { type: 'warning' })
+      await cleanSqlMonitor()
+      ElMessage.success('已清空')
+      loadData()
+    }
+  }
+}
+
+function onTableAction(payload: { action: string; row: Record<string, unknown> }) {
+  const row = payload.row as unknown as SqlRecord
+  if (payload.action === 'view' || payload.action === 'edit') openDetail(row)
+  else if (payload.action === 'delete') handleDelete(row)
+}
+
+async function handleDelete(row: SqlRecord) {
+  if (row.id == null) {
+    ElMessage.warning('无法删除该记录')
+    return
+  }
+  await ElMessageBox.confirm('确定删除该条 SQL 记录吗？', '删除确认', { type: 'warning' })
+  await removeSqlRecord(row.id)
+  ElMessage.success('删除成功')
+  loadData()
+}
+
+function inquires(form: SearchForm) {
+  queryForm.value = form
+  page.value = 1
+  applyLocalPage()
+}
+
+function reset() {
+  queryForm.value = {}
+  page.value = 1
+  applyLocalPage()
 }
 
 onMounted(() => {
-  load()
-  timer = setInterval(load, 10000)
+  loadData()
+  timer = setInterval(loadData, 10000)
 })
 
 onBeforeUnmount(() => {
@@ -67,9 +200,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.sql-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.sql-detail {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.6;
 }
 </style>

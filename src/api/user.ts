@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { buildQueryString, downloadWithAuth } from '@/utils/download'
 import type { ApiResponse, PageResult, User, UserForm } from '@/types'
 import type { ImportResult } from '@/types/excel'
 
@@ -18,6 +19,7 @@ export type UserImportRow = {
   phone?: string
   roleCodes?: string
   unitCode?: string
+  postCode?: string
   status?: number | string
 }
 
@@ -59,4 +61,10 @@ export function updateStatus(id: number, status: number) {
 /** Excel 导入用户（前端解析后提交行数据） */
 export function importUsers(rows: UserImportRow[]) {
   return request.post<any, ApiResponse<ImportResult>>('/users/import', rows)
+}
+
+/** 导出用户 CSV */
+export function exportUsers(params?: Omit<UserListParams, 'page' | 'size'>) {
+  const qs = buildQueryString({ ...(params || {}) })
+  return downloadWithAuth(`/api/users/export${qs}`, 'users.csv')
 }

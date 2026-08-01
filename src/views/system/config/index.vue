@@ -4,11 +4,12 @@
       <div class="system-config-page__heading">
         <h2 class="page-title">系统配置</h2>
         <p class="system-config-page__hint">
-          与前端 app.ts 对齐：保存后即时生效。登录页背景/验证码请在「登录页设置」中配置；主题色请在右上角主题面板调整。
+          与前端 app.ts
+          对齐：保存后即时生效。登录页背景/验证码请在「登录页设置」中配置；主题色请在右上角主题面板调整。
         </p>
       </div>
       <div class="system-config-page__actions">
-        <el-button :icon="Refresh" @click="loadConfig">刷新</el-button>
+        <el-button v-permission="'system-config:view'" :icon="Refresh" @click="loadConfig">刷新</el-button>
         <el-button
           v-permission="'system-config:update'"
           type="primary"
@@ -20,24 +21,47 @@
       </div>
     </div>
 
-    <el-tabs v-model="activeTab" tab-position="left" class="system-config-page__tabs">
+    <el-tabs
+      v-model="activeTab"
+      tab-position="left"
+      class="system-config-page__tabs"
+    >
       <el-tab-pane label="应用信息" name="app">
-        <el-form :model="form" label-width="120px" class="system-config-page__form">
+        <el-form
+          :model="form"
+          label-width="120px"
+          class="system-config-page__form"
+        >
           <el-form-item label="项目名称" required>
-            <el-input v-model="form.app.name" maxlength="50" placeholder="侧栏 / 登录页 / 浏览器标题" />
+            <el-input
+              v-model="form.app.name"
+              maxlength="50"
+              placeholder="侧栏 / 登录页 / 浏览器标题"
+            />
           </el-form-item>
           <el-form-item label="公司名称">
             <el-input v-model="form.app.company" maxlength="50" />
           </el-form-item>
           <el-form-item label="副标题">
-            <el-input v-model="form.app.subtitle" maxlength="100" placeholder="登录页说明文案" />
+            <el-input
+              v-model="form.app.subtitle"
+              maxlength="100"
+              placeholder="登录页说明文案"
+            />
           </el-form-item>
           <el-form-item label="页脚">
-            <el-input v-model="form.app.footer" maxlength="200" placeholder="留空则不显示页脚" />
+            <el-input
+              v-model="form.app.footer"
+              maxlength="200"
+              placeholder="留空则不显示页脚"
+            />
           </el-form-item>
           <el-form-item label="Favicon">
             <div class="asset-row">
-              <el-input v-model="form.app.favicon" placeholder="/favicon.svg 或上传" />
+              <el-input
+                v-model="form.app.favicon"
+                placeholder="/favicon.svg 或上传"
+              />
               <el-upload
                 v-permission="'system-config:update'"
                 :show-file-list="false"
@@ -46,12 +70,20 @@
               >
                 <el-button>上传</el-button>
               </el-upload>
-              <img v-if="form.app.favicon" :src="form.app.favicon" class="asset-preview asset-preview--icon" alt="favicon" />
+              <img
+                v-if="form.app.favicon"
+                :src="form.app.favicon"
+                class="asset-preview asset-preview--icon"
+                alt="favicon"
+              />
             </div>
           </el-form-item>
           <el-form-item label="Logo">
             <div class="asset-row">
-              <el-input v-model="form.app.logo" placeholder="/logo.svg 或上传" />
+              <el-input
+                v-model="form.app.logo"
+                placeholder="/logo.svg 或上传"
+              />
               <el-upload
                 v-permission="'system-config:update'"
                 :show-file-list="false"
@@ -60,24 +92,47 @@
               >
                 <el-button>上传</el-button>
               </el-upload>
-              <img v-if="form.app.logo" :src="form.app.logo" class="asset-preview" alt="logo" />
+              <img
+                v-if="form.app.logo"
+                :src="form.app.logo"
+                class="asset-preview"
+                alt="logo"
+              />
             </div>
           </el-form-item>
           <el-form-item label="Logo 宽度">
-            <el-input-number v-model="form.app.logoWidth" :min="1" :max="200" controls-position="right" />
+            <el-input-number
+              v-model="form.app.logoWidth"
+              :min="1"
+              :max="200"
+              controls-position="right"
+            />
             <span class="hint">px；清空表示按比例自适应</span>
-            <el-button link type="primary" @click="form.app.logoWidth = null">清空</el-button>
+            <el-button link type="primary" @click="form.app.logoWidth = null"
+              >清空</el-button
+            >
           </el-form-item>
           <el-form-item label="Logo 高度">
-            <el-input-number v-model="form.app.logoHeight" :min="1" :max="200" controls-position="right" />
+            <el-input-number
+              v-model="form.app.logoHeight"
+              :min="1"
+              :max="200"
+              controls-position="right"
+            />
             <span class="hint">px；清空表示按比例自适应</span>
-            <el-button link type="primary" @click="form.app.logoHeight = null">清空</el-button>
+            <el-button link type="primary" @click="form.app.logoHeight = null"
+              >清空</el-button
+            >
           </el-form-item>
         </el-form>
       </el-tab-pane>
 
       <el-tab-pane label="会话策略" name="session">
-        <el-form :model="form" label-width="140px" class="system-config-page__form">
+        <el-form
+          :model="form"
+          label-width="140px"
+          class="system-config-page__form"
+        >
           <el-form-item label="空闲自动登出">
             <el-switch v-model="form.session.idleLogoutEnabled" />
           </el-form-item>
@@ -118,7 +173,11 @@
         <div class="ui-split">
           <section class="ui-split__panel">
             <h3 class="ui-split__title">布局与字号</h3>
-            <el-form :model="form" label-width="120px" class="system-config-page__form system-config-page__form--compact">
+            <el-form
+              :model="form"
+              label-width="120px"
+              class="system-config-page__form system-config-page__form--compact"
+            >
               <el-form-item label="布局模式">
                 <el-radio-group v-model="form.ui.layout.mode">
                   <el-radio-button value="side">左侧</el-radio-button>
@@ -128,22 +187,40 @@
                 </el-radio-group>
               </el-form-item>
               <el-form-item label="弹窗最大高度">
-                <el-input v-model="form.ui.dialog.maxHeight" placeholder="如 95vh" />
+                <el-input
+                  v-model="form.ui.dialog.maxHeight"
+                  placeholder="如 95vh"
+                />
               </el-form-item>
               <el-form-item label="标签栏高度">
-                <el-input v-model="form.ui.tagsView.height" placeholder="如 40px" />
+                <el-input
+                  v-model="form.ui.tagsView.height"
+                  placeholder="如 40px"
+                />
               </el-form-item>
               <el-form-item label="侧栏字号">
-                <el-input v-model="form.ui.fontSize.sidebar" placeholder="如 14px" />
+                <el-input
+                  v-model="form.ui.fontSize.sidebar"
+                  placeholder="如 14px"
+                />
               </el-form-item>
               <el-form-item label="顶栏字号">
-                <el-input v-model="form.ui.fontSize.header" placeholder="如 14px" />
+                <el-input
+                  v-model="form.ui.fontSize.header"
+                  placeholder="如 14px"
+                />
               </el-form-item>
               <el-form-item label="标签栏字号">
-                <el-input v-model="form.ui.fontSize.tagsView" placeholder="如 14px" />
+                <el-input
+                  v-model="form.ui.fontSize.tagsView"
+                  placeholder="如 14px"
+                />
               </el-form-item>
               <el-form-item label="正文字号">
-                <el-input v-model="form.ui.fontSize.main" placeholder="如 14px" />
+                <el-input
+                  v-model="form.ui.fontSize.main"
+                  placeholder="如 14px"
+                />
               </el-form-item>
             </el-form>
           </section>
@@ -151,11 +228,20 @@
           <section class="ui-split__panel ui-split__panel--aside">
             <div class="ui-split__head">
               <h3 class="ui-split__title">组件全局</h3>
-              <p class="ui-split__desc">对应 Element Plus Config Provider；主题色请用右上角主题面板。</p>
+              <p class="ui-split__desc">
+                对应 Element Plus Config Provider；主题色请用右上角主题面板。
+              </p>
             </div>
-            <el-form :model="form" label-width="120px" class="system-config-page__form system-config-page__form--compact">
+            <el-form
+              :model="form"
+              label-width="120px"
+              class="system-config-page__form system-config-page__form--compact"
+            >
               <el-form-item label="语言">
-                <el-select v-model="form.ui.elementPlus.locale" style="width: 100%">
+                <el-select
+                  v-model="form.ui.elementPlus.locale"
+                  style="width: 100%"
+                >
                   <el-option label="简体中文" value="zh-cn" />
                   <el-option label="English" value="en" />
                 </el-select>
@@ -177,10 +263,15 @@
                 />
               </el-form-item>
               <el-form-item label="类名前缀">
-                <el-input v-model="form.ui.elementPlus.namespace" placeholder="默认 el" />
+                <el-input
+                  v-model="form.ui.elementPlus.namespace"
+                  placeholder="默认 el"
+                />
               </el-form-item>
               <el-form-item label="按钮自动空格">
-                <el-switch v-model="form.ui.elementPlus.button.autoInsertSpace" />
+                <el-switch
+                  v-model="form.ui.elementPlus.button.autoInsertSpace"
+                />
               </el-form-item>
               <el-form-item label="消息最大数量">
                 <el-input-number
@@ -206,7 +297,11 @@
       </el-tab-pane>
 
       <el-tab-pane label="对象存储" name="storage">
-        <el-form :model="form" label-width="120px" class="system-config-page__form">
+        <el-form
+          :model="form"
+          label-width="120px"
+          class="system-config-page__form"
+        >
           <el-alert
             type="warning"
             :closable="false"
@@ -215,7 +310,10 @@
             title="仅配置 endpoint / bucket / region；密钥请放在后端，勿写入前端配置。"
           />
           <el-form-item label="Endpoint">
-            <el-input v-model="form.storage.minio.endpoint" placeholder="https://minio.example.com" />
+            <el-input
+              v-model="form.storage.minio.endpoint"
+              placeholder="https://minio.example.com"
+            />
           </el-form-item>
           <el-form-item label="Bucket">
             <el-input v-model="form.storage.minio.bucket" />
@@ -225,36 +323,88 @@
           </el-form-item>
         </el-form>
       </el-tab-pane>
+
+      <el-tab-pane label="日志保留" name="logRetention">
+        <el-form
+          :model="form"
+          label-width="140px"
+          class="system-config-page__form"
+        >
+          <el-alert
+            type="info"
+            :closable="false"
+            show-icon
+            class="system-config-page__alert"
+            title="定时任务「日志保留清理」每天凌晨按此天数删除过期日志；设为 0 表示不自动清理该类日志。"
+          />
+          <el-form-item label="登录日志">
+            <el-input-number
+              v-model="form.logRetention.loginDays"
+              :min="0"
+              :max="3650"
+              controls-position="right"
+            />
+            <span class="hint">天</span>
+          </el-form-item>
+          <el-form-item label="操作日志">
+            <el-input-number
+              v-model="form.logRetention.operDays"
+              :min="0"
+              :max="3650"
+              controls-position="right"
+            />
+            <span class="hint">天</span>
+          </el-form-item>
+          <el-form-item label="异常日志">
+            <el-input-number
+              v-model="form.logRetention.exceptionDays"
+              :min="0"
+              :max="3650"
+              controls-position="right"
+            />
+            <span class="hint">天</span>
+          </el-form-item>
+          <el-form-item label="任务日志">
+            <el-input-number
+              v-model="form.logRetention.jobDays"
+              :min="0"
+              :max="3650"
+              controls-position="right"
+            />
+            <span class="hint">天</span>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import { Refresh } from '@element-plus/icons-vue'
-import { ElMessage, type UploadRequestOptions } from 'element-plus'
+import { computed, onMounted, reactive, ref } from "vue";
+import { Refresh } from "@element-plus/icons-vue";
+import { ElMessage, type UploadRequestOptions } from "element-plus";
 import {
   appConfig,
   applyRemoteAppConfig,
   defaultAppConfig,
   type AppConfig,
   type LayoutMode,
-} from '@/config/app'
+} from "@/config/app";
 import {
   getSystemConfig,
   updateSystemConfig,
   uploadBrandAsset,
   type SystemConfigPayload,
-} from '@/api/system-config'
+} from "@/api/system-config";
 
-defineOptions({ name: 'SystemConfig' })
+defineOptions({ name: "SystemConfig" });
 
-const loading = ref(false)
-const saving = ref(false)
-const activeTab = ref('app')
+const loading = ref(false);
+const saving = ref(false);
+const activeTab = ref("app");
 
 function createForm(): SystemConfigPayload {
-  const d = JSON.parse(JSON.stringify(defaultAppConfig)) as AppConfig
+  const d = JSON.parse(JSON.stringify(defaultAppConfig)) as AppConfig;
   return {
     app: { ...d.app },
     session: { ...d.session },
@@ -273,96 +423,101 @@ function createForm(): SystemConfigPayload {
     storage: {
       minio: { ...d.storage.minio },
     },
-  }
+    logRetention: { ...d.logRetention },
+  };
 }
 
-const form = reactive(createForm())
+const form = reactive(createForm());
 
 const idleTimeoutMin = computed({
   get: () => Math.round(form.session.idleTimeoutMs / 60000),
   set: (v: number) => {
-    form.session.idleTimeoutMs = Math.max(1, v || 1) * 60000
+    form.session.idleTimeoutMs = Math.max(1, v || 1) * 60000;
   },
-})
+});
 
 const refreshIntervalMin = computed({
   get: () => Math.round(form.session.refreshIntervalMs / 60000),
   set: (v: number) => {
-    form.session.refreshIntervalMs = Math.max(1, v || 1) * 60000
+    form.session.refreshIntervalMs = Math.max(1, v || 1) * 60000;
   },
-})
+});
 
 const idleCheckIntervalSec = computed({
   get: () => Math.round(form.session.idleCheckIntervalMs / 1000),
   set: (v: number) => {
-    form.session.idleCheckIntervalMs = Math.max(5, v || 5) * 1000
+    form.session.idleCheckIntervalMs = Math.max(5, v || 5) * 1000;
   },
-})
+});
 
 function assignForm(data: SystemConfigPayload) {
-  Object.assign(form.app, data.app)
-  Object.assign(form.session, data.session)
-  Object.assign(form.ui.dialog, data.ui.dialog)
-  form.ui.layout.mode = (data.ui.layout?.mode || 'side') as LayoutMode
-  Object.assign(form.ui.fontSize, data.ui.fontSize)
-  Object.assign(form.ui.tagsView, data.ui.tagsView)
+  Object.assign(form.app, data.app);
+  Object.assign(form.session, data.session);
+  Object.assign(form.ui.dialog, data.ui.dialog);
+  form.ui.layout.mode = (data.ui.layout?.mode || "side") as LayoutMode;
+  Object.assign(form.ui.fontSize, data.ui.fontSize);
+  Object.assign(form.ui.tagsView, data.ui.tagsView);
   Object.assign(form.ui.elementPlus, {
     ...data.ui.elementPlus,
     button: { ...data.ui.elementPlus.button },
     message: { ...data.ui.elementPlus.message },
     dialog: { ...data.ui.elementPlus.dialog },
-  })
-  Object.assign(form.storage.minio, data.storage?.minio || {})
+  });
+  Object.assign(form.storage.minio, data.storage?.minio || {});
+  Object.assign(
+    form.logRetention,
+    data.logRetention || defaultAppConfig.logRetention,
+  );
 }
 
 async function loadConfig() {
-  loading.value = true
+  loading.value = true;
   try {
-    const res = await getSystemConfig()
-    if (res.data) assignForm(res.data)
+    const res = await getSystemConfig();
+    if (res.data) assignForm(res.data);
   } catch (e: any) {
-    ElMessage.error(e?.message || '加载失败')
+    ElMessage.error(e?.message || "加载失败");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 async function handleSave() {
   if (!form.app.name?.trim()) {
-    ElMessage.warning('项目名称不能为空')
-    activeTab.value = 'app'
-    return
+    ElMessage.warning("项目名称不能为空");
+    activeTab.value = "app";
+    return;
   }
-  saving.value = true
+  saving.value = true;
   try {
-    const payload: SystemConfigPayload = JSON.parse(JSON.stringify(form))
-    const res = await updateSystemConfig(payload)
+    const payload: SystemConfigPayload = JSON.parse(JSON.stringify(form));
+    const res = await updateSystemConfig(payload);
     if (res.data) {
-      assignForm(res.data)
-      applyRemoteAppConfig(res.data)
+      assignForm(res.data);
+      applyRemoteAppConfig(res.data);
     } else {
-      applyRemoteAppConfig(payload)
+      applyRemoteAppConfig(payload);
     }
-    ElMessage.success('保存成功，已即时生效')
+    ElMessage.success("保存成功，已即时生效");
   } catch (e: any) {
-    ElMessage.error(e?.message || '保存失败')
+    ElMessage.error(e?.message || "保存失败");
   } finally {
-    saving.value = false
+    saving.value = false;
   }
 }
 
-async function onUpload(opt: UploadRequestOptions, field: 'logo' | 'favicon') {
+async function onUpload(opt: UploadRequestOptions, field: "logo" | "favicon") {
   try {
-    const file = opt.file as File
-    const res = await uploadBrandAsset(file)
-    const url = res.data?.url
-    if (!url) throw new Error('上传失败')
-    form.app[field] = url
-    ElMessage.success('上传成功')
-    opt.onSuccess?.(res as any)
+    const file = opt.file as File;
+    const res = await uploadBrandAsset(file);
+    const url = res.data?.url;
+    if (!url) throw new Error("上传失败");
+    form.app[field] = url;
+    ElMessage.success("上传成功");
+    opt.onSuccess?.(res as any);
   } catch (e: any) {
-    ElMessage.error(e?.message || '上传失败')
-    opt.onError?.(e)
+    ElMessage.error(e?.message || "上传失败");
+    opt.onError?.(e);
   }
 }
 
@@ -384,9 +539,9 @@ onMounted(() => {
       },
     },
     storage: { minio: { ...appConfig.storage.minio } },
-  })
-  loadConfig()
-})
+  });
+  loadConfig();
+});
 </script>
 
 <style scoped>

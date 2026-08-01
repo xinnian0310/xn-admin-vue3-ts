@@ -1,5 +1,11 @@
 <template>
-  <PageLayout>
+  <PageLayout
+    v-model:page="page"
+    v-model:page-size="size"
+    :total="total"
+    :loading="loading"
+    @page-change="applyLocalPage"
+  >
     <template #aside>
       <TreePanel
         ref="menuTreeRef"
@@ -29,247 +35,206 @@
       </TreePanel>
     </template>
 
-    <template v-if="selectedRoute" #toolbar>
-      <div class="perm-content__title">
-        <span>{{ selectedRoute.title }}</span>
-        <span v-if="selectedMenu?.code" class="perm-content__code">{{ selectedMenu.code }}</span>
-      </div>
+    <template #search>
+      <xnSearch :search-item="searchItems" @query-form="inquires" @reset="reset" />
     </template>
 
-    <div v-if="selectedRoute" class="perm-content__body">
+    <template #toolbar>
+      <xnButton
+        :list-item="toolbarButtons"
+        :selected="selected"
+        @button-click="buttonClick"
+      />
+    </template>
+
+    <template #toolbar-extra>
+      <el-radio-group v-if="selectedMenu" v-model="activeType">
+        <el-radio-button v-for="tab in tabs" :key="tab.type" :value="tab.type">
+          {{ tab.label }}
+          <el-badge
+            v-if="groups[tab.type].length"
+            :value="groups[tab.type].length"
+            type="info"
+            class="perm-content__tab-badge"
+          />
+        </el-radio-button>
+      </el-radio-group>
+    </template>
+
+    <template #table>
       <el-alert
-        v-if="!selectedMenu"
+        v-if="selectedRoute && !selectedMenu"
         type="warning"
         :closable="false"
         show-icon
         title="该路由尚未关联权限标识，请先在路由管理中保存以自动生成后再配置子权限。"
         class="perm-content__alert"
       />
-      <el-tabs v-else v-model="activeType" class="perm-content__tabs">
-        <el-tab-pane v-for="tab in tabs" :key="tab.type" :name="tab.type">
-          <template #label>
-            {{ tab.label }}
-            <el-badge
-              v-if="groups[tab.type].length"
-              :value="groups[tab.type].length"
-              type="info"
-              class="perm-content__tab-badge"
-            />
-          </template>
+      <el-empty
+        v-else-if="!selectedRoute"
+        class="perm-content__empty"
+        description="请从左侧选择一个菜单，管理其接口 / 按钮权限"
+        :image-size="120"
+      />
+      <xnTable
+        v-else
+        v-model:page="page"
+        v-model:page-size="size"
+        :data="tableData"
+        :total="total"
+        :loading="loading"
+        table-key="system:permissions-content"
+        entity-name="权限"
+        name-field="name"
+        :columns="columns"
+        :action-items="tableButtonItems"
+        stripe
+        @selection-change="selectionChangeHandle"
+        @page-change="applyLocalPage"
+      >
+        <template #icon="{ row }">
+          <AppIcon v-if="row.icon" :name="row.icon" />
+          <span v-else>-</span>
+        </template>
+        <template #action="{ row }">
+          <code v-if="row.action" class="perm-content__mono">{{ row.action }}</code>
+          <span v-else>-</span>
+        </template>
+        <template #buttonColor="{ row }">
+          <el-button v-if="row.buttonColor" :type="buttonTypeOf(row.buttonColor)">
+            {{ row.name || '示例' }}
+          </el-button>
+          <span v-else>-</span>
+        </template>
+        <template #code="{ row }">
+          <code class="perm-content__mono">{{ row.code }}</code>
+        </template>
+        <template #method="{ row }">
+          <el-tag :type="methodTagType(row.method)">{{ row.method || '-' }}</el-tag>
+        </template>
+        <template #path="{ row }">
+          <code class="perm-content__mono">{{ row.path }}</code>
+        </template>
+        <template #builtIn="{ row }">
+          <el-tag v-if="row.builtIn" type="warning">内置</el-tag>
+          <span v-else>-</span>
+        </template>
+        <template #actions="{ row }">
+          <xnTableActions
+            :items="tableButtonItems"
+            :row="row"
+            :disabled="tableActionDisabled"
+            @action-click="onTableAction"
+          />
+        </template>
+      </xnTable>
+    </template>
+  </PageLayout>
 
-          <div class="perm-content__tab-toolbar">
-            <el-button
-              v-permission="'permission-content:create'"
-              type="primary"
-              :icon="Plus"
-              @click="openCreate(tab.type)"
-            >
-              新增{{ tab.label }}
-            </el-button>
-          </div>
-
-          <el-table
-            :data="groups[tab.type]"
-            row-key="id"
-            border
-            stripe
-            class="perm-content__table"
-          >
-            <el-table-column prop="name" label="名称" min-width="150" />
-            <el-table-column v-if="tab.type !== 'API'" label="图标" width="70" align="center">
-              <template #default="{ row }">
-                <AppIcon v-if="row.icon" :name="row.icon" />
-                <span v-else>-</span>
-              </template>
-            </el-table-column>
-            <el-table-column v-if="tab.type !== 'API'" label="动作" min-width="110">
-              <template #default="{ row }">
-                <code v-if="row.action" class="perm-content__mono">{{ row.action }}</code>
-                <span v-else>-</span>
-              </template>
-            </el-table-column>
-            <el-table-column
-              v-if="tab.type !== 'API'"
-              label="按钮颜色"
-              min-width="100"
-              align="center"
-            >
-              <template #default="{ row }">
-                <el-button
-                  v-if="row.buttonColor"
-                  :type="buttonTypeOf(row.buttonColor)"
-                >
-                  {{ row.name || '示例' }}
-                </el-button>
-                <span v-else>-</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="code" label="权限编码" min-width="240" show-overflow-tooltip>
-              <template #default="{ row }">
-                <code class="perm-content__mono">{{ row.code }}</code>
-              </template>
-            </el-table-column>
-            <el-table-column v-if="tab.type === 'API'" label="方法" width="90" align="center">
-              <template #default="{ row }">
-                <el-tag :type="methodTagType(row.method)">{{ row.method || '-' }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column
-              v-if="tab.type === 'API'"
-              prop="path"
-              label="接口路径"
-              min-width="220"
-              show-overflow-tooltip
-            >
-              <template #default="{ row }">
-                <code class="perm-content__mono">{{ row.path }}</code>
-              </template>
-            </el-table-column>
-            <el-table-column prop="sort" label="排序" width="80" align="center" />
-            <el-table-column label="内置" width="80" align="center">
-              <template #default="{ row }">
-                <el-tag v-if="row.builtIn" type="warning">内置</el-tag>
-                <span v-else>-</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="140" align="center" fixed="right">
-              <template #default="{ row }">
-                <el-button
-                  v-permission="'permission-content:table-edit'"
-                  link
-                  type="primary"
-                  @click="openEdit(row)"
-                >
-                  编辑
-                </el-button>
-                <el-button
-                  v-permission="'permission-content:table-delete'"
-                  link
-                  type="danger"
-                  :disabled="row.builtIn"
-                  @click="handleDelete(row)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-table-column>
-            <template #empty>
-              <el-empty :description="`暂无${tab.label}，点击上方新增`" :image-size="80" />
-            </template>
-          </el-table>
-        </el-tab-pane>
-      </el-tabs>
-    </div>
-
-    <el-empty
-      v-else
-      class="perm-content__empty"
-      description="请从左侧选择一个菜单，管理其接口 / 按钮权限"
-      :image-size="120"
-    />
-
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="520px" @closed="resetForm">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
-        <el-form-item label="归属菜单">
-          <el-input :model-value="selectedRoute?.title" disabled />
-        </el-form-item>
-        <el-form-item label="权限类型">
-          <el-tag :type="typeTagType(form.type)">{{ typeLabel(form.type) }}</el-tag>
-        </el-form-item>
-        <el-form-item label="名称" prop="name">
+  <el-dialog v-model="dialogVisible" :title="dialogTitle" width="520px" @closed="resetForm">
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
+      <el-form-item label="归属菜单">
+        <el-input :model-value="selectedRoute?.title" disabled />
+      </el-form-item>
+      <el-form-item label="权限类型">
+        <el-tag :type="typeTagType(form.type)">{{ typeLabel(form.type) }}</el-tag>
+      </el-form-item>
+      <el-form-item label="名称" prop="name">
+        <el-input
+          v-model="form.name"
+          placeholder="如：新增、导出、用户列表接口"
+          @change="onNameChange"
+        />
+      </el-form-item>
+      <template v-if="isButtonType">
+        <el-form-item label="动作标识" prop="action">
           <el-input
-            v-model="form.name"
-            placeholder="如：新增、导出、用户列表接口"
-            @change="onNameChange"
+            v-model="form.action"
+            placeholder="英文，如：add / edit / view / delete / assign"
+            @input="syncCodeFromForm"
+          />
+          <div class="perm-content__form-tip">
+            用英文动作生成权限编码，并匹配前端处理函数（如 buttonClick('edit')）
+          </div>
+        </el-form-item>
+        <el-form-item label="图标">
+          <IconPicker v-model="form.icon" placeholder="选择按钮图标(可留空)" />
+        </el-form-item>
+        <el-form-item label="按钮颜色">
+          <el-select v-model="form.buttonColor" placeholder="选择颜色" style="width: 160px">
+            <template #label>
+              <el-button v-if="form.buttonColor" :type="buttonTypeOf(form.buttonColor)">
+                {{ form.name || '示例' }}
+              </el-button>
+            </template>
+            <el-option
+              v-for="c in buttonColors"
+              :key="c.value"
+              :label="c.label"
+              :value="c.value"
+            >
+              <el-button :type="buttonTypeOf(c.value)">
+                {{ form.name || '示例' }}
+              </el-button>
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </template>
+      <template v-if="form.type === 'API'">
+        <el-form-item label="请求方法" prop="method">
+          <el-select
+            v-model="form.method"
+            placeholder="选择方法"
+            :disabled="editingBuiltIn"
+            @change="syncCodeFromForm"
+          >
+            <el-option v-for="m in methods" :key="m" :label="m" :value="m" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="接口路径" prop="path">
+          <el-input
+            v-model="form.path"
+            placeholder="如：/api/users/{id}"
+            :disabled="editingBuiltIn"
+            @input="syncCodeFromForm"
           />
         </el-form-item>
-        <template v-if="isButtonType">
-          <el-form-item label="动作标识" prop="action">
-            <el-input
-              v-model="form.action"
-              placeholder="英文，如：add / edit / view / delete / assign"
-              @input="syncCodeFromForm"
-            />
-            <div class="perm-content__form-tip">
-              用英文动作生成权限编码，并匹配前端处理函数（如 buttonClick('edit')）
-            </div>
-          </el-form-item>
-          <el-form-item label="图标">
-            <IconPicker v-model="form.icon" placeholder="选择按钮图标(可留空)" />
-          </el-form-item>
-          <el-form-item label="按钮颜色">
-            <el-select v-model="form.buttonColor" placeholder="选择颜色" style="width: 160px">
-              <template #label>
-                <el-button
-                  v-if="form.buttonColor"
-                  :type="buttonTypeOf(form.buttonColor)"
-                >
-                  {{ form.name || '示例' }}
-                </el-button>
-              </template>
-              <el-option
-                v-for="c in buttonColors"
-                :key="c.value"
-                :label="c.label"
-                :value="c.value"
-              >
-                <el-button :type="buttonTypeOf(c.value)">
-                  {{ form.name || '示例' }}
-                </el-button>
-              </el-option>
-            </el-select>
-          </el-form-item>
-        </template>
-        <template v-if="form.type === 'API'">
-          <el-form-item label="请求方法" prop="method">
-            <el-select
-              v-model="form.method"
-              placeholder="选择方法"
-              :disabled="editingBuiltIn"
-              @change="syncCodeFromForm"
-            >
-              <el-option v-for="m in methods" :key="m" :label="m" :value="m" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="接口路径" prop="path">
-            <el-input
-              v-model="form.path"
-              placeholder="如：/api/users/{id}"
-              :disabled="editingBuiltIn"
-              @input="syncCodeFromForm"
-            />
-          </el-form-item>
-        </template>
-        <el-form-item label="排序" prop="sort">
-          <el-input-number v-model="form.sort" :min="0" :max="9999" />
-        </el-form-item>
-        <div
-          v-if="editingBuiltIn"
-          class="perm-content__form-tip perm-content__form-tip--warn"
-        >
-          内置权限的路径 / 方法不可修改，仅可调整名称与排序。
-        </div>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
       </template>
-    </el-dialog>
-  </PageLayout>
+      <el-form-item label="排序" prop="sort">
+        <el-input-number v-model="form.sort" :min="0" :max="9999" />
+      </el-form-item>
+      <div
+        v-if="editingBuiltIn"
+        class="perm-content__form-tip perm-content__form-tip--warn"
+      >
+        内置权限的路径 / 方法不可修改，仅可调整名称与排序。
+      </div>
+    </el-form>
+    <template #footer>
+      <el-button @click="dialogVisible = false">取消</el-button>
+      <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
 import PageLayout from '@/components/PageLayout/PageLayout.vue'
 import TreePanel from '@/components/TreePanel/TreePanel.vue'
 import AppIcon from '@/components/AppIcon/AppIcon.vue'
 import IconPicker from '@/components/IconPicker/IconPicker.vue'
+import xnSearch from '@/components/xnSearch/xnSearch.vue'
+import xnButton from '@/components/xnButton/xnButton.vue'
+import xnTableActions from '@/components/xnButton/xnTableActions.vue'
+import xnTable from '@/components/xnTable/xnTable.vue'
+import { usePageUi } from '@/composables/usePageUi'
 import { create, list as listPermissions, remove, update } from '@/api/permission'
 import { list as listRoutes } from '@/api/route'
 import type { Permission, PermissionForm, SysRoute } from '@/types'
+import type { SearchForm } from '@/types/search'
+import type { TableColumnItem } from '@/types/table'
 
 defineOptions({ name: 'PermissionContent' })
 
@@ -281,11 +246,17 @@ interface MenuNode {
   code?: string
   type: 'DIR' | 'MENU'
   permissionControl: boolean
-  /** 未开启权限控制的菜单 / 目录不可选中 */
   disabled: boolean
   childCount: number
   children: MenuNode[]
 }
+
+const { searchItems, buttonItems, tableButtonItems } = usePageUi('/system/permissions-content')
+
+/** 工具栏仅使用权限内容里的「新增」按钮：permission-content:create */
+const toolbarButtons = computed(() =>
+  buttonItems.value.filter((item) => item.action === 'add' || item.action === 'create'),
+)
 
 const tabs: { type: ContentType; label: string }[] = [
   { type: 'BUTTON', label: '按钮权限' },
@@ -316,11 +287,19 @@ const typeLabels: Record<string, string> = {
   API: '接口',
 }
 
+const loading = ref(false)
 const menuKeyword = ref('')
 const routeTree = ref<SysRoute[]>([])
 const selectedRouteId = ref<number | null>(null)
 const activeType = ref<ContentType>('BUTTON')
 const menuTreeRef = ref<InstanceType<typeof TreePanel>>()
+
+const tableData = ref<Permission[]>([])
+const total = ref(0)
+const page = ref(1)
+const size = ref(10)
+const queryForm = ref<SearchForm>({})
+const selected = ref<Permission[]>([])
 
 const dialogVisible = ref(false)
 const isEdit = ref(false)
@@ -380,13 +359,36 @@ const groups = computed<Record<ContentType, Permission[]>>(() => {
   return result
 })
 
+const columns = computed<TableColumnItem[]>(() => {
+  const cols: TableColumnItem[] = [{ prop: 'name', label: '名称', minWidth: 150 }]
+  if (activeType.value !== 'API') {
+    cols.push(
+      { type: 'slot', slot: 'icon', prop: 'icon', label: '图标', width: 70 },
+      { type: 'slot', slot: 'action', prop: 'action', label: '动作', minWidth: 110 },
+      { type: 'slot', slot: 'buttonColor', prop: 'buttonColor', label: '按钮颜色', minWidth: 100 },
+    )
+  }
+  cols.push({ type: 'slot', slot: 'code', prop: 'code', label: '权限编码', minWidth: 240 })
+  if (activeType.value === 'API') {
+    cols.push(
+      { type: 'slot', slot: 'method', prop: 'method', label: '方法', width: 90 },
+      { type: 'slot', slot: 'path', prop: 'path', label: '接口路径', minWidth: 220 },
+    )
+  }
+  cols.push(
+    { prop: 'sort', label: '排序', width: 80 },
+    { type: 'slot', slot: 'builtIn', prop: 'builtIn', label: '内置', width: 80 },
+    { type: 'slot', slot: 'actions', label: '操作', width: 140, fixed: 'right' },
+  )
+  return cols
+})
+
 const editingBuiltIn = computed(() => isEdit.value && !!editingRow.value?.builtIn)
 
 const dialogTitle = computed(
   () => `${isEdit.value ? '编辑' : '新增'}${typeLabel(form.value.type)}`,
 )
 
-/** 菜单权限码最后一段作为按钮前缀，如 menu:system:user → user */
 const menuPrefix = computed(() => {
   const code = selectedMenu.value?.code
   if (!code) return ''
@@ -394,7 +396,30 @@ const menuPrefix = computed(() => {
   return parts[parts.length - 1] || ''
 })
 
-/** 动作英文规范化：小写、空白转 -，仅保留英文数字连字符 */
+function selectionChangeHandle(rows: unknown[]) {
+  selected.value = rows as Permission[]
+}
+
+function applyLocalPage() {
+  const kw = String(queryForm.value.FuzzyWord ?? '').trim().toLowerCase()
+  let rows = groups.value[activeType.value] ?? []
+  if (kw) {
+    rows = rows.filter((r) =>
+      [r.name, r.code, r.action, r.path]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(kw)),
+    )
+  }
+  total.value = rows.length
+  const start = (page.value - 1) * size.value
+  tableData.value = rows.slice(start, start + size.value)
+}
+
+watch([activeType, selectedMenu], () => {
+  page.value = 1
+  applyLocalPage()
+})
+
 function normalizeActionEnglish(action: string) {
   return action
     .trim()
@@ -409,7 +434,6 @@ function normalizeApiPath(path: string) {
   return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
 }
 
-/** 用按钮英文动作生成编码：prefix:add / prefix:edit …；表格按钮避免与工具栏重码 */
 function buildAutoCode() {
   if (form.value.type === 'API') {
     const method = (form.value.method || 'GET').toUpperCase()
@@ -420,9 +444,9 @@ function buildAutoCode() {
   const prefix = menuPrefix.value
   let action = normalizeActionEnglish(form.value.action || '')
   if (!prefix || !action) return ''
-  // 表格按钮与工具栏可能同为 edit/delete，编码加 table- 前缀区分
   if (form.value.type === 'TABLE_BUTTON') {
     if (action === 'edit' || action === 'update') action = 'table-edit'
+    else if (action === 'view') action = 'table-view'
     else if (action === 'delete') action = 'table-delete'
     else if (action === 'add' || action === 'create') action = 'table-add'
   }
@@ -434,7 +458,6 @@ function syncCodeFromForm() {
   form.value.code = buildAutoCode()
 }
 
-/** 常用中文名 → 英文动作 */
 function onNameChange() {
   if (isEdit.value || !isButtonType.value || form.value.action) return
   const name = form.value.name.trim()
@@ -487,7 +510,6 @@ function toMenuNodes(nodes: SysRoute[]): MenuNode[] {
       const linked = code ? permissionByCode.get(code) : undefined
       const childCount = (linked?.children ?? []).filter((c) => c.type !== 'MENU').length
       const permissionControl = !!node.permissionControl
-      // 仅「开启权限控制」的菜单可点击配置
       const disabled = !(node.type === 'MENU' && permissionControl)
       return {
         id: node.id,
@@ -552,6 +574,9 @@ function methodTagType(method?: string) {
 function onMenuClick(data: Record<string, unknown>) {
   if (data.disabled) return
   selectedRouteId.value = Number(data.id)
+  page.value = 1
+  queryForm.value = {}
+  nextTick(applyLocalPage)
 }
 
 function firstSelectableRouteId(nodes: MenuNode[]): number | null {
@@ -563,26 +588,32 @@ function firstSelectableRouteId(nodes: MenuNode[]): number | null {
   return null
 }
 
-async function loadTree(preserveSelection = false) {
-  const [routeRes, permRes] = await Promise.all([listRoutes(), listPermissions()])
-  routeTree.value = routeRes.data
-  routeById.clear()
-  indexRoutes(routeRes.data)
+async function loadData(preserveSelection = false) {
+  loading.value = true
+  try {
+    const [routeRes, permRes] = await Promise.all([listRoutes(), listPermissions()])
+    routeTree.value = routeRes.data
+    routeById.clear()
+    indexRoutes(routeRes.data)
 
-  permissionById.clear()
-  permissionByCode.clear()
-  indexPermissions(permRes.data)
+    permissionById.clear()
+    permissionByCode.clear()
+    indexPermissions(permRes.data)
 
-  if (
-    !preserveSelection ||
-    selectedRouteId.value == null ||
-    !routeById.has(selectedRouteId.value) ||
-    !routeById.get(selectedRouteId.value)?.permissionControl
-  ) {
-    selectedRouteId.value = firstSelectableRouteId(menuTree.value)
+    if (
+      !preserveSelection ||
+      selectedRouteId.value == null ||
+      !routeById.has(selectedRouteId.value) ||
+      !routeById.get(selectedRouteId.value)?.permissionControl
+    ) {
+      selectedRouteId.value = firstSelectableRouteId(menuTree.value)
+    }
+    await nextTick()
+    if (selectedRouteId.value != null) menuTreeRef.value?.setCurrentKey(selectedRouteId.value)
+    applyLocalPage()
+  } finally {
+    loading.value = false
   }
-  await nextTick()
-  if (selectedRouteId.value != null) menuTreeRef.value?.setCurrentKey(selectedRouteId.value)
 }
 
 function openCreate(type: ContentType) {
@@ -617,6 +648,21 @@ function resetForm() {
   form.value = emptyForm()
   isEdit.value = false
   editingRow.value = null
+}
+
+async function buttonClick(action: string) {
+  if (action === 'add' || action === 'create') openCreate(activeType.value)
+}
+
+function onTableAction(payload: { action: string; row: Record<string, unknown> }) {
+  const row = payload.row as unknown as Permission
+  if (payload.action === 'edit' || payload.action === 'view') openEdit(row)
+  else if (payload.action === 'delete') handleDelete(row)
+}
+
+function tableActionDisabled(action: string, row: Record<string, unknown>) {
+  if (action === 'delete' && row.builtIn) return true
+  return false
 }
 
 async function handleSubmit() {
@@ -654,7 +700,7 @@ async function handleSubmit() {
       ElMessage.success('新增成功')
     }
     dialogVisible.value = false
-    await loadTree(true)
+    await loadData(true)
   } finally {
     submitting.value = false
   }
@@ -668,11 +714,23 @@ async function handleDelete(row: Permission) {
   })
   await remove(row.id)
   ElMessage.success('删除成功')
-  await loadTree(true)
+  await loadData(true)
+}
+
+function inquires(formData: SearchForm) {
+  queryForm.value = formData
+  page.value = 1
+  applyLocalPage()
+}
+
+function reset() {
+  queryForm.value = {}
+  page.value = 1
+  applyLocalPage()
 }
 
 onMounted(() => {
-  loadTree()
+  loadData()
 })
 </script>
 
@@ -696,59 +754,12 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.perm-content__title {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  font-size: var(--app-font-size-main);
-  font-weight: 600;
-  color: #303133;
-}
-
-.perm-content__code {
-  font-size: var(--app-font-size-main);
-  font-weight: 400;
-  color: #909399;
-}
-
-.perm-content__body {
-  flex: 1;
-  min-height: 0;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
 .perm-content__alert {
-  margin-bottom: 12px;
-}
-
-.perm-content__tabs {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.perm-content__tabs :deep(.el-tabs__content) {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+  margin: 16px;
 }
 
 .perm-content__tab-badge {
-  margin-left: 2px;
-}
-
-.perm-content__tab-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 12px;
-}
-
-.perm-content__table {
-  width: 100%;
+  margin-left: 4px;
 }
 
 .perm-content__mono {

@@ -15,6 +15,7 @@ export type SystemConfigPayload = {
     elementPlus: AppConfig['ui']['elementPlus']
   }
   storage: AppConfig['storage']
+  logRetention: AppConfig['logRetention']
 }
 
 /** 公开配置（登录前，无需鉴权） */

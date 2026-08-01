@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { buildQueryString, downloadWithAuth } from '@/utils/download'
 import type { ApiResponse, OperLog, PageResult } from '@/types'
 
 export type OperLogListParams = {
@@ -30,4 +31,9 @@ export function batchRemove(ids: number[]) {
 
 export function clean() {
   return request.delete<any, ApiResponse<void>>('/logs/oper/clean')
+}
+
+export function exportOperLogs(params?: Omit<OperLogListParams, 'page' | 'size'>) {
+  const qs = buildQueryString({ ...(params || {}) })
+  return downloadWithAuth(`/api/logs/oper/export${qs}`, 'oper-logs.csv')
 }

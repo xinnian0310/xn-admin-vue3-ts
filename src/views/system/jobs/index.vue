@@ -45,6 +45,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/PageLayout/PageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
@@ -53,7 +54,7 @@ import xnTableActions from '@/components/xnButton/xnTableActions.vue'
 import xnTable from '@/components/xnTable/xnTable.vue'
 import JobSave from './save.vue'
 import { usePageUi } from '@/composables/usePageUi'
-import { batchRemoveJobs, changeJobStatus, listJobs, removeJob, runJob } from '@/api/file-job'
+import { batchRemoveJobs, listJobs, removeJob, runJob } from '@/api/file-job'
 import type { Job } from '@/types'
 import type { SearchForm } from '@/types/search'
 import type { SaveMode } from '@/types/save'
@@ -61,6 +62,7 @@ import type { TableColumnItem } from '@/types/table'
 
 defineOptions({ name: 'SystemJobs' })
 
+const router = useRouter()
 const { searchItems, buttonItems, tableButtonItems } = usePageUi('/system/jobs')
 
 const saveRef = ref<InstanceType<typeof JobSave>>()
@@ -107,6 +109,9 @@ function onTableAction(payload: { action: string; row: Record<string, unknown> }
     case 'run':
       handleRun(row)
       break
+    case 'logs':
+      router.push({ path: '/system/jobs/logs', query: { jobId: String(row.id) } })
+      break
   }
 }
 
@@ -116,6 +121,11 @@ function buttonClick(action: string) {
   else if (action === 'view' && selected.value.length === 1) openSave('view', selected.value[0].id)
   else if (action === 'delete') handleBatchDelete()
   else if (action === 'run' && selected.value.length === 1) handleRun(selected.value[0])
+  else if (action === 'logs') {
+    const query =
+      selected.value.length === 1 ? { jobId: String(selected.value[0].id) } : undefined
+    router.push({ path: '/system/jobs/logs', query })
+  }
 }
 
 async function loadData() {

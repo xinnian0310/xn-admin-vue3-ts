@@ -1,18 +1,32 @@
 <template>
-  <component :is="tag" v-show="visible" class="layout-header" :class="{ 'is-embed': embed }">
+  <component
+    :is="tag"
+    v-show="visible"
+    class="layout-header"
+    :class="{ 'is-embed': embed }"
+  >
     <div class="layout-header__left">
       <slot name="left" />
     </div>
     <div class="layout-header__right">
       <slot name="right">
         <div class="layout-header__tools">
-          <el-tooltip content="消息" effect="light" placement="bottom" :show-after="200">
+          <el-tooltip
+            content="消息"
+            effect="light"
+            placement="bottom"
+            :show-after="200"
+          >
             <button
               type="button"
               class="layout-header__tool"
               @click="noticeStore.openDrawer()"
             >
-              <el-badge :value="noticeStore.unreadCount" :hidden="!noticeStore.unreadCount" :max="99">
+              <el-badge
+                :value="noticeStore.unreadCount"
+                :hidden="!noticeStore.unreadCount"
+                :max="99"
+              >
                 <el-icon :size="18"><Bell /></el-icon>
               </el-badge>
             </button>
@@ -35,7 +49,12 @@
             </button>
           </el-tooltip>
 
-          <el-tooltip content="主题设置" effect="light" placement="bottom" :show-after="200">
+          <el-tooltip
+            content="主题设置"
+            effect="light"
+            placement="bottom"
+            :show-after="200"
+          >
             <button
               type="button"
               class="layout-header__tool"
@@ -55,7 +74,9 @@
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="profile" :icon="User">个人信息</el-dropdown-item>
+                <el-dropdown-item command="profile" :icon="User"
+                  >个人信息</el-dropdown-item
+                >
                 <el-dropdown-item divided command="logout" :icon="SwitchButton">
                   退出登录
                 </el-dropdown-item>
@@ -71,8 +92,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import {
   ArrowDown,
   Bell,
@@ -81,94 +102,94 @@ import {
   FullScreen,
   SwitchButton,
   User,
-} from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import NoticeInbox from '@/components/NoticeInbox/NoticeInbox.vue'
-import { useNoticeStore } from '@/stores/notice'
-import { useThemeStore } from '@/stores/theme'
-import { useUserStore } from '@/stores/user'
+} from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import NoticeInbox from "@/components/NoticeInbox/NoticeInbox.vue";
+import { useNoticeStore } from "@/stores/notice";
+import { useThemeStore } from "@/stores/theme";
+import { useUserStore } from "@/stores/user";
 import {
   isBrowserFullscreen,
   isFullscreenEnabled,
   onBrowserFullscreenChange,
   toggleBrowserFullscreen,
-} from '@/utils/fullscreen'
+} from "@/utils/fullscreen";
 
 const props = withDefaults(
   defineProps<{
-    visible?: boolean
+    visible?: boolean;
     /** 嵌入顶栏等场景时用 div，默认 el-header */
-    embed?: boolean
+    embed?: boolean;
   }>(),
   {
     visible: true,
     embed: false,
   },
-)
+);
 
-const tag = computed(() => (props.embed ? 'div' : 'el-header'))
+const tag = computed(() => (props.embed ? "div" : "el-header"));
 
-const router = useRouter()
-const userStore = useUserStore()
-const themeStore = useThemeStore()
-const noticeStore = useNoticeStore()
+const router = useRouter();
+const userStore = useUserStore();
+const themeStore = useThemeStore();
+const noticeStore = useNoticeStore();
 
-const isFullscreen = ref(isBrowserFullscreen())
-let offFullscreen: (() => void) | undefined
+const isFullscreen = ref(isBrowserFullscreen());
+let offFullscreen: (() => void) | undefined;
 
 const avatarText = computed(() => {
-  const name = userStore.user?.nickname || userStore.user?.username || 'U'
-  return name.charAt(0).toUpperCase()
-})
+  const name = userStore.user?.nickname || userStore.user?.username || "U";
+  return name.charAt(0).toUpperCase();
+});
 
 async function handleCommand(command: string) {
-  if (command === 'logout') {
+  if (command === "logout") {
     try {
-      await ElMessageBox.confirm('确定退出登录吗？', '提示', {
-        type: 'warning',
-        confirmButtonText: '退出',
-        cancelButtonText: '取消',
-      })
+      await ElMessageBox.confirm("确定退出登录吗？", "提示", {
+        type: "warning",
+        confirmButtonText: "退出",
+        cancelButtonText: "取消",
+      });
     } catch {
-      return
+      return;
     }
-    noticeStore.stopRealtime()
-    await userStore.logout()
-    await router.push('/login')
-    return
+    noticeStore.stopRealtime();
+    await userStore.logout();
+    await router.push("/login");
+    return;
   }
-  if (command === 'profile') {
-    router.push('/profile')
+  if (command === "profile") {
+    router.push("/profile");
   }
 }
 
 /** 浏览器原生全屏（Fullscreen API，接近 F11） */
 function handleFullscreenClick() {
   if (!isFullscreenEnabled()) {
-    ElMessage.warning('当前环境不支持全屏，请直接按键盘 F11')
-    return
+    ElMessage.warning("当前环境不支持全屏，请直接按键盘 F11");
+    return;
   }
   // 在点击同步栈内发起 requestFullscreen，避免丢失 user activation
   toggleBrowserFullscreen(document.documentElement)
     .then(() => {
-      isFullscreen.value = isBrowserFullscreen()
+      isFullscreen.value = isBrowserFullscreen();
     })
     .catch((e) => {
-      console.warn('[fullscreen]', e)
-      ElMessage.warning('无法进入全屏，请按键盘 F11，或在系统浏览器中打开本站')
-    })
+      console.warn("[fullscreen]", e);
+      ElMessage.warning("无法进入全屏，请按键盘 F11，或在系统浏览器中打开本站");
+    });
 }
 
 onMounted(() => {
-  isFullscreen.value = isBrowserFullscreen()
+  isFullscreen.value = isBrowserFullscreen();
   offFullscreen = onBrowserFullscreenChange(() => {
-    isFullscreen.value = isBrowserFullscreen()
-  })
-})
+    isFullscreen.value = isBrowserFullscreen();
+  });
+});
 
 onUnmounted(() => {
-  offFullscreen?.()
-})
+  offFullscreen?.();
+});
 </script>
 
 <style scoped>

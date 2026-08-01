@@ -1,7 +1,7 @@
 <template>
   <div class="assign-panel">
     <div class="assign-panel__toolbar">
-      <el-button v-permission="'permission:create'" type="primary" @click="openForm()">
+      <el-button v-permission="'permission-content:create'" type="primary" @click="openForm()">
         新增
       </el-button>
     </div>
@@ -27,11 +27,11 @@
       </el-table-column>
       <el-table-column label="操作" width="120" align="center" fixed="right">
         <template #default="{ row }">
-          <el-button v-permission="'permission:update'" link type="primary" @click="openForm(row)">
+          <el-button v-permission="'permission-content:table-edit'" link type="primary" @click="openForm(row)">
             编辑
           </el-button>
           <el-button
-            v-permission="'permission:delete'"
+            v-permission="'permission-content:table-delete'"
             link
             type="danger"
             :disabled="row.builtIn"
@@ -120,12 +120,13 @@ const TOOLBAR_STANDARD_BUTTONS = [
   { label: '删除', action: 'delete', sort: 4 },
 ] as const
 
-// 表格操作列纯文本按钮（xnTableActions）：编辑、删除 + 扩展
+// 表格操作列纯文本按钮（xnTableActions）：查看、编辑、删除 + 扩展
 const TABLE_STANDARD_BUTTONS = [
-  { label: '编辑', action: 'table-edit', sort: 1 },
-  { label: '删除', action: 'table-delete', sort: 2 },
-  { label: '分配权限', action: 'assign', sort: 3 },
-  { label: '添加子级', action: 'add-child', sort: 4 },
+  { label: '查看', action: 'table-view', sort: 1 },
+  { label: '编辑', action: 'table-edit', sort: 2 },
+  { label: '删除', action: 'table-delete', sort: 3 },
+  { label: '分配权限', action: 'assign', sort: 4 },
+  { label: '添加子级', action: 'add-child', sort: 5 },
 ] as const
 
 const isButtonLike = computed(() => props.type === 'BUTTON' || props.type === 'TABLE_BUTTON')

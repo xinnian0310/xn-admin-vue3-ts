@@ -42,3 +42,7 @@ export function getSqlMonitor() {
 export function cleanSqlMonitor() {
   return request.delete<any, ApiResponse<void>>('/monitor/sql/clean')
 }
+
+export function removeSqlRecord(id: number) {
+  return request.delete<any, ApiResponse<void>>(`/monitor/sql/records/${id}`)
+}
