@@ -35,5 +35,5 @@ export function clean() {
 
 export function exportOperLogs(params?: Omit<OperLogListParams, 'page' | 'size'>) {
   const qs = buildQueryString({ ...(params || {}) })
-  return downloadWithAuth(`/api/logs/oper/export${qs}`, 'oper-logs.csv')
+  return downloadWithAuth(`/api/logs/oper/export${qs}`, 'oper-logs.xlsx')
 }

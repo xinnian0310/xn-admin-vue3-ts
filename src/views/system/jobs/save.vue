@@ -27,6 +27,18 @@
       </el-form-item>
       <el-form-item label="允许并发">
         <el-switch v-model="form.concurrent" />
+        <div class="form-tip">关闭后同一任务不会重叠执行（Quartz DisallowConcurrent）</div>
+      </el-form-item>
+      <el-form-item label="misfire策略" prop="misfirePolicy">
+        <el-select v-model="form.misfirePolicy" style="width: 100%">
+          <el-option
+            v-for="opt in misfireOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
+        </el-select>
+        <div class="form-tip">错过触发时间后的补偿策略（对标若依 Quartz）</div>
       </el-form-item>
       <el-form-item label="备注">
         <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
@@ -62,6 +74,13 @@ const formRef = ref<FormInstance>()
 const readonly = computed(() => mode.value === 'view')
 const dialogTitle = computed(() => saveDialogTitle(mode.value, '定时任务'))
 
+const misfireOptions = [
+  { value: '0', label: '默认（放弃本次）' },
+  { value: '1', label: '忽略 misfire（尽快补齐）' },
+  { value: '2', label: '立即补偿执行一次' },
+  { value: '3', label: '不触发立即执行' },
+]
+
 const form = reactive<JobForm>({
   name: '',
   jobKey: '',
@@ -70,6 +89,7 @@ const form = reactive<JobForm>({
   status: 0,
   remark: '',
   concurrent: false,
+  misfirePolicy: '0',
 })
 
 const rules: FormRules = {
@@ -93,6 +113,7 @@ async function open(nextMode: SaveMode, id?: number) {
       status: res.data.status,
       remark: res.data.remark || '',
       concurrent: res.data.concurrent ?? false,
+      misfirePolicy: res.data.misfirePolicy || '0',
     })
   } else {
     Object.assign(form, {
@@ -103,6 +124,7 @@ async function open(nextMode: SaveMode, id?: number) {
       status: 0,
       remark: '',
       concurrent: false,
+      misfirePolicy: '0',
     })
   }
 }
@@ -131,3 +153,12 @@ function handleClosed() {
 
 defineExpose({ open })
 </script>
+
+<style scoped>
+.form-tip {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  line-height: 1.4;
+}
+</style>

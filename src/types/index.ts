@@ -337,6 +337,8 @@ export interface Job {
   status: number
   remark?: string
   concurrent?: boolean
+  /** 0默认 1忽略misfire 2补偿执行 3不触发 */
+  misfirePolicy?: string
   lastRunAt?: string
   lastStatus?: string
   lastMessage?: string
@@ -352,6 +354,7 @@ export interface JobForm {
   status?: number
   remark?: string
   concurrent?: boolean
+  misfirePolicy?: string
 }
 
 export interface RedisMonitor {

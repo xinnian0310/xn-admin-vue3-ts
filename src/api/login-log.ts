@@ -30,5 +30,5 @@ export function clean() {
 
 export function exportLoginLogs(params?: Omit<LoginLogListParams, 'page' | 'size'>) {
   const qs = buildQueryString({ ...(params || {}) })
-  return downloadWithAuth(`/api/logs/login/export${qs}`, 'login-logs.csv')
+  return downloadWithAuth(`/api/logs/login/export${qs}`, 'login-logs.xlsx')
 }

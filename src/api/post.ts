@@ -57,5 +57,5 @@ export function importPosts(rows: PostImportRow[]) {
 
 export function exportPosts(params?: { keyword?: string; status?: number | string }) {
   const qs = buildQueryString({ ...(params || {}) })
-  return downloadWithAuth(`/api/posts/export${qs}`, 'posts.csv')
+  return downloadWithAuth(`/api/posts/export${qs}`, 'posts.xlsx')
 }

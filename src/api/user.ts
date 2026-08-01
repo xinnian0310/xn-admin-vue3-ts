@@ -66,5 +66,5 @@ export function importUsers(rows: UserImportRow[]) {
 /** 导出用户 CSV */
 export function exportUsers(params?: Omit<UserListParams, 'page' | 'size'>) {
   const qs = buildQueryString({ ...(params || {}) })
-  return downloadWithAuth(`/api/users/export${qs}`, 'users.csv')
+  return downloadWithAuth(`/api/users/export${qs}`, 'users.xlsx')
 }

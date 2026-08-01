@@ -28,6 +28,9 @@
         @selection-change="selectionChangeHandle"
         @page-change="loadData"
       >
+        <template #misfirePolicy="{ row }">
+          {{ misfireLabel(row.misfirePolicy) }}
+        </template>
         <template #status="{ row }">
           <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
             {{ row.status === 1 ? '启用' : '停用' }}
@@ -74,12 +77,26 @@ const size = ref(10)
 const queryForm = ref<SearchForm>({})
 const selected = ref<Job[]>([])
 
+function misfireLabel(policy?: string) {
+  switch (policy) {
+    case '1':
+      return '忽略补齐'
+    case '2':
+      return '补偿一次'
+    case '3':
+      return '不触发'
+    default:
+      return '默认'
+  }
+}
+
 const columns: TableColumnItem[] = [
   { type: 'selection', width: 50, fixed: true },
   { prop: 'name', label: '任务名称', minWidth: 140 },
   { prop: 'jobKey', label: '任务标识', minWidth: 140 },
   { prop: 'cron', label: 'Cron', minWidth: 140 },
   { prop: 'invokeTarget', label: '调用目标', minWidth: 180, showOverflowTooltip: true },
+  { type: 'slot', slot: 'misfirePolicy', prop: 'misfirePolicy', label: 'misfire', width: 120 },
   { type: 'slot', slot: 'status', prop: 'status', label: '状态', width: 90 },
   { prop: 'lastRunAt', label: '上次执行', minWidth: 170, type: 'datetime' },
   { prop: 'lastStatus', label: '执行结果', width: 100 },

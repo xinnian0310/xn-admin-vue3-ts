@@ -32,5 +32,5 @@ export function clean() {
 
 export function exportExceptionLogs(params?: Omit<ExceptionLogListParams, 'page' | 'size'>) {
   const qs = buildQueryString({ ...(params || {}) })
-  return downloadWithAuth(`/api/logs/exception/export${qs}`, 'exception-logs.csv')
+  return downloadWithAuth(`/api/logs/exception/export${qs}`, 'exception-logs.xlsx')
 }

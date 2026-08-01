@@ -35,5 +35,5 @@ export function cleanJobLogs() {
 
 export function exportJobLogs(params?: Omit<JobLogListParams, 'page' | 'size'>) {
   const qs = buildQueryString({ ...(params || {}) })
-  return downloadWithAuth(`/api/logs/job/export${qs}`, 'job-logs.csv')
+  return downloadWithAuth(`/api/logs/job/export${qs}`, 'job-logs.xlsx')
 }
