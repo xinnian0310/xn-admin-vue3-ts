@@ -14,27 +14,29 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 8848,
+    // 与本机 Nacos 默认 8848 错开；API 走下方代理
+    port: 5173,
     open: true,
     proxy: {
+      // 微服务网关（xn-admin-cloud）
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8088',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8088',
         changeOrigin: true,
       },
       '/swagger-ui': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8088',
         changeOrigin: true,
       },
       '/v3/api-docs': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8088',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8088',
         ws: true,
         changeOrigin: true,
       },

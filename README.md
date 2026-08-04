@@ -2,7 +2,7 @@
 
 心念后台管理系统前端：Vue 3 + TypeScript + Vite + Element Plus。
 
-对接后端 [`xn-admin-server`](../xn-admin-server/)，提供 JWT 登录、RBAC、动态路由/菜单、page-ui 驱动 CRUD、主题、通知与系统监控等能力。
+对接微服务后端 [`xn-admin-cloud`](../xn-admin-cloud/)（经网关 `8088`），提供 JWT 登录、RBAC、动态路由/菜单、page-ui 驱动 CRUD、主题、通知与系统监控等能力。
 
 ## 技术栈
 
@@ -24,15 +24,15 @@ npm install
 npm run dev
 ```
 
-开发地址：http://localhost:8848
+开发地址：http://localhost:5173
 
-Vite 已代理：
+Vite 已代理到网关：
 
 | 前缀 | 目标 |
 |------|------|
-| `/api` | `http://localhost:8080` |
-| `/uploads` | `http://localhost:8080` |
-| `/ws` | `http://localhost:8080`（WebSocket） |
+| `/api` | `http://localhost:8088` |
+| `/uploads` | `http://localhost:8088` |
+| `/ws` | `http://localhost:8088`（WebSocket） |
 
 ```bash
 npm run build    # vue-tsc + vite build
