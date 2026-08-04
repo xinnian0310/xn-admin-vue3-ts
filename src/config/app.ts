@@ -2,8 +2,8 @@
  * 应用全局配置
  *
  * - 本地默认值在此定义；后端「系统配置」启动时 merge 覆盖
- * - 项目名称 / 副标题 / 页脚：改 app.name、app.subtitle、app.footer
- * - favicon / 侧栏 Logo：改 app.favicon、app.logo、app.logoWidth / logoHeight
+ * - 项目名称 / 应用介绍 / 页脚：改 app.name、app.intro、app.footer
+ * - favicon / 侧栏 Logo：共用 app.logo（保存时同步写入 app.favicon）
  * - UI 行为、Element Plus 尺寸、布局字号集中管理
  * - 主题色由 theme store 管理，不在此覆盖
  */
@@ -35,8 +35,9 @@ const elementPlusLocales: Record<ElementPlusLocale, Language> = {
 export const defaultAppConfig = {
   app: {
     name: '心念后台管理系统',
-    company: '心念科技',
-    subtitle: '心念科技',
+    /** 管理端首页 / 官网开源项目介绍 */
+    intro:
+      '面向中后台的 Vue3 + 微服务管理脚手架：JWT 登录、RBAC 动态路由、page-ui 驱动 CRUD、多布局与主题、通知推送与系统监控一站集成，对接 xn-admin-cloud 网关即可开箱使用。',
     favicon: '/xinnian-tech-logo.png',
     logo: '/xinnian-tech-logo.png',
     logoWidth: 28 as number | null,
@@ -127,8 +128,7 @@ export const defaultAppConfig = {
 export type AppConfig = {
   app: {
     name: string
-    company: string
-    subtitle: string
+    intro: string
     favicon: string
     logo: string
     logoWidth: number | null

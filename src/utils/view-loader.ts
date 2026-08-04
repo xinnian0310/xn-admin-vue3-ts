@@ -9,7 +9,7 @@ export function loadIndexView(routePath: string) {
   const loader = viewModules[key]
   if (!loader) {
     console.warn(`[view-loader] 未找到页面: views/${viewDir}/index.vue`)
-    return () => import('@/views/error/ForbiddenView.vue')
+    return () => import('@/views/error/NotFoundView.vue')
   }
   return loader
 }
@@ -21,7 +21,7 @@ export function loadSaveView(routePath: string) {
   const loader = viewModules[key]
   if (!loader) {
     console.warn(`[view-loader] 未找到页面: views/${basePath}/save.vue`)
-    return () => import('@/views/error/ForbiddenView.vue')
+    return () => import('@/views/error/NotFoundView.vue')
   }
   return loader
 }

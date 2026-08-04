@@ -6,6 +6,8 @@ import { useMenuStore } from '@/stores/menu'
 import { useTagsViewStore } from '@/stores/tagsView'
 import { registerDynamicRoutes } from '@/utils/route-register'
 
+const ERROR_PATHS = new Set(['/403', '/404', '/503'])
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -40,6 +42,18 @@ const router = createRouter({
           meta: { title: '无权限', hidden: true },
         },
         {
+          path: '404',
+          name: 'NotFoundPage',
+          component: () => import('@/views/error/NotFoundView.vue'),
+          meta: { title: '页面不存在', hidden: true },
+        },
+        {
+          path: '503',
+          name: 'ServiceUnavailable',
+          component: () => import('@/views/error/ServiceUnavailableView.vue'),
+          meta: { title: '服务不可用', hidden: true },
+        },
+        {
           path: 'redirect/:path(.*)',
           name: 'Redirect',
           component: () => import('@/views/redirect/index.vue'),
@@ -48,10 +62,14 @@ const router = createRouter({
       ],
     },
     // 注意：通配 404 不在此静态声明。
-    // 若在动态路由注册前就 redirect 到 /403，硬刷新深层页面会丢失原始路径。
+    // 若在动态路由注册前就 redirect，硬刷新深层页面会丢失原始路径。
     // 通配路由在 registerDynamicRoutes 完成后再挂载。
   ],
 })
+
+function unmatchedFallback(menuStore: ReturnType<typeof useMenuStore>) {
+  return menuStore.menuLoadFailed ? '/503' : '/404'
+}
 
 router.beforeEach(async (to) => {
   const userStore = useUserStore()
@@ -68,18 +86,18 @@ router.beforeEach(async (to) => {
     return '/dashboard'
   }
 
-  // 强制改密：仅允许个人中心与退出相关公共页
+  // 强制改密：仅允许个人中心与退出相关公共页、错误页
   if (
     userStore.token &&
     userStore.user?.mustChangePassword &&
     to.path !== '/profile' &&
     to.path !== '/login' &&
-    to.path !== '/403'
+    !ERROR_PATHS.has(to.path)
   ) {
     return { path: '/profile', query: { forcePwd: '1' } }
   }
 
-  // 先注册动态路由，再决定是否无权限（避免硬刷时被通配路由抢先打到 403）
+  // 先注册动态路由，再决定是否无权限（避免硬刷时被通配路由抢先打到错误页）
   if (!to.meta.public && userStore.token && !menuStore.routesRegistered) {
     await registerDynamicRoutes(router)
     return {
@@ -90,13 +108,13 @@ router.beforeEach(async (to) => {
     }
   }
 
-  if (to.path === '/403') {
+  if (ERROR_PATHS.has(to.path)) {
     return true
   }
 
   // 动态路由注册后仍未匹配到任何页面
-  if (to.name === 'NotFound' || to.matched.length === 0) {
-    return '/403'
+  if (to.name === 'CatchAll' || to.matched.length === 0) {
+    return unmatchedFallback(menuStore)
   }
 
   if (to.meta.public || !to.meta.permission) {

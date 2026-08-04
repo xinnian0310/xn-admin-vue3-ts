@@ -13,8 +13,9 @@
       label-width="88px"
       :disabled="mode === 'view'"
     >
-      <el-form-item label="名称" prop="label">
-        <el-input v-model="form.label" maxlength="30" placeholder="如：微信支付 / 支付宝" />
+      <el-form-item label="名称">
+        <el-input :model-value="form.label" disabled />
+        <div class="form-tip">名称固定，仅可更换二维码图片</div>
       </el-form-item>
       <el-form-item label="二维码" prop="src">
         <el-upload
@@ -83,7 +84,6 @@ const form = reactive<SiteDonationQrcode>({
 })
 
 const rules: FormRules = {
-  label: [{ required: true, message: '请输入名称', trigger: 'blur' }],
   src: [{ required: true, message: '请上传二维码图片', trigger: 'change' }],
 }
 

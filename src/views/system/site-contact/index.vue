@@ -4,7 +4,8 @@
       <div class="site-contact-page__heading">
         <h2 class="page-title">联系与捐赠</h2>
         <p class="site-contact-page__hint">
-          统一维护管理端首页与官网的「联系我们」及捐赠二维码。公开接口无需登录即可读取，增删改后立即同步。
+          图标与标签固定；每项可选择分类（文本 / 链接 / 邮箱 /
+          QQ群），内容表单随分类变化。QQ群支持多群号与已满状态。修改后立即同步。
         </p>
       </div>
     </div>
@@ -39,9 +40,30 @@
                   <span>{{ row.icon || '—' }}</span>
                 </span>
               </template>
+              <template #type="{ row }">
+                {{ contactTypeLabel(resolveContactType(row)) }}
+              </template>
+              <template #value="{ row }">
+                <template v-if="isQqContact(row) && row.groups?.length">
+                  <span
+                    v-for="(g, gi) in row.groups"
+                    :key="gi"
+                    class="qq-chip"
+                    :class="{ 'is-full': g.full }"
+                  >
+                    <xnAppIcon name="ri:qq-fill" :size="14" class="qq-chip__icon" />
+                    <span class="qq-chip__num">{{ g.value }}</span>
+                    <em v-if="g.full">已满</em>
+                  </span>
+                </template>
+                <span v-else>{{ row.value || '—' }}</span>
+              </template>
               <template #link="{ row }">
+                <template v-if="resolveContactType(row) === 'qq'">
+                  <span class="muted">—</span>
+                </template>
                 <a
-                  v-if="row.link"
+                  v-else-if="row.link"
                   :href="row.link"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -131,17 +153,18 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import { Edit, View } from '@element-plus/icons-vue'
 import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
 import xnTable from '@/components/xnTable/xnTable.vue'
 import xnAppIcon from '@/components/xnAppIcon/xnAppIcon.vue'
-import { createDefaultButtonList } from '@/components/xnButton/defaultButtons'
 import ContactSave from './contact-save.vue'
 import QrcodeSave from './qrcode-save.vue'
 import { getSiteContact, updateSiteContact } from '@/api/site-contact'
 import type { SiteContactConfig, SiteContactItem, SiteDonationQrcode } from '@/types/site-contact'
+import { contactTypeLabel, isQqContact, resolveContactType } from '@/types/site-contact'
 import type { ButtonListItem } from '@/types/button'
 import type { TableColumnItem } from '@/types/table'
 import type { SaveMode } from '@/types/save'
@@ -151,12 +174,28 @@ defineOptions({ name: 'SystemSiteContact' })
 type ContactRow = SiteContactItem & { __index?: number }
 type QrRow = SiteDonationQrcode & { __index?: number }
 
-/** 与默认列表页一致的增删改查，本页不配置按钮权限 */
-const crudButtons = createDefaultButtonList()
+/** 联系/捐赠项数量固定，仅支持编辑与查看 */
+const crudButtons: ButtonListItem[] = [
+  {
+    name: '编辑',
+    action: 'edit',
+    type: 'button',
+    icon: Edit,
+    typeColor: 'primary',
+    index: 0,
+  },
+  {
+    name: '查看',
+    action: 'view',
+    type: 'button',
+    icon: View,
+    typeColor: 'primary',
+    index: 0,
+  },
+]
 const tableActions: ButtonListItem[] = [
   { name: '编辑', type: 'button', action: 'edit' },
   { name: '查看', type: 'button', action: 'view' },
-  { name: '删除', type: 'button', action: 'delete', typeColor: 'danger' },
 ]
 
 const loading = ref(false)
@@ -175,10 +214,11 @@ const contactColumns: TableColumnItem[] = [
   { type: 'selection', width: 50, fixed: true },
   { type: 'index', label: '序号', width: 60 },
   { type: 'slot', slot: 'icon', prop: 'icon', label: '图标', width: 140 },
-  { prop: 'label', label: '标签', minWidth: 120 },
-  { prop: 'value', label: '内容', minWidth: 180, showOverflowTooltip: true },
-  { type: 'slot', slot: 'link', prop: 'link', label: '链接', minWidth: 200 },
-  { type: 'slot', slot: 'actions', label: '操作', width: 180, fixed: 'right' },
+  { prop: 'label', label: '标签', minWidth: 100 },
+  { type: 'slot', slot: 'type', prop: 'type', label: '分类', width: 90 },
+  { type: 'slot', slot: 'value', prop: 'value', label: '内容', minWidth: 220 },
+  { type: 'slot', slot: 'link', prop: 'link', label: '链接', minWidth: 180 },
+  { type: 'slot', slot: 'actions', label: '操作', width: 140, fixed: 'right' },
 ]
 
 const qrColumns: TableColumnItem[] = [
@@ -186,16 +226,28 @@ const qrColumns: TableColumnItem[] = [
   { type: 'index', label: '序号', width: 60 },
   { prop: 'label', label: '名称', minWidth: 160 },
   { type: 'slot', slot: 'src', prop: 'src', label: '二维码', width: 120, align: 'center' },
-  { type: 'slot', slot: 'actions', label: '操作', width: 180, fixed: 'right' },
+  { type: 'slot', slot: 'actions', label: '操作', width: 140, fixed: 'right' },
 ]
 
 function applyConfig(data: SiteContactConfig) {
-  contacts.value = (data.contacts ?? []).map((c) => ({
-    icon: c.icon || 'Link',
-    label: c.label || '',
-    value: c.value || '',
-    link: c.link || '',
-  }))
+  contacts.value = (data.contacts ?? []).map((c) => {
+    const item: SiteContactItem = {
+      icon: c.icon || 'Link',
+      label: c.label || '',
+      type: resolveContactType(c),
+      value: c.value || '',
+      link: c.link || '',
+    }
+    if (item.type === 'qq') {
+      const groups = (c.groups ?? [])
+        .filter((g) => g.value?.trim())
+        .map((g) => ({ value: g.value.trim(), full: Boolean(g.full) }))
+      item.groups = groups.length ? groups : item.value ? [{ value: item.value, full: false }] : []
+      if (item.groups.length) item.value = item.groups[0].value
+      item.link = ''
+    }
+    return item
+  })
   donationTip.value = data.donation?.tip || ''
   tipSnapshot.value = donationTip.value
   qrcodes.value = (data.donation?.qrcodes ?? []).map((q) => ({
@@ -210,12 +262,48 @@ function buildPayload(
   nextQrs = qrcodes.value,
 ): SiteContactConfig {
   return {
-    contacts: nextContacts.map((c) => ({
-      icon: c.icon || 'Link',
-      label: c.label.trim(),
-      value: c.value.trim(),
-      link: c.link?.trim() || null,
-    })),
+    contacts: nextContacts.map((c) => {
+      const type = resolveContactType(c)
+      if (type === 'qq') {
+        const groups = (c.groups ?? [])
+          .map((g) => ({ value: String(g.value || '').trim(), full: Boolean(g.full) }))
+          .filter((g) => g.value)
+        return {
+          icon: c.icon || 'ChatDotRound',
+          label: c.label.trim(),
+          type,
+          value: groups[0]?.value || '',
+          link: null,
+          groups,
+        }
+      }
+      if (type === 'email') {
+        const email = c.value.trim()
+        return {
+          icon: c.icon || 'Message',
+          label: c.label.trim(),
+          type,
+          value: email,
+          link: email ? `mailto:${email}` : null,
+        }
+      }
+      if (type === 'link') {
+        return {
+          icon: c.icon || 'Link',
+          label: c.label.trim(),
+          type,
+          value: c.value.trim(),
+          link: c.link?.trim() || null,
+        }
+      }
+      return {
+        icon: c.icon || 'Link',
+        label: c.label.trim(),
+        type: 'text',
+        value: c.value.trim(),
+        link: null,
+      }
+    }),
     donation: {
       tip: nextTip.trim(),
       qrcodes: nextQrs.map((q) => ({
@@ -264,10 +352,6 @@ function resolveRowIndex(row: Record<string, unknown>, listLen: number) {
 }
 
 function onContactToolbar(action: string) {
-  if (action === 'add') {
-    contactSaveRef.value?.open('add')
-    return
-  }
   if (contactSelected.value.length !== 1) {
     ElMessage.warning('请选择一项操作')
     return
@@ -284,14 +368,9 @@ function onContactToolbar(action: string) {
   }
   if (action === 'edit') contactSaveRef.value?.open('edit', contacts.value[resolved], resolved)
   if (action === 'view') contactSaveRef.value?.open('view', contacts.value[resolved], resolved)
-  if (action === 'delete') removeContact(resolved)
 }
 
 function onQrToolbar(action: string) {
-  if (action === 'add') {
-    qrSaveRef.value?.open('add')
-    return
-  }
   if (qrSelected.value.length !== 1) {
     ElMessage.warning('请选择一项操作')
     return
@@ -306,7 +385,6 @@ function onQrToolbar(action: string) {
   }
   if (action === 'edit') qrSaveRef.value?.open('edit', qrcodes.value[resolved], resolved)
   if (action === 'view') qrSaveRef.value?.open('view', qrcodes.value[resolved], resolved)
-  if (action === 'delete') removeQr(resolved)
 }
 
 function onContactTableAction(payload: { action: string; row: Record<string, unknown> }) {
@@ -315,7 +393,6 @@ function onContactTableAction(payload: { action: string; row: Record<string, unk
   const row = contacts.value[index]
   if (payload.action === 'edit') contactSaveRef.value?.open('edit', row, index)
   if (payload.action === 'view') contactSaveRef.value?.open('view', row, index)
-  if (payload.action === 'delete') removeContact(index)
 }
 
 function onQrTableAction(payload: { action: string; row: Record<string, unknown> }) {
@@ -324,27 +401,6 @@ function onQrTableAction(payload: { action: string; row: Record<string, unknown>
   const row = qrcodes.value[index]
   if (payload.action === 'edit') qrSaveRef.value?.open('edit', row, index)
   if (payload.action === 'view') qrSaveRef.value?.open('view', row, index)
-  if (payload.action === 'delete') removeQr(index)
-}
-
-function removeContact(index: number) {
-  const row = contacts.value[index]
-  ElMessageBox.confirm(`确认删除联系项「${row.label}」？`, '提示', { type: 'warning' })
-    .then(async () => {
-      const next = contacts.value.filter((_, i) => i !== index)
-      await persist(buildPayload(next, donationTip.value, qrcodes.value), '删除成功')
-    })
-    .catch(() => undefined)
-}
-
-function removeQr(index: number) {
-  const row = qrcodes.value[index]
-  ElMessageBox.confirm(`确认删除二维码「${row.label}」？`, '提示', { type: 'warning' })
-    .then(async () => {
-      const next = qrcodes.value.filter((_, i) => i !== index)
-      await persist(buildPayload(contacts.value, donationTip.value, next), '删除成功')
-    })
-    .catch(() => undefined)
 }
 
 async function onContactSaved(payload: {
@@ -352,15 +408,10 @@ async function onContactSaved(payload: {
   index: number | null
   data: SiteContactItem
 }) {
-  if (payload.mode === 'view') return
+  if (payload.mode !== 'edit' || payload.index == null) return
   const next = [...contacts.value]
-  if (payload.mode === 'edit' && payload.index != null) {
-    next[payload.index] = payload.data
-    await persist(buildPayload(next), '更新成功')
-  } else {
-    next.push(payload.data)
-    await persist(buildPayload(next), '新增成功')
-  }
+  next[payload.index] = payload.data
+  await persist(buildPayload(next), '更新成功')
 }
 
 async function onQrSaved(payload: {
@@ -368,15 +419,10 @@ async function onQrSaved(payload: {
   index: number | null
   data: SiteDonationQrcode
 }) {
-  if (payload.mode === 'view') return
+  if (payload.mode !== 'edit' || payload.index == null) return
   const next = [...qrcodes.value]
-  if (payload.mode === 'edit' && payload.index != null) {
-    next[payload.index] = payload.data
-    await persist(buildPayload(contacts.value, donationTip.value, next), '更新成功')
-  } else {
-    next.push(payload.data)
-    await persist(buildPayload(contacts.value, donationTip.value, next), '新增成功')
-  }
+  next[payload.index] = payload.data
+  await persist(buildPayload(contacts.value, donationTip.value, next), '更新成功')
 }
 
 loadConfig()
@@ -417,6 +463,37 @@ loadConfig()
 
 .muted {
   color: var(--el-text-color-placeholder);
+}
+
+.qq-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.qq-chip__icon {
+  color: #12b7f5;
+  flex-shrink: 0;
+}
+
+.qq-chip.is-full {
+  color: var(--el-text-color-placeholder);
+}
+
+.qq-chip.is-full .qq-chip__num {
+  text-decoration: line-through;
+}
+
+.qq-chip.is-full .qq-chip__icon {
+  opacity: 0.55;
+}
+
+.qq-chip em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--el-color-danger);
 }
 
 .donation-tip-panel {

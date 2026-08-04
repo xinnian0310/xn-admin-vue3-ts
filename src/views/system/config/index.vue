@@ -30,70 +30,62 @@
             <el-input
               v-model="form.app.name"
               maxlength="50"
-              placeholder="侧栏 / 登录页 / 浏览器标题"
+              placeholder="侧栏 / 登录页 / 管理端首页标题 / 官网项目副标题"
             />
           </el-form-item>
-          <el-form-item label="公司名称">
-            <el-input v-model="form.app.company" maxlength="50" />
-          </el-form-item>
-          <el-form-item label="副标题">
-            <el-input v-model="form.app.subtitle" maxlength="100" placeholder="登录页说明文案" />
+          <el-form-item label="应用介绍">
+            <el-input
+              v-model="form.app.intro"
+              type="textarea"
+              :rows="4"
+              maxlength="500"
+              show-word-limit
+              placeholder="管理端首页与官网开源项目介绍文案"
+            />
           </el-form-item>
           <el-form-item label="页脚">
             <el-input v-model="form.app.footer" maxlength="200" placeholder="留空则不显示页脚" />
           </el-form-item>
-          <el-form-item label="Favicon">
-            <div class="asset-row">
-              <el-input v-model="form.app.favicon" placeholder="/xinnian-tech-logo.png 或上传" />
+          <el-form-item label="品牌图标">
+            <div>
               <el-upload
                 v-permission="'system-config:update'"
-                :show-file-list="false"
+                :file-list="brandIconList"
+                class="brand-uploader"
+                :class="{ 'is-full': brandIconList.length >= 1 }"
+                list-type="picture-card"
                 accept="image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon"
-                :http-request="uploadFavicon"
+                :limit="1"
+                :http-request="uploadBrandIcon"
+                :on-exceed="onBrandIconExceed"
+                :on-remove="onBrandIconRemove"
+                :on-preview="onBrandIconPreview"
+                @update:file-list="(files) => (brandIconList = files)"
               >
-                <el-button>上传</el-button>
+                <el-icon><Plus /></el-icon>
               </el-upload>
-              <img
-                v-if="form.app.favicon"
-                :src="form.app.favicon"
-                class="asset-preview asset-preview--icon"
-                alt="favicon"
-              />
+              <div class="form-tip">一张图同时用于浏览器标签图标与侧栏 / 登录页 Logo</div>
             </div>
           </el-form-item>
-          <el-form-item label="Logo">
-            <div class="asset-row">
-              <el-input v-model="form.app.logo" placeholder="/xinnian-tech-logo.png 或上传" />
-              <el-upload
-                v-permission="'system-config:update'"
-                :show-file-list="false"
-                accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                :http-request="uploadLogo"
-              >
-                <el-button>上传</el-button>
-              </el-upload>
-              <img v-if="form.app.logo" :src="form.app.logo" class="asset-preview" alt="logo" />
-            </div>
-          </el-form-item>
-          <el-form-item label="Logo 宽度">
+          <el-form-item label="图标宽度">
             <el-input-number
               v-model="form.app.logoWidth"
               :min="1"
               :max="200"
               controls-position="right"
+              clearable
             />
             <span class="hint">px；清空表示按比例自适应</span>
-            <el-button link type="primary" @click="form.app.logoWidth = null">清空</el-button>
           </el-form-item>
-          <el-form-item label="Logo 高度">
+          <el-form-item label="图标高度">
             <el-input-number
               v-model="form.app.logoHeight"
               :min="1"
               :max="200"
               controls-position="right"
+              clearable
             />
             <span class="hint">px；清空表示按比例自适应</span>
-            <el-button link type="primary" @click="form.app.logoHeight = null">清空</el-button>
           </el-form-item>
         </el-form>
       </el-tab-pane>
@@ -379,13 +371,20 @@
         </el-form>
       </el-tab-pane>
     </el-tabs>
+
+    <el-image-viewer
+      v-if="brandIconPreviewVisible"
+      :url-list="brandIconPreviewUrl ? [brandIconPreviewUrl] : []"
+      teleported
+      @close="brandIconPreviewVisible = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { Refresh } from '@element-plus/icons-vue'
-import { ElMessage, type UploadRequestOptions } from 'element-plus'
+import { Plus, Refresh } from '@element-plus/icons-vue'
+import { ElMessage, type UploadRequestOptions, type UploadUserFile } from 'element-plus'
 import {
   appConfig,
   applyRemoteAppConfig,
@@ -409,6 +408,49 @@ defineOptions({ name: 'SystemConfig' })
 const loading = ref(false)
 const saving = ref(false)
 const activeTab = ref('app')
+const brandIconList = ref<UploadUserFile[]>([])
+const brandIconPreviewVisible = ref(false)
+const brandIconPreviewUrl = ref('')
+
+function brandIconUrl() {
+  return (form.app.logo || form.app.favicon || '').trim()
+}
+
+function syncBrandIconList(url = brandIconUrl()) {
+  if (!url) {
+    brandIconList.value = []
+    return
+  }
+  brandIconList.value = [
+    {
+      name: 'brand-icon',
+      url,
+      status: 'success',
+      uid: Date.now(),
+    },
+  ]
+}
+
+function applyBrandIcon(url: string) {
+  form.app.logo = url
+  form.app.favicon = url
+  syncBrandIconList(url)
+}
+
+function onBrandIconExceed() {
+  ElMessage.warning('仅允许上传一张品牌图标')
+}
+
+function onBrandIconRemove() {
+  applyBrandIcon('')
+}
+
+function onBrandIconPreview(file: UploadUserFile) {
+  const url = file.url || brandIconUrl()
+  if (!url) return
+  brandIconPreviewUrl.value = url
+  brandIconPreviewVisible.value = true
+}
 
 function createForm(): SystemConfigPayload {
   const d = JSON.parse(JSON.stringify(defaultAppConfig)) as AppConfig
@@ -506,6 +548,11 @@ const fontMainPx = pxField(
 
 function assignForm(data: SystemConfigPayload) {
   Object.assign(form.app, data.app)
+  // 品牌图标：favicon / logo 共用同一张图
+  const icon = (form.app.logo || form.app.favicon || '').trim()
+  form.app.logo = icon
+  form.app.favicon = icon
+  syncBrandIconList(icon)
   Object.assign(form.session, data.session)
   Object.assign(form.ui.dialog, data.ui.dialog)
   form.ui.layout.mode = (data.ui.layout?.mode || 'side') as LayoutMode
@@ -546,6 +593,9 @@ async function handleSave() {
   }
   saving.value = true
   try {
+    const icon = brandIconUrl()
+    form.app.logo = icon
+    form.app.favicon = icon
     const payload: SystemConfigPayload = JSON.parse(JSON.stringify(form))
     const res = await updateSystemConfig(payload)
     if (res.data) {
@@ -565,27 +615,19 @@ async function handleSave() {
   }
 }
 
-async function onUpload(opt: UploadRequestOptions, field: 'logo' | 'favicon') {
+async function uploadBrandIcon(opt: UploadRequestOptions) {
   try {
     const file = opt.file as File
     const res = await uploadBrandAsset(file)
     const url = res.data?.url
     if (!url) throw new Error('上传失败')
-    form.app[field] = url
+    applyBrandIcon(url)
     ElMessage.success('上传成功')
     opt.onSuccess?.(res as any)
   } catch (e: any) {
     ElMessage.error(e?.message || '上传失败')
     opt.onError?.(e)
   }
-}
-
-function uploadFavicon(opt: UploadRequestOptions) {
-  return onUpload(opt, 'favicon')
-}
-
-function uploadLogo(opt: UploadRequestOptions) {
-  return onUpload(opt, 'logo')
 }
 
 onMounted(() => {
@@ -743,6 +785,23 @@ onMounted(() => {
   font-size: 12px;
 }
 
+.form-tip {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--app-text-muted, #909399);
+}
+
+.brand-uploader :deep(.el-upload--picture-card),
+.brand-uploader :deep(.el-upload-list__item) {
+  width: 96px;
+  height: 96px;
+}
+
+.brand-uploader.is-full :deep(.el-upload--picture-card) {
+  display: none;
+}
+
 .px-field {
   display: inline-flex;
   align-items: center;
@@ -756,30 +815,5 @@ onMounted(() => {
 .px-field__unit {
   color: var(--app-text-muted, #909399);
   font-size: 13px;
-}
-
-.asset-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.asset-row .el-input {
-  flex: 1;
-}
-
-.asset-preview {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  border: 1px solid var(--app-border-color, #ebeef5);
-  border-radius: 4px;
-  background: var(--app-fill-color, #fafbfc);
-}
-
-.asset-preview--icon {
-  width: 24px;
-  height: 24px;
 }
 </style>

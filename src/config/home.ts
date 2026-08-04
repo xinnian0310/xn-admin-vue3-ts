@@ -1,8 +1,9 @@
 /**
  * 首页展示配置
  *
- * 首页为纯静态介绍页，内容集中在此维护：
- * - 框架简介 / 技术选型 / 联系信息 / 捐赠情况
+ * - 标题 / 简介：由「系统配置」app.name、app.intro 下发，此处 intro 仅作本地兜底
+ * - 技术选型 / 特性卡片仍在此维护
+ * - 联系 / 捐赠优先走 GET /api/site-contact/public
  * - intro.version 取自 package.json（构建时由 Vite 注入）
  * - 更新日志由 virtual:git-changelog 在构建时从 git log 同步（feat/fix/refactor）
  */
@@ -26,8 +27,11 @@ export interface ContactItem {
   icon: string
   label: string
   value: string
+  type?: 'text' | 'link' | 'email' | 'qq'
   /** 可点击链接（邮箱用 mailto:，网址用 https://） */
   link?: string
+  /** 交流群多个 QQ 号；full 时前台删除线 */
+  groups?: { value: string; full?: boolean }[]
 }
 
 export type ChangelogType = 'feature' | 'fix' | 'refactor'
@@ -48,7 +52,7 @@ export const changelogTypeMeta: Record<
 
 export const homeConfig = {
   intro: {
-    title: '心念后台',
+    title: '心念后台管理系统',
     version: `v${__APP_VERSION__}`,
     description:
       '面向中后台的 Vue3 + 微服务管理脚手架：JWT 登录、RBAC 动态路由、page-ui 驱动 CRUD、多布局与主题、通知推送与系统监控一站集成，对接 xn-admin-cloud 网关即可开箱使用。',
@@ -125,20 +129,28 @@ export const homeConfig = {
   ] as TechItem[],
 
   contacts: [
-    { icon: 'User', label: '公司', value: '心念科技' },
+    { icon: 'User', label: '公司', type: 'text', value: '心念科技' },
     {
       icon: 'Message',
       label: '邮箱',
+      type: 'email',
       value: 'support@xinnian.com',
       link: 'mailto:support@xinnian.com',
     },
     {
       icon: 'Link',
       label: '官网',
+      type: 'link',
       value: 'https://xinnian.example.com',
       link: 'https://xinnian.example.com',
     },
-    { icon: 'ChatDotRound', label: '交流群', value: '123456789' },
+    {
+      icon: 'ChatDotRound',
+      label: '交流群',
+      type: 'qq',
+      value: '123456789',
+      groups: [{ value: '123456789', full: false }],
+    },
   ] as ContactItem[],
 
   /** 本地兜底；线上优先走 GET /api/site-contact/public */

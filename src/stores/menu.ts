@@ -34,6 +34,7 @@ export const useMenuStore = defineStore('menu', () => {
   const menus = ref<MenuItem[]>([])
   const sysRoutes = ref<SysRoute[]>([])
   const routesRegistered = ref(false)
+  const menuLoadFailed = ref(false)
   let fetchPromise: Promise<void> | null = null
 
   async function fetchMenus() {
@@ -44,16 +45,22 @@ export const useMenuStore = defineStore('menu', () => {
       const res = await getAuthMenus()
       sysRoutes.value = res.data
       menus.value = res.data.map(routeToMenu)
+      menuLoadFailed.value = false
     })().finally(() => {
       fetchPromise = null
     })
     return fetchPromise
   }
 
+  function markMenuLoadFailed() {
+    menuLoadFailed.value = true
+  }
+
   function reset() {
     menus.value = []
     sysRoutes.value = []
     routesRegistered.value = false
+    menuLoadFailed.value = false
     fetchPromise = null
   }
 
@@ -65,7 +72,9 @@ export const useMenuStore = defineStore('menu', () => {
     menus,
     sysRoutes,
     routesRegistered,
+    menuLoadFailed,
     fetchMenus,
+    markMenuLoadFailed,
     reset,
     markRoutesRegistered,
   }

@@ -45,13 +45,17 @@ export async function registerDynamicRoutes(router: Router) {
       addDynamicRoutes(router)
     } catch (error) {
       console.error('[route-register] 菜单加载失败，将仅使用静态路由', error)
+      menuStore.markMenuLoadFailed()
     } finally {
-      // 通配路由必须在动态业务路由之后挂载，否则硬刷深层页面会先被 redirect 到 /403
-      if (!router.hasRoute('NotFound')) {
+      // 通配路由必须在动态业务路由之后挂载，否则硬刷深层页面会先被 redirect
+      if (!router.hasRoute('CatchAll')) {
         router.addRoute({
           path: '/:pathMatch(.*)*',
-          name: 'NotFound',
-          redirect: '/403',
+          name: 'CatchAll',
+          redirect: () => {
+            const store = useMenuStore()
+            return store.menuLoadFailed ? '/503' : '/404'
+          },
         })
       }
       // 无论成功失败都标记完成，避免守卫反复请求 /api/auth/menus

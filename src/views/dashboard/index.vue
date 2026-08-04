@@ -6,12 +6,12 @@
         <div class="home-intro">
           <div class="home-intro__head">
             <div class="home-intro__title">
-              {{ home.intro.title }}
+              {{ introTitle }}
               <el-tag type="primary" effect="plain" round size="small">{{
                 home.intro.version
               }}</el-tag>
             </div>
-            <p class="home-intro__desc">{{ home.intro.description }}</p>
+            <p class="home-intro__desc">{{ introDescription }}</p>
           </div>
           <div class="home-intro__features">
             <div v-for="f in home.intro.features" :key="f.title" class="feature-chip">
@@ -121,11 +121,30 @@
             </div>
           </template>
           <div class="contact-list">
-            <div v-for="c in siteContact.contacts" :key="c.label" class="contact-item">
+            <div v-for="(c, ci) in siteContact.contacts" :key="ci" class="contact-item">
               <xnAppIcon v-if="c.icon" :name="c.icon" class="contact-item__icon" />
               <span class="contact-item__label">{{ c.label }}</span>
+              <div
+                v-if="resolveContactType(c) === 'qq' && c.groups?.length"
+                class="contact-item__groups"
+              >
+                <button
+                  v-for="(g, gi) in c.groups"
+                  :key="gi"
+                  type="button"
+                  class="contact-item__qq"
+                  :class="{ 'is-full': g.full }"
+                  :title="g.full ? '群已满' : '点击复制群号'"
+                  :disabled="!!g.full"
+                  @click="copyQq(g.value, g.full)"
+                >
+                  <xnAppIcon name="ri:qq-fill" :size="14" class="contact-item__qq-icon" />
+                  <span class="contact-item__qq-num">{{ g.value }}</span>
+                  <span v-if="g.full" class="contact-item__qq-badge">已满</span>
+                </button>
+              </div>
               <a
-                v-if="c.link"
+                v-else-if="c.link"
                 :href="c.link"
                 target="_blank"
                 class="contact-item__value contact-item__value--link"
@@ -166,7 +185,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive } from 'vue'
+import { ElMessage } from 'element-plus'
 import {
   Lock,
   Guide,
@@ -186,15 +206,30 @@ import {
   Connection,
 } from '@element-plus/icons-vue'
 import type { Component } from 'vue'
+import { appConfig } from '@/config/app'
 import { homeConfig, changelogTypeMeta } from '@/config/home'
 import { getPublicSiteContact } from '@/api/site-contact'
 import type { SiteContactConfig } from '@/types/site-contact'
+import { resolveContactType } from '@/types/site-contact'
 import xnAppIcon from '@/components/xnAppIcon/xnAppIcon.vue'
 import { gitChangelog } from 'virtual:git-changelog'
 
 defineOptions({ name: 'Dashboard' })
 
 const home = homeConfig
+
+async function copyQq(value: string, full?: boolean) {
+  if (full || !value) return
+  try {
+    await navigator.clipboard.writeText(value)
+    ElMessage.success(`已复制群号 ${value}`)
+  } catch {
+    ElMessage.error('复制失败，请手动选择')
+  }
+}
+
+const introTitle = computed(() => appConfig.app.name?.trim() || homeConfig.intro.title)
+const introDescription = computed(() => appConfig.app.intro?.trim() || homeConfig.intro.description)
 
 const siteContact = reactive<SiteContactConfig>({
   contacts: [...homeConfig.contacts],
@@ -564,7 +599,7 @@ onMounted(async () => {
 
 .contact-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 10px 4px;
   border-bottom: 1px dashed var(--app-border-color);
@@ -575,21 +610,100 @@ onMounted(async () => {
 }
 
 .contact-item__icon {
+  margin-top: 2px;
   color: var(--app-color-primary);
 }
 
 .contact-item__label {
   width: 56px;
+  flex-shrink: 0;
+  margin-top: 2px;
   color: var(--app-text-muted);
   font-size: 13px;
+  line-height: 1.6;
 }
 
 .contact-item__value {
   color: var(--app-text-primary);
+  line-height: 1.6;
 }
 
 .contact-item__value--link {
   color: var(--app-color-primary);
+}
+
+.contact-item__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.contact-item__qq {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 2px 10px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 999px;
+  background: var(--el-fill-color-light);
+  color: var(--app-text-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.contact-item__qq:hover:not(:disabled) {
+  border-color: var(--el-color-primary-light-5);
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+.contact-item__qq:disabled {
+  cursor: default;
+}
+
+.contact-item__qq-icon {
+  color: #12b7f5;
+  flex-shrink: 0;
+}
+
+.contact-item__qq-num {
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.02em;
+}
+
+.contact-item__qq.is-full {
+  color: var(--app-text-muted);
+  background: transparent;
+  border-color: var(--el-border-color-extra-light);
+}
+
+.contact-item__qq.is-full .contact-item__qq-num {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.contact-item__qq.is-full .contact-item__qq-icon {
+  opacity: 0.5;
+}
+
+.contact-item__qq-badge {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--el-color-danger-light-9);
+  color: var(--el-color-danger);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: nowrap;
 }
 
 /* 捐赠 */
