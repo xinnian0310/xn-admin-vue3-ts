@@ -60,11 +60,3 @@ export function batchRemove(ids: number[]) {
     ids,
   })
 }
-
-export function uploadBackground(file: File) {
-  const form = new FormData()
-  form.append('file', file)
-  return request.post<any, ApiResponse<{ url: string }>>('/login-page-configs/upload', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
-}

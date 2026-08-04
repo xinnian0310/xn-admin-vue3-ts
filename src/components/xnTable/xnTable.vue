@@ -1,6 +1,6 @@
 <template>
   <div class="xn-table">
-    <div class="xn-table__body">
+    <div ref="bodyRef" class="xn-table__body">
       <el-table
         v-loading="displayLoading"
         v-bind="$attrs"
@@ -63,6 +63,27 @@
                 <xnAppIcon v-if="resolveIconName(row, col)" :name="resolveIconName(row, col)" />
                 <span>{{ formatText(row, col) }}</span>
               </span>
+            </template>
+          </el-table-column>
+
+          <el-table-column
+            v-else-if="col.type === 'longText'"
+            :prop="col.prop"
+            :label="col.label"
+            :width="col.width"
+            :min-width="col.minWidth"
+            :fixed="col.fixed"
+            :align="col.align"
+            :sortable="col.sortable"
+            :class-name="col.className"
+          >
+            <template #default="{ row }">
+              <xnLongText
+                :text="formatLongTextRaw(row, col)"
+                :title="col.label || '详细内容'"
+                :empty-text="emptyOf(col)"
+                :max-length="col.longTextMaxLength ?? 48"
+              />
             </template>
           </el-table-column>
 
@@ -135,7 +156,7 @@
             v-model:current-page="currentPage"
             v-model:page-size="currentPageSize"
             :total="displayTotal"
-            :page-sizes="pageSizes"
+            :page-sizes="resolvedPageSizes"
             layout="total, sizes, prev, pager, next, jumper"
             background
             @size-change="handlePageChange"
@@ -172,10 +193,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, ref, shallowRef, watch, type Component } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
+  shallowRef,
+  watch,
+  type Component,
+} from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh, Setting } from '@element-plus/icons-vue'
 import xnAppIcon from '@/components/xnAppIcon/xnAppIcon.vue'
+import xnLongText from '@/components/xnLongText/xnLongText.vue'
 import xnColumnSettingDialog from '@/components/xnTable/xnColumnSettingDialog.vue'
 import { getTableColumns, saveTableColumns, type TableColumnSetting } from '@/api/table-column'
 import { CRUD_API_KEY } from '@/composables/useCrudApi'
@@ -238,6 +270,15 @@ const props = withDefaults(
      * 用于按全部按钮单行排布估算列宽，避免换行。
      */
     actionItems?: ButtonListItem[]
+    /**
+     * 按表格可视高度自动计算每页条数并写入 pageSize，减少底部留白。
+     * 窗口/容器尺寸变化时会重新计算。
+     */
+    autoPageSize?: boolean
+    /** 自动计算时的最小条数 */
+    autoPageSizeMin?: number
+    /** 自动计算时的最大条数 */
+    autoPageSizeMax?: number
   }>(),
   {
     columns: () => [],
@@ -254,6 +295,9 @@ const props = withDefaults(
     idField: 'id',
     immediate: true,
     actionItems: () => [],
+    autoPageSize: true,
+    autoPageSizeMin: 5,
+    autoPageSizeMax: 200,
   },
 )
 
@@ -387,6 +431,83 @@ const currentPageSize = computed({
   get: () => props.pageSize,
   set: (val: number) => emit('update:pageSize', val),
 })
+
+const bodyRef = ref<HTMLElement | null>(null)
+const fittedPageSize = ref(0)
+/** 首次自动算高完成前不因尺寸变更触发翻页重载，避免与父级 onMounted 重复请求 */
+let autoPageSizeReady = false
+let resizeObserver: ResizeObserver | null = null
+let resizeTimer: ReturnType<typeof setTimeout> | undefined
+
+const DEFAULT_HEADER_HEIGHT = 40
+const DEFAULT_ROW_HEIGHT = 48
+
+const resolvedPageSizes = computed(() => {
+  const set = new Set(props.pageSizes)
+  if (props.autoPageSize && fittedPageSize.value > 0) {
+    set.add(fittedPageSize.value)
+  }
+  return [...set].sort((a, b) => a - b)
+})
+
+function measureRowMetrics(bodyEl: HTMLElement) {
+  const header = bodyEl.querySelector('.el-table__header-wrapper') as HTMLElement | null
+  const row = bodyEl.querySelector('.el-table__body tr.el-table__row') as HTMLElement | null
+  return {
+    headerH: header?.offsetHeight || DEFAULT_HEADER_HEIGHT,
+    rowH: row?.offsetHeight || DEFAULT_ROW_HEIGHT,
+  }
+}
+
+function calcFittedPageSize(bodyEl: HTMLElement) {
+  const bodyH = bodyEl.clientHeight
+  if (bodyH <= 0) return props.autoPageSizeMin
+  const { headerH, rowH } = measureRowMetrics(bodyEl)
+  const usable = bodyH - headerH
+  if (usable <= 0 || rowH <= 0) return props.autoPageSizeMin
+  const raw = Math.floor(usable / rowH)
+  return Math.min(props.autoPageSizeMax, Math.max(props.autoPageSizeMin, raw))
+}
+
+function applyFittedPageSize(next: number, opts?: { emitReload?: boolean }) {
+  fittedPageSize.value = next
+  const sizeChanged = next !== props.pageSize
+  if (sizeChanged) {
+    emit('update:pageSize', next)
+  }
+  if (sizeChanged && props.page !== 1) {
+    emit('update:page', 1)
+  }
+  if (opts?.emitReload && sizeChanged) {
+    nextTick(() => {
+      emit('page-change')
+      if (isApiMode.value && serverPaging.value) {
+        loadData()
+      }
+    })
+  }
+}
+
+function updateAutoPageSize(opts?: { emitReload?: boolean }) {
+  if (!props.autoPageSize) return
+  const el = bodyRef.value
+  if (!el) return
+  const next = calcFittedPageSize(el)
+  applyFittedPageSize(next, opts)
+}
+
+function setupAutoPageSizeObserver() {
+  const el = bodyRef.value
+  if (!el || typeof ResizeObserver === 'undefined') return
+  resizeObserver?.disconnect()
+  resizeObserver = new ResizeObserver(() => {
+    if (resizeTimer) clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(() => {
+      updateAutoPageSize({ emitReload: autoPageSizeReady })
+    }, 80)
+  })
+  resizeObserver.observe(el)
+}
 
 const filteredAllData = computed(() => {
   const rows = innerAllData.value
@@ -605,13 +726,38 @@ watch(
   { deep: true },
 )
 
+/** 有真实数据行后仅用实测行高校正一次，避免滚动条显隐导致条数震荡 */
+let didRefineByRealRow = false
+
+watch(
+  () => displayData.value.length,
+  async (len) => {
+    if (!props.autoPageSize || !autoPageSizeReady || didRefineByRealRow || len <= 0) return
+    didRefineByRealRow = true
+    await nextTick()
+    updateAutoPageSize({ emitReload: true })
+  },
+)
+
 onMounted(async () => {
   if (props.tableKey) {
     await loadColumnSettings()
   }
+  // 先按高度写入 pageSize，再拉数，避免首屏用 10 条造成留白
+  await nextTick()
+  updateAutoPageSize({ emitReload: false })
+  await nextTick()
+  setupAutoPageSizeObserver()
+  autoPageSizeReady = true
   if (isApiMode.value && props.immediate) {
     loadData()
   }
+})
+
+onBeforeUnmount(() => {
+  if (resizeTimer) clearTimeout(resizeTimer)
+  resizeObserver?.disconnect()
+  resizeObserver = null
 })
 
 async function loadColumnSettings() {
@@ -750,6 +896,13 @@ function formatText(row: unknown, col: TableColumnItem): string {
     return `${col.prefix ?? ''}${formatDateTime(raw as string)}${col.suffix ?? ''}`
   }
   return `${col.prefix ?? ''}${String(raw)}${col.suffix ?? ''}`
+}
+
+/** longText 列传给弹窗组件的原始字符串（空则交给 emptyText） */
+function formatLongTextRaw(row: unknown, col: TableColumnItem): string {
+  const raw = getCellValue(row, col.prop)
+  if (raw === null || raw === undefined || raw === '') return ''
+  return String(raw)
 }
 
 function isSwitchDisabled(row: unknown, col: TableColumnItem) {

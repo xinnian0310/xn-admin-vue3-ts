@@ -1,6 +1,6 @@
 /** 列渲染类型 */
 export type TableColumnType =
-  'selection' | 'index' | 'text' | 'datetime' | 'tag' | 'switch' | 'iconText' | 'slot'
+  'selection' | 'index' | 'text' | 'datetime' | 'tag' | 'switch' | 'iconText' | 'longText' | 'slot'
 
 export type TableColumnAlign = 'left' | 'center' | 'right'
 export type TableColumnFixed = boolean | 'left' | 'right'
@@ -35,8 +35,10 @@ export interface TableColumnItem {
   type?: TableColumnType
   /** 固定列 */
   fixed?: TableColumnFixed
-  /** 过长省略并 tooltip */
+  /** 过长省略并 tooltip（longText 列请用点击弹窗，勿再开此项） */
   showOverflowTooltip?: boolean
+  /** type=longText 时触发区最大字符数，默认 48 */
+  longTextMaxLength?: number
   /** 空值占位，默认 — */
   emptyText?: string
   /** 文本前缀，如 views/ */

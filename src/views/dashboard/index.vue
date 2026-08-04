@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <!-- 上区：介绍 / 前端 / 后端 各 1/3 -->
+    <!-- 上区：介绍 / 前端 / 后端 -->
     <el-row :gutter="16" class="home-top">
       <el-col :xs="24" :md="12" :lg="8">
         <div class="home-intro">
@@ -16,7 +16,7 @@
           <div class="home-intro__features">
             <div v-for="f in home.intro.features" :key="f.title" class="feature-chip">
               <div class="feature-chip__icon">
-                <el-icon :size="18"><component :is="iconOf(f.icon)" /></el-icon>
+                <el-icon :size="16"><component :is="iconOf(f.icon)" /></el-icon>
               </div>
               <div class="feature-chip__body">
                 <div class="feature-chip__title">{{ f.title }}</div>
@@ -31,18 +31,23 @@
         <el-card shadow="never" class="home-card home-tech">
           <template #header>
             <div class="home-card__header">
-              <el-icon><Monitor /></el-icon><span>前端技术选型</span>
+              <el-icon><Monitor /></el-icon>
+              <span>前端技术选型</span>
+              <span class="home-card__count">{{ home.frontendTech.length }}</span>
             </div>
           </template>
-          <div class="tech-list">
-            <div v-for="t in home.frontendTech" :key="t.name" class="tech-row">
-              <div class="tech-row__main">
-                <span class="tech-row__name">{{ t.name }}</span>
-                <span class="tech-row__desc">{{ t.desc }}</span>
+          <el-scrollbar class="tech-scroll" max-height="420px">
+            <div class="tech-list">
+              <div v-for="t in home.frontendTech" :key="t.name" class="tech-row">
+                <div class="tech-row__main">
+                  <span class="tech-row__name">{{ t.name }}</span>
+                  <span class="tech-row__sep">·</span>
+                  <span class="tech-row__desc">{{ t.desc }}</span>
+                </div>
+                <el-tag size="small" type="primary" effect="plain">{{ t.version }}</el-tag>
               </div>
-              <el-tag size="small" type="primary" effect="plain">{{ t.version }}</el-tag>
             </div>
-          </div>
+          </el-scrollbar>
         </el-card>
       </el-col>
 
@@ -50,53 +55,66 @@
         <el-card shadow="never" class="home-card home-tech">
           <template #header>
             <div class="home-card__header">
-              <el-icon><Coin /></el-icon><span>后端技术选型</span>
+              <el-icon><Coin /></el-icon>
+              <span>后端技术选型</span>
+              <span class="home-card__count">{{ home.backendTech.length }}</span>
             </div>
           </template>
-          <div class="tech-list">
-            <div v-for="t in home.backendTech" :key="t.name" class="tech-row">
-              <div class="tech-row__main">
-                <span class="tech-row__name">{{ t.name }}</span>
-                <span class="tech-row__desc">{{ t.desc }}</span>
+          <el-scrollbar class="tech-scroll" max-height="420px">
+            <div class="tech-list">
+              <div v-for="t in home.backendTech" :key="t.name" class="tech-row">
+                <div class="tech-row__main">
+                  <span class="tech-row__name">{{ t.name }}</span>
+                  <span class="tech-row__sep">·</span>
+                  <span class="tech-row__desc">{{ t.desc }}</span>
+                </div>
+                <el-tag size="small" type="success" effect="plain">{{ t.version }}</el-tag>
               </div>
-              <el-tag size="small" type="success" effect="plain">{{ t.version }}</el-tag>
             </div>
-          </div>
+          </el-scrollbar>
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- 更新日志 + 联系 / 捐赠 -->
-    <el-row :gutter="16">
-      <el-col :xs="24" :lg="14">
-        <el-card shadow="never" class="home-card">
+    <!-- 更新日志 + 联系 / 捐赠：右侧定高，左侧等齐后滚动 -->
+    <div class="home-bottom">
+      <div class="home-bottom__log">
+        <el-card shadow="never" class="home-card home-card--fill">
           <template #header>
             <div class="home-card__header">
-              <el-icon><Clock /></el-icon><span>更新日志</span>
+              <el-icon><Clock /></el-icon>
+              <span>更新日志</span>
+              <span class="log-version-badge">{{ home.intro.version }}</span>
+              <el-tag size="small" type="primary" effect="light" round>当前</el-tag>
+              <span class="log-source">同步自 Git</span>
             </div>
           </template>
-          <el-timeline class="home-timeline">
-            <el-timeline-item
-              v-for="log in home.changelog"
-              :key="log.version"
-              :timestamp="`${log.version}  ·  ${log.date}`"
-              placement="top"
-              type="primary"
-              hollow
-            >
-              <div v-for="(item, idx) in log.items" :key="idx" class="log-line">
-                <el-tag size="small" :type="changelogTypeMeta[item.type].tag" effect="light">
-                  {{ changelogTypeMeta[item.type].label }}
-                </el-tag>
-                <span class="log-line__text">{{ item.text }}</span>
-              </div>
-            </el-timeline-item>
-          </el-timeline>
+          <el-scrollbar class="log-scroll">
+            <el-timeline v-if="gitChangelog.length" class="home-timeline">
+              <el-timeline-item
+                v-for="(item, idx) in gitChangelog"
+                :key="item.hash"
+                :timestamp="item.date"
+                placement="top"
+                :type="idx === 0 ? 'primary' : 'info'"
+                :hollow="idx !== 0"
+              >
+                <div class="log-line">
+                  <el-tag size="small" :type="changelogTypeMeta[item.type].tag" effect="light">
+                    {{ changelogTypeMeta[item.type].label }}
+                  </el-tag>
+                  <span class="log-line__text">{{ item.text }}</span>
+                  <span class="log-line__hash">{{ item.hash }}</span>
+                </div>
+              </el-timeline-item>
+            </el-timeline>
+            <el-empty v-else description="暂无可用的 Git 提交记录" :image-size="64" />
+          </el-scrollbar>
         </el-card>
-      </el-col>
+      </div>
 
-      <el-col :xs="24" :lg="10">
-        <el-card shadow="never" class="home-card home-card--mb">
+      <div class="home-bottom__aside">
+        <el-card shadow="never" class="home-card">
           <template #header>
             <div class="home-card__header">
               <el-icon><Phone /></el-icon><span>联系信息</span>
@@ -123,44 +141,29 @@
           <template #header>
             <div class="home-card__header">
               <el-icon><Coffee /></el-icon><span>捐赠情况</span>
-              <span class="donation-total">累计 ¥{{ donationTotal }}</span>
             </div>
           </template>
           <p class="donation-tip">{{ home.donation.tip }}</p>
           <div class="donation-body">
-            <div class="donation-qr">
-              <el-image
-                v-if="home.donation.qrcode"
-                :src="home.donation.qrcode"
-                fit="contain"
-                class="donation-qr__img"
-              />
-              <div v-else class="donation-qr__placeholder">
-                <el-icon :size="28"><Money /></el-icon>
-                <span>收款码占位</span>
-              </div>
-            </div>
-            <div class="donation-donors">
-              <div v-for="(d, idx) in home.donation.donors" :key="idx" class="donor-item">
-                <span class="donor-item__name">{{ d.name }}</span>
-                <span class="donor-item__amount">¥{{ d.amount }}</span>
-                <span class="donor-item__msg">{{ d.message || d.date }}</span>
-              </div>
+            <div v-for="(qr, idx) in home.donation.qrcodes" :key="idx" class="donation-qr">
+              <el-image :src="qr.src" fit="contain" class="donation-qr__img" />
+              <span class="donation-qr__label">{{ qr.label }}</span>
             </div>
           </div>
         </el-card>
-      </el-col>
-    </el-row>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import {
   Lock,
   Guide,
   Monitor,
   Bell,
+  Brush,
+  Grid,
   User,
   Message,
   Link,
@@ -169,10 +172,10 @@ import {
   Clock,
   Phone,
   Coffee,
-  Money,
 } from '@element-plus/icons-vue'
 import type { Component } from 'vue'
 import { homeConfig, changelogTypeMeta } from '@/config/home'
+import { gitChangelog } from 'virtual:git-changelog'
 
 defineOptions({ name: 'Dashboard' })
 
@@ -183,6 +186,8 @@ const iconMap: Record<string, Component> = {
   Guide,
   Monitor,
   Bell,
+  Brush,
+  Grid,
   User,
   Message,
   Link,
@@ -191,19 +196,11 @@ const iconMap: Record<string, Component> = {
   Clock,
   Phone,
   Coffee,
-  Money,
 }
 
 function iconOf(name: string): Component {
   return iconMap[name] ?? Monitor
 }
-
-const donationTotal = computed(() =>
-  home.donation.donors
-    .reduce((sum, d) => sum + d.amount, 0)
-    .toFixed(2)
-    .replace(/\.00$/, ''),
-)
 </script>
 
 <style scoped>
@@ -224,13 +221,59 @@ const donationTotal = computed(() =>
   min-width: 0;
 }
 
-/* 介绍区：跟随主题卡片底色 */
+/* 下区：右侧两个盒子决定高度，左侧绝对铺满后内部滚动 */
+.home-bottom {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.home-bottom__log {
+  position: relative;
+  flex: 14 1 0;
+  min-width: 0;
+  /* 无文档流高度，高度完全由右侧 stretch 决定 */
+}
+
+.home-bottom__log > .home-card--fill {
+  position: absolute;
+  inset: 0;
+  width: auto;
+}
+
+.home-bottom__aside {
+  flex: 10 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-card--fill {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.home-card--fill :deep(.el-card__body) {
+  flex: 1;
+  min-height: 0;
+  height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: 10px;
+  padding-bottom: 12px;
+}
+
+/* 介绍区 */
 .home-intro {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 22px 24px;
+  gap: 16px;
+  padding: 20px 22px;
   border-radius: 10px;
   background: var(--app-card-bg, #fff);
   border: 1px solid var(--app-border-color);
@@ -256,15 +299,15 @@ const donationTotal = computed(() =>
 
 .home-intro__features {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .feature-chip {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  padding: 10px 12px;
   border-radius: 8px;
   background: var(--app-surface-soft);
   border: 1px solid var(--app-surface-soft-border);
@@ -272,9 +315,9 @@ const donationTotal = computed(() =>
 
 .feature-chip__icon {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -285,14 +328,15 @@ const donationTotal = computed(() =>
 
 .feature-chip__title {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--app-text-primary);
+  line-height: 1.3;
 }
 
 .feature-chip__desc {
-  margin-top: 4px;
-  font-size: 12px;
-  line-height: 1.5;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.45;
   color: var(--app-text-muted);
 }
 
@@ -302,38 +346,110 @@ const donationTotal = computed(() =>
   width: 100%;
 }
 
-.home-card--mb {
-  margin-bottom: 16px;
-}
-
 .home-card__header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   font-weight: 600;
 }
 
-/* 右侧技术选型 */
+.home-card__count {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  background: var(--app-surface-soft);
+  border: 1px solid var(--app-surface-soft-border);
+}
+
+.log-version-badge {
+  margin-left: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--app-color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-source {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--app-text-muted);
+}
+
+/* 技术选型 */
 .home-tech {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .home-tech :deep(.el-card__body) {
-  padding-top: 12px;
+  flex: 1;
+  padding-top: 10px;
+  padding-bottom: 12px;
+  min-height: 0;
+}
+
+.tech-scroll :deep(.el-scrollbar__bar),
+.log-scroll :deep(.el-scrollbar__bar) {
+  z-index: 2;
+}
+
+.tech-scroll :deep(.el-scrollbar__bar.is-vertical),
+.log-scroll :deep(.el-scrollbar__bar.is-vertical) {
+  width: 4px;
+  right: 2px;
+}
+
+.tech-scroll :deep(.el-scrollbar__bar.is-horizontal),
+.log-scroll :deep(.el-scrollbar__bar.is-horizontal) {
+  display: none;
+}
+
+.tech-scroll :deep(.el-scrollbar__thumb),
+.log-scroll :deep(.el-scrollbar__thumb) {
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--app-text-muted) 45%, transparent);
+  opacity: 1;
+}
+
+.tech-scroll :deep(.el-scrollbar__thumb:hover),
+.log-scroll :deep(.el-scrollbar__thumb:hover) {
+  background: color-mix(in srgb, var(--app-text-muted) 70%, transparent);
+}
+
+.log-scroll {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.log-scroll :deep(.el-scrollbar__wrap) {
+  max-height: 100%;
 }
 
 .tech-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  padding-right: 6px;
 }
 
 .tech-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 7px 10px;
   border-radius: 6px;
   background: var(--app-fill-color, #fafbfc);
   border: 1px solid var(--app-border-color);
@@ -343,17 +459,25 @@ const donationTotal = computed(() =>
   min-width: 0;
   flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .tech-row__name {
+  flex-shrink: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--app-text-primary);
 }
 
+.tech-row__sep {
+  flex-shrink: 0;
+  color: var(--app-border-color);
+  font-size: 12px;
+}
+
 .tech-row__desc {
+  min-width: 0;
   font-size: 12px;
   color: var(--app-text-muted);
   line-height: 1.4;
@@ -364,18 +488,27 @@ const donationTotal = computed(() =>
 
 /* 更新日志 */
 .home-timeline {
-  padding: 4px 4px 0;
+  padding: 4px 8px 0 4px;
 }
 
 .log-line {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin-bottom: 6px;
 }
 
 .log-line__text {
+  flex: 1;
+  min-width: 0;
   color: var(--app-text-primary);
+  line-height: 1.6;
+}
+
+.log-line__hash {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--app-text-muted);
   line-height: 1.6;
 }
 
@@ -417,13 +550,6 @@ const donationTotal = computed(() =>
 }
 
 /* 捐赠 */
-.donation-total {
-  margin-left: auto;
-  font-size: 13px;
-  color: #f56c6c;
-  font-weight: 600;
-}
-
 .donation-tip {
   margin: 0 0 12px;
   color: var(--app-text-muted);
@@ -432,70 +558,63 @@ const donationTotal = computed(() =>
 
 .donation-body {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
 }
 
 .donation-qr {
-  flex-shrink: 0;
-}
-
-.donation-qr__img,
-.donation-qr__placeholder {
-  width: 108px;
-  height: 108px;
-  border-radius: 10px;
-}
-
-.donation-qr__placeholder {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: 1px dashed var(--app-surface-soft-border);
-  background: var(--app-surface-soft);
-  color: var(--app-text-muted);
-  font-size: 12px;
-}
-
-.donation-donors {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.donor-item {
-  display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.donation-qr__img {
+  width: 160px;
+  height: 220px;
+  border-radius: 10px;
+  border: 1px solid var(--app-border-color);
+}
+
+.donation-qr__label {
   font-size: 13px;
-}
-
-.donor-item__name {
-  width: 52px;
   color: var(--app-text-primary);
-}
-
-.donor-item__amount {
-  color: #f56c6c;
-  font-weight: 600;
-  width: 60px;
-}
-
-.donor-item__msg {
-  flex: 1;
-  min-width: 0;
-  color: var(--app-text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @media (max-width: 992px) {
   .home-intro__features {
     grid-template-columns: 1fr;
+  }
+
+  .home-bottom {
+    flex-direction: column;
+  }
+
+  .home-bottom__log {
+    position: static;
+    flex: none;
+  }
+
+  .home-bottom__log > .home-card--fill {
+    position: static;
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tech-row__main {
+    flex-wrap: wrap;
+    gap: 2px 6px;
+  }
+
+  .tech-row__desc {
+    white-space: normal;
+  }
+
+  .log-source {
+    margin-left: 0;
+    width: 100%;
   }
 }
 </style>

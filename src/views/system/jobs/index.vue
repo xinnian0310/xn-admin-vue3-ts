@@ -95,7 +95,7 @@ const columns: TableColumnItem[] = [
   { prop: 'name', label: '任务名称', minWidth: 140 },
   { prop: 'jobKey', label: '任务标识', minWidth: 140 },
   { prop: 'cron', label: 'Cron', minWidth: 140 },
-  { prop: 'invokeTarget', label: '调用目标', minWidth: 180, showOverflowTooltip: true },
+  { type: 'longText', prop: 'invokeTarget', label: '调用目标', minWidth: 180 },
   { type: 'slot', slot: 'misfirePolicy', prop: 'misfirePolicy', label: 'misfire', width: 120 },
   { type: 'slot', slot: 'status', prop: 'status', label: '状态', width: 90 },
   { prop: 'lastRunAt', label: '上次执行', minWidth: 170, type: 'datetime' },

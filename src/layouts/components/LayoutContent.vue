@@ -64,6 +64,7 @@ const footerText = computed(() => appConfig.app.footer?.trim() || '')
   width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .layout-content__footer {

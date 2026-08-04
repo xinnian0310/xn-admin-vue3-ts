@@ -2,6 +2,8 @@
   <div class="admin-layout" :class="{ 'is-fullscreen': tagsViewStore.isFullscreen }">
     <component :is="layoutComponent" :is-fullscreen="tagsViewStore.isFullscreen" />
 
+    <UiPreferenceFab />
+
     <transition name="fade">
       <button
         v-if="tagsViewStore.isFullscreen"
@@ -23,6 +25,7 @@ import { Close } from '@element-plus/icons-vue'
 import { appConfig } from '@/config/app'
 import { useNoticeStore } from '@/stores/notice'
 import { useTagsViewStore } from '@/stores/tagsView'
+import UiPreferenceFab from '@/components/UiPreference/UiPreferenceFab.vue'
 import SideLayout from './modes/SideLayout.vue'
 import TopLayout from './modes/TopLayout.vue'
 import MixLayout from './modes/MixLayout.vue'

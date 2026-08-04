@@ -17,6 +17,7 @@ import { clearApiRegistry, setApiRegistry } from '@/utils/api-guard'
 import { normalizeDateTimes } from '@/utils/datetime'
 import { useNoticeStore } from '@/stores/notice'
 import { startSessionGuard, stopSessionGuard } from '@/utils/session-guard'
+import { useUiPreferenceStore } from '@/stores/uiPreference'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
@@ -84,6 +85,7 @@ export const useUserStore = defineStore('user', () => {
     setAuth(res.data.token, res.data.user)
     await loadRegistry()
     startSessionGuard()
+    await useUiPreferenceStore().load()
     return res.data
   }
 
@@ -125,6 +127,7 @@ export const useUserStore = defineStore('user', () => {
     stopSessionGuard()
     useNoticeStore().stopRealtime()
     clearSessionViews()
+    useUiPreferenceStore().clearLocal()
     clearAuth()
     resetDynamicRoutes()
 

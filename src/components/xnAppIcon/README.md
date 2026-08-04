@@ -10,11 +10,11 @@
 
 ## Props
 
-| 名称    | 类型               | 默认值 | 说明                                              |
-| ------- | ------------------ | ------ | ------------------------------------------------- |
-| `name`  | `string \| null`   | —      | 图标名，如 `Setting`、`mdi:home`、`svg:demo-star` |
-| `size`  | `number \| string` | `16`   | 尺寸                                              |
-| `color` | `string`           | —      | 颜色                                              |
+| 名称    | 类型               | 默认值 | 说明                                                 |
+| ------- | ------------------ | ------ | ---------------------------------------------------- |
+| `name`  | `string \| null`   | —      | 图标名，如 `Setting`、`mdi:home`、`svg:自定义文件名` |
+| `size`  | `number \| string` | `16`   | 尺寸                                                 |
+| `color` | `string`           | —      | 颜色                                                 |
 
 ## 依赖
 
@@ -27,7 +27,7 @@
 ```vue
 <xnAppIcon name="Setting" :size="18" />
 <xnAppIcon name="mdi:home" color="#409eff" />
-<xnAppIcon name="svg:demo-star" />
+<xnAppIcon name="svg:my-icon" />
 ```
 
 `name` 为空或无法解析时不渲染内容。

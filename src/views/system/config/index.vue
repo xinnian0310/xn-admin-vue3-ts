@@ -44,7 +44,7 @@
           </el-form-item>
           <el-form-item label="Favicon">
             <div class="asset-row">
-              <el-input v-model="form.app.favicon" placeholder="/favicon.svg 或上传" />
+              <el-input v-model="form.app.favicon" placeholder="/xinnian-tech-logo.png 或上传" />
               <el-upload
                 v-permission="'system-config:update'"
                 :show-file-list="false"
@@ -63,7 +63,7 @@
           </el-form-item>
           <el-form-item label="Logo">
             <div class="asset-row">
-              <el-input v-model="form.app.logo" placeholder="/logo.svg 或上传" />
+              <el-input v-model="form.app.logo" placeholder="/xinnian-tech-logo.png 或上传" />
               <el-upload
                 v-permission="'system-config:update'"
                 :show-file-list="false"
@@ -140,6 +140,9 @@
         <div class="ui-split">
           <section class="ui-split__panel">
             <h3 class="ui-split__title">布局与字号</h3>
+            <p class="ui-split__desc ui-split__desc--block">
+              通用默认；登录用户可在右下角悬浮入口单独覆盖。字号 / 高度填正整数，单位 px 自动带入。
+            </p>
             <el-form
               :model="form"
               label-width="120px"
@@ -157,19 +160,64 @@
                 <el-input v-model="form.ui.dialog.maxHeight" placeholder="如 95vh" />
               </el-form-item>
               <el-form-item label="标签栏高度">
-                <el-input v-model="form.ui.tagsView.height" placeholder="如 40px" />
+                <div class="px-field">
+                  <el-input-number
+                    v-model="tagsViewHeightPx"
+                    :min="1"
+                    :max="120"
+                    :step="1"
+                    controls-position="right"
+                  />
+                  <span class="px-field__unit">px</span>
+                </div>
               </el-form-item>
               <el-form-item label="侧栏字号">
-                <el-input v-model="form.ui.fontSize.sidebar" placeholder="如 14px" />
+                <div class="px-field">
+                  <el-input-number
+                    v-model="fontSidebarPx"
+                    :min="1"
+                    :max="48"
+                    :step="1"
+                    controls-position="right"
+                  />
+                  <span class="px-field__unit">px</span>
+                </div>
               </el-form-item>
               <el-form-item label="顶栏字号">
-                <el-input v-model="form.ui.fontSize.header" placeholder="如 14px" />
+                <div class="px-field">
+                  <el-input-number
+                    v-model="fontHeaderPx"
+                    :min="1"
+                    :max="48"
+                    :step="1"
+                    controls-position="right"
+                  />
+                  <span class="px-field__unit">px</span>
+                </div>
               </el-form-item>
               <el-form-item label="标签栏字号">
-                <el-input v-model="form.ui.fontSize.tagsView" placeholder="如 14px" />
+                <div class="px-field">
+                  <el-input-number
+                    v-model="fontTagsViewPx"
+                    :min="1"
+                    :max="48"
+                    :step="1"
+                    controls-position="right"
+                  />
+                  <span class="px-field__unit">px</span>
+                </div>
               </el-form-item>
               <el-form-item label="正文字号">
-                <el-input v-model="form.ui.fontSize.main" placeholder="如 14px" />
+                <div class="px-field">
+                  <el-input-number
+                    v-model="fontMainPx"
+                    :min="1"
+                    :max="48"
+                    :step="1"
+                    controls-position="right"
+                  />
+                  <span class="px-field__unit">px</span>
+                </div>
               </el-form-item>
             </el-form>
           </section>
@@ -341,6 +389,8 @@ import { ElMessage, type UploadRequestOptions } from 'element-plus'
 import {
   appConfig,
   applyRemoteAppConfig,
+  applyUserUiPreference,
+  captureGlobalUiBaseline,
   defaultAppConfig,
   type AppConfig,
   type LayoutMode,
@@ -351,6 +401,8 @@ import {
   uploadBrandAsset,
   type SystemConfigPayload,
 } from '@/api/system-config'
+import { useUiPreferenceStore } from '@/stores/uiPreference'
+import { parsePxInt, toPx } from '@/utils/px'
 
 defineOptions({ name: 'SystemConfig' })
 
@@ -409,6 +461,49 @@ const idleCheckIntervalSec = computed({
   },
 })
 
+function pxField(get: () => string, set: (px: string) => void, fallback: number) {
+  return computed({
+    get: () => parsePxInt(get(), fallback),
+    set: (v: number) => set(toPx(v, fallback)),
+  })
+}
+
+const tagsViewHeightPx = pxField(
+  () => form.ui.tagsView.height,
+  (v) => {
+    form.ui.tagsView.height = v
+  },
+  40,
+)
+const fontSidebarPx = pxField(
+  () => form.ui.fontSize.sidebar,
+  (v) => {
+    form.ui.fontSize.sidebar = v
+  },
+  14,
+)
+const fontHeaderPx = pxField(
+  () => form.ui.fontSize.header,
+  (v) => {
+    form.ui.fontSize.header = v
+  },
+  14,
+)
+const fontTagsViewPx = pxField(
+  () => form.ui.fontSize.tagsView,
+  (v) => {
+    form.ui.fontSize.tagsView = v
+  },
+  14,
+)
+const fontMainPx = pxField(
+  () => form.ui.fontSize.main,
+  (v) => {
+    form.ui.fontSize.main = v
+  },
+  14,
+)
+
 function assignForm(data: SystemConfigPayload) {
   Object.assign(form.app, data.app)
   Object.assign(form.session, data.session)
@@ -459,7 +554,10 @@ async function handleSave() {
     } else {
       applyRemoteAppConfig(payload)
     }
-    ElMessage.success('保存成功，已即时生效')
+    captureGlobalUiBaseline()
+    const pref = useUiPreferenceStore().preference
+    if (pref) applyUserUiPreference(pref)
+    ElMessage.success('保存成功，已即时生效（通用配置；用户个人偏好仍优先）')
   } catch (e: any) {
     ElMessage.error(e?.message || '保存失败')
   } finally {
@@ -627,6 +725,12 @@ onMounted(() => {
   text-align: right;
 }
 
+.ui-split__desc--block {
+  display: block;
+  text-align: left;
+  margin: -4px 0 12px;
+}
+
 @media (max-width: 960px) {
   .ui-split {
     grid-template-columns: 1fr;
@@ -637,6 +741,21 @@ onMounted(() => {
   margin-left: 8px;
   color: var(--app-text-muted, #909399);
   font-size: 12px;
+}
+
+.px-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.px-field :deep(.el-input-number) {
+  width: 140px;
+}
+
+.px-field__unit {
+  color: var(--app-text-muted, #909399);
+  font-size: 13px;
 }
 
 .asset-row {

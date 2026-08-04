@@ -6,7 +6,7 @@ export type IconType = 'element' | 'iconify' | 'svg'
 
 export interface ParsedIcon {
   type: IconType
-  /** 用于存储/回显的完整值，如 Setting / mdi:home / svg:demo-star */
+  /** 用于存储/回显的完整值，如 Setting / mdi:home / svg:my-icon */
   value: string
   /** Element 组件名 / Iconify 名 / SVG 文件名（不含扩展名） */
   name: string

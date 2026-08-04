@@ -37,8 +37,8 @@ export const defaultAppConfig = {
     name: '心念后台管理系统',
     company: '心念科技',
     subtitle: '心念科技',
-    favicon: '/favicon.svg',
-    logo: '/logo.svg',
+    favicon: '/xinnian-tech-logo.png',
+    logo: '/xinnian-tech-logo.png',
     logoWidth: 28 as number | null,
     logoHeight: null as number | null,
     footer: '心念后台管理系统 · 心念科技 · Copyright © 2026',
@@ -252,6 +252,51 @@ export function applyRemoteAppConfig(
   if (app) {
     if ('logoWidth' in app) appConfig.app.logoWidth = app.logoWidth ?? null
     if ('logoHeight' in app) appConfig.app.logoHeight = app.logoHeight ?? null
+  }
+  applyAppConfig(appConfig)
+}
+
+/** 全局配置快照（个人偏好叠加前），用于重置个人配置后回退 */
+let globalUiBaseline: {
+  layoutMode: LayoutMode
+  fontSize: AppConfig['ui']['fontSize']
+  tagsView: AppConfig['ui']['tagsView']
+  dialog: AppConfig['ui']['dialog']
+} | null = null
+
+export function captureGlobalUiBaseline(config: AppConfig = appConfig) {
+  globalUiBaseline = {
+    layoutMode: config.ui.layout.mode,
+    fontSize: { ...config.ui.fontSize },
+    tagsView: { ...config.ui.tagsView },
+    dialog: { ...config.ui.dialog },
+  }
+}
+
+export type UserUiPreference = {
+  layout?: { mode?: LayoutMode }
+  fontSize?: Partial<AppConfig['ui']['fontSize']>
+  tagsView?: Partial<AppConfig['ui']['tagsView']>
+  dialog?: Partial<AppConfig['ui']['dialog']>
+}
+
+/** 先恢复全局布局/字号，再叠加个人偏好 */
+export function applyUserUiPreference(pref: UserUiPreference | null | undefined) {
+  if (globalUiBaseline) {
+    appConfig.ui.layout.mode = globalUiBaseline.layoutMode
+    Object.assign(appConfig.ui.fontSize, globalUiBaseline.fontSize)
+    Object.assign(appConfig.ui.tagsView, globalUiBaseline.tagsView)
+    Object.assign(appConfig.ui.dialog, globalUiBaseline.dialog)
+  }
+  if (pref) {
+    if (pref.layout?.mode) appConfig.ui.layout.mode = pref.layout.mode
+    if (pref.fontSize) {
+      for (const [k, v] of Object.entries(pref.fontSize)) {
+        if (v) (appConfig.ui.fontSize as Record<string, string>)[k] = v
+      }
+    }
+    if (pref.tagsView?.height) appConfig.ui.tagsView.height = pref.tagsView.height
+    if (pref.dialog?.maxHeight) appConfig.ui.dialog.maxHeight = pref.dialog.maxHeight
   }
   applyAppConfig(appConfig)
 }

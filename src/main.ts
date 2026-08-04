@@ -7,11 +7,12 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import App from './App.vue'
 import router from './router'
-import { applyAppConfig, applyRemoteAppConfig } from '@/config/app'
+import { applyAppConfig, applyRemoteAppConfig, captureGlobalUiBaseline } from '@/config/app'
 import { getPublicConfig } from '@/api/system-config'
 import { setupPermissionDirective } from '@/directives/permission'
 import { useUserStore } from '@/stores/user'
 import { useThemeStore } from '@/stores/theme'
+import { useUiPreferenceStore } from '@/stores/uiPreference'
 import { startSessionGuard } from '@/utils/session-guard'
 import './style.css'
 
@@ -23,6 +24,12 @@ async function bootstrapRemoteConfig() {
     applyRemoteAppConfig(res.data)
   } catch {
     // 后端未启动或网络失败时沿用本地默认
+  }
+  captureGlobalUiBaseline()
+
+  const userStore = useUserStore()
+  if (userStore.token) {
+    await useUiPreferenceStore().load()
   }
 }
 

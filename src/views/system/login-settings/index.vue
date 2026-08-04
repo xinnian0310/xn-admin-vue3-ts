@@ -32,17 +32,6 @@
         @selection-change="selectionChangeHandle"
         @page-change="loadData"
       >
-        <template #background="{ row }">
-          <div v-if="row.backgroundUrl" class="bg-thumb">
-            <img :src="row.backgroundUrl" alt="背景" />
-          </div>
-          <span v-else class="muted">默认渐变</span>
-        </template>
-        <template #position="{ row }">
-          <el-tag :type="row.boxX != null && row.boxY != null ? 'success' : 'info'" size="small">
-            {{ row.boxX != null && row.boxY != null ? '已设置' : '默认' }}
-          </el-tag>
-        </template>
         <template #captcha="{ row }">
           <template v-if="row.captchaEnabled">
             <el-tag type="warning" size="small">{{ captchaLabel(row.captchaType) }}</el-tag>
@@ -69,21 +58,14 @@
               {{ row.status === 1 ? '启用中' : '未启用' }}
             </el-tag>
           </div>
-          <div v-if="row.backgroundUrl" class="cfg-card__bg">
-            <img :src="row.backgroundUrl" alt="背景" />
-          </div>
           <div class="cfg-card__body">
             <div class="cfg-card__row">
-              <span class="label">位置</span>
-              <span>{{ row.boxX != null && row.boxY != null ? '已设置' : '默认' }}</span>
-            </div>
-            <div class="cfg-card__row">
-              <span class="label">适应</span>
-              <span>{{ fitLabel(row.backgroundFit) }}</span>
-            </div>
-            <div class="cfg-card__row">
-              <span class="label">验证</span>
+              <span class="label">登录验证</span>
               <span>{{ row.captchaEnabled ? captchaLabel(row.captchaType) : '关闭' }}</span>
+            </div>
+            <div v-if="row.remark" class="cfg-card__row">
+              <span class="label">备注</span>
+              <span class="remark">{{ row.remark }}</span>
             </div>
           </div>
           <div class="cfg-card__footer">
@@ -114,7 +96,6 @@ import LoginPageSave from './save.vue'
 import { usePageUi } from '@/composables/usePageUi'
 import { list, batchRemove, remove, updateStatus } from '@/api/login-page'
 import type { LoginPageConfig } from '@/types'
-import { BACKGROUND_FIT_OPTIONS } from '@/types'
 import type { SearchForm } from '@/types/search'
 import type { SaveMode } from '@/types/save'
 import type { TableColumnItem } from '@/types/table'
@@ -133,28 +114,10 @@ const queryForm = ref<SearchForm>({})
 const viewMode = ref<'table' | 'card'>('table')
 const selected = ref<LoginPageConfig[]>([])
 
-function fitLabel(fit?: string | null) {
-  return BACKGROUND_FIT_OPTIONS.find((o) => o.value === fit)?.label ?? '覆盖铺满'
-}
-
 const columns: TableColumnItem[] = [
   { type: 'selection', width: 50, fixed: true },
   { prop: 'name', label: '配置名称', minWidth: 140 },
-  { type: 'slot', slot: 'background', prop: 'backgroundUrl', label: '背景图', width: 120 },
-  { type: 'slot', slot: 'position', prop: 'boxX', label: '登录框位置', width: 100 },
-  {
-    prop: 'backgroundFit',
-    label: '适应模式',
-    width: 110,
-    type: 'tag',
-    options: [
-      { value: 'COVER', label: '覆盖铺满', type: 'primary' },
-      { value: 'CONTAIN', label: '完整适应', type: 'success' },
-      { value: 'STRETCH', label: '拉伸填满', type: 'warning' },
-      { value: 'CENTER', label: '居中原图', type: 'info' },
-    ],
-  },
-  { type: 'slot', slot: 'captcha', prop: 'captchaEnabled', label: '登录验证', width: 120 },
+  { type: 'slot', slot: 'captcha', prop: 'captchaEnabled', label: '登录验证', width: 140 },
   {
     prop: 'status',
     label: '状态',
@@ -307,26 +270,6 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.muted {
-  color: var(--app-text-muted);
-  font-size: 12px;
-}
-
-.bg-thumb {
-  width: 64px;
-  height: 40px;
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid var(--app-border-color);
-}
-
-.bg-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
 .cfg-card__header {
   display: flex;
   align-items: center;
@@ -337,21 +280,6 @@ onMounted(loadData)
 
 .cfg-card__name {
   font-weight: 600;
-}
-
-.cfg-card__bg {
-  height: 100px;
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 12px;
-  background: linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #a8dadc 100%);
-}
-
-.cfg-card__bg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
 }
 
 .cfg-card__body {
@@ -370,6 +298,13 @@ onMounted(loadData)
 
 .cfg-card__row .label {
   color: var(--app-text-muted);
+  flex-shrink: 0;
+}
+
+.cfg-card__row .remark {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cfg-card__footer {

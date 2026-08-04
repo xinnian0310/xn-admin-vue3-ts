@@ -96,7 +96,7 @@ const columns: TableColumnItem[] = [
   { type: 'selection', width: 50, fixed: true },
   { type: 'slot', slot: 'executedAt', prop: 'executedAt', label: '执行时间', width: 170 },
   { type: 'slot', slot: 'durationMs', prop: 'durationMs', label: '耗时(ms)', width: 100 },
-  { prop: 'sql', label: 'SQL', minWidth: 420, showOverflowTooltip: true },
+  { type: 'longText', prop: 'sql', label: 'SQL', minWidth: 420, longTextMaxLength: 64 },
   { type: 'slot', slot: 'actions', label: '操作', width: 140, fixed: 'right' },
 ]
 

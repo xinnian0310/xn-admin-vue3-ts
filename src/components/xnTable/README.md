@@ -35,8 +35,12 @@
 | `immediate`                   | `boolean`                    | `true`              | 挂载后是否立即拉数（api 模式）  |
 | `tableKey`                    | `string`                     | —                   | 有值则启用列设置持久化          |
 | `actionItems`                 | `ButtonListItem[]`           | `[]`                | 操作列按钮                      |
+| `autoPageSize`                | `boolean`                    | `true`              | 按表格可视高度自动计算每页条数  |
+| `autoPageSizeMin` / `Max`     | `number`                     | `5` / `200`         | 自动计算条数上下限              |
 
 `inheritAttrs: false`，其余属性透传到内部 `el-table`。
+
+开启 `autoPageSize`（默认）时，会测量表格区域高度与表头/行高，算出能填满一屏的条数并写入 `pageSize`；窗口或容器尺寸变化时会重新计算。下拉「每页条数」仍可手动改，尺寸变化后会再次按高度适配。
 
 ### Emits
 
@@ -71,7 +75,9 @@
 
 ### 列类型（`TableColumnItem.type`）
 
-`selection` | `index` | `text`（默认） | `datetime` | `tag` | `switch` | `iconText` | `slot`
+`selection` | `index` | `text`（默认） | `datetime` | `tag` | `switch` | `iconText` | `longText` | `slot`
+
+`longText`：单元格截断展示，点击弹窗查看全文（可复制）。
 
 ### 用法
 

@@ -109,8 +109,8 @@ const columns: TableColumnItem[] = [
   { type: 'index', label: '#', width: 55 },
   { type: 'slot', slot: 'name', prop: 'name', label: '文件名', minWidth: 140 },
   { type: 'slot', slot: 'contentType', prop: 'contentType', label: '类型', minWidth: 120 },
-  { prop: 'path', label: '对象路径', minWidth: 200, showOverflowTooltip: true },
-  { prop: 'url', label: '访问地址', minWidth: 200, showOverflowTooltip: true },
+  { type: 'longText', prop: 'path', label: '对象路径', minWidth: 200 },
+  { type: 'longText', prop: 'url', label: '访问地址', minWidth: 200 },
   {
     prop: 'storage',
     label: '存储',

@@ -31,7 +31,7 @@ import { getSvgRaw, parseIcon, resolveElementIcon } from '@/utils/icons'
 
 const props = withDefaults(
   defineProps<{
-    /** 图标值：Setting | mdi:home | svg:demo-star */
+    /** 图标值：Setting | mdi:home | svg:my-icon */
     name?: string | null
     size?: number | string
     color?: string
