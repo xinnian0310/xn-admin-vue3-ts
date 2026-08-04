@@ -17,6 +17,8 @@ const WHITELIST = new Set([
   '/api/auth/api-registry',
   '/api/login-page-configs/active',
   '/api/system-config/public',
+  '/api/site-contact/public',
+  '/api/site-ui-shots/public',
 ])
 
 let compiledApis: CompiledApi[] = []

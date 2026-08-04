@@ -188,6 +188,11 @@ export const menus: MenuItem[] = [
             path: '/system/config',
             permission: 'menu:system:config',
           },
+          {
+            id: 'site-contact',
+            title: '联系与捐赠',
+            path: '/system/site-contact',
+          },
         ],
       },
       {

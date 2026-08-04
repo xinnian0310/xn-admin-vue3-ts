@@ -121,8 +121,8 @@
             </div>
           </template>
           <div class="contact-list">
-            <div v-for="c in home.contacts" :key="c.label" class="contact-item">
-              <el-icon class="contact-item__icon"><component :is="iconOf(c.icon)" /></el-icon>
+            <div v-for="c in siteContact.contacts" :key="c.label" class="contact-item">
+              <xnAppIcon v-if="c.icon" :name="c.icon" class="contact-item__icon" />
               <span class="contact-item__label">{{ c.label }}</span>
               <a
                 v-if="c.link"
@@ -143,12 +143,21 @@
               <el-icon><Coffee /></el-icon><span>捐赠情况</span>
             </div>
           </template>
-          <p class="donation-tip">{{ home.donation.tip }}</p>
+          <p class="donation-tip">{{ siteContact.donation.tip }}</p>
           <div class="donation-body">
-            <div v-for="(qr, idx) in home.donation.qrcodes" :key="idx" class="donation-qr">
+            <div
+              v-for="(qr, idx) in siteContact.donation.qrcodes.filter((q) => q.src)"
+              :key="idx"
+              class="donation-qr"
+            >
               <el-image :src="qr.src" fit="contain" class="donation-qr__img" />
               <span class="donation-qr__label">{{ qr.label }}</span>
             </div>
+            <el-empty
+              v-if="!siteContact.donation.qrcodes.some((q) => q.src)"
+              description="暂未配置捐赠二维码"
+              :image-size="56"
+            />
           </div>
         </el-card>
       </div>
@@ -157,6 +166,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, reactive } from 'vue'
 import {
   Lock,
   Guide,
@@ -172,14 +182,27 @@ import {
   Clock,
   Phone,
   Coffee,
+  Location,
+  Connection,
 } from '@element-plus/icons-vue'
 import type { Component } from 'vue'
 import { homeConfig, changelogTypeMeta } from '@/config/home'
+import { getPublicSiteContact } from '@/api/site-contact'
+import type { SiteContactConfig } from '@/types/site-contact'
+import xnAppIcon from '@/components/xnAppIcon/xnAppIcon.vue'
 import { gitChangelog } from 'virtual:git-changelog'
 
 defineOptions({ name: 'Dashboard' })
 
 const home = homeConfig
+
+const siteContact = reactive<SiteContactConfig>({
+  contacts: [...homeConfig.contacts],
+  donation: {
+    tip: homeConfig.donation.tip,
+    qrcodes: homeConfig.donation.qrcodes.map((q) => ({ ...q })),
+  },
+})
 
 const iconMap: Record<string, Component> = {
   Lock,
@@ -196,11 +219,31 @@ const iconMap: Record<string, Component> = {
   Clock,
   Phone,
   Coffee,
+  Location,
+  Connection,
 }
 
 function iconOf(name: string): Component {
   return iconMap[name] ?? Monitor
 }
+
+onMounted(async () => {
+  try {
+    const res = await getPublicSiteContact()
+    const data = res.data
+    if (data?.contacts?.length) {
+      siteContact.contacts = data.contacts
+    }
+    if (data?.donation) {
+      siteContact.donation.tip = data.donation.tip || siteContact.donation.tip
+      if (data.donation.qrcodes?.length) {
+        siteContact.donation.qrcodes = data.donation.qrcodes
+      }
+    }
+  } catch {
+    // 后端未就绪时沿用本地默认配置
+  }
+})
 </script>
 
 <style scoped>

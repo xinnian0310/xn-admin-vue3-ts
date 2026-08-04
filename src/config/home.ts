@@ -141,6 +141,7 @@ export const homeConfig = {
     { icon: 'ChatDotRound', label: '交流群', value: '123456789' },
   ] as ContactItem[],
 
+  /** 本地兜底；线上优先走 GET /api/site-contact/public */
   donation: {
     tip: '如果这个项目对你有帮助，欢迎请作者喝杯咖啡 ☕',
     qrcodes: [
