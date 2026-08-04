@@ -62,6 +62,8 @@ export const useUserStore = defineStore('user', () => {
 
   async function login(username: string, password: string, captcha?: { captchaId?: string; captchaCode?: string }) {
     clearSessionViews()
+    // 重新登录必须重置动态路由/菜单，否则会沿用内存里旧菜单树（看不到新加的「代码生成」等）
+    resetDynamicRoutes()
     const res = await loginApi({
       username,
       password,
