@@ -19,14 +19,15 @@ npm run ci            # 全量检查：typecheck + lint + format:check + test + 
 
 ## 技术栈
 
-| 类别          | 技术                                           |
-| ------------- | ---------------------------------------------- |
-| 框架          | Vue 3.5、TypeScript 6、Vite 8                  |
-| UI            | Element Plus、@element-plus/icons-vue、Iconify |
-| 状态 / 路由   | Pinia、Vue Router 5                            |
-| 请求          | Axios                                          |
-| 图表 / 编辑器 | ECharts、wangEditor                            |
-| Excel         | ExcelJS、xlsx                                  |
+| 类别          | 技术                                                     |
+| ------------- | -------------------------------------------------------- |
+| 框架          | Vue 3.5、TypeScript 6、Vite 8                            |
+| UI            | Element Plus、@element-plus/icons-vue、Iconify           |
+| 状态 / 路由   | Pinia 4、Vue Router 5                                    |
+| 请求          | Axios                                                    |
+| 图表 / 编辑器 | ECharts、wangEditor                                      |
+| Excel         | ExcelJS、xlsx                                            |
+| 工程化        | ESLint、Prettier、Vitest、Husky、lint-staged、commitlint |
 
 ## 快速启动
 
