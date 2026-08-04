@@ -12,10 +12,7 @@ export type RouteListParams = {
   [key: string]: unknown
 }
 
-export type RouteCodegenTemplate = 'BLANK' | 'LIST' | 'CRUD'
-
 export type RouteCodegenRequest = {
-  template: RouteCodegenTemplate
   modulePrefix: string
   apiBasePath: string
   persistPermissions?: boolean

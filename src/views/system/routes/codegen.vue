@@ -12,9 +12,16 @@
         type="info"
         :closable="false"
         show-icon
-        title="根据当前菜单生成按钮/接口权限与前后端骨架"
-        description="默认会将权限写入数据库并授予超管/管理员；代码与 SQL 可预览下载，不会自动写入工程目录。"
-      />
+        title="生成标准 CRUD 脚手架（编码/名称/排序/状态/备注）"
+      >
+        <ol class="codegen-steps">
+          <li>生成后下载 ZIP（不会自动写入工程目录）</li>
+          <li>按包内路径拷到前后端对应目录（见 README.md）</li>
+          <li>重启 xn-system（开发环境 Entity 会自动建表）</li>
+          <li>刷新浏览器打开本菜单即可试用；再按业务改字段</li>
+        </ol>
+        <div>默认会将权限写入数据库并授予超管/管理员。</div>
+      </el-alert>
 
       <el-descriptions v-if="route" :column="1" border class="codegen-meta" size="small">
         <el-descriptions-item label="菜单">{{ route.title }}</el-descriptions-item>
@@ -23,13 +30,6 @@
       </el-descriptions>
 
       <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" class="codegen-form">
-        <el-form-item label="页面模板" prop="template">
-          <el-radio-group v-model="form.template">
-            <el-radio value="BLANK">空白页</el-radio>
-            <el-radio value="LIST">仅列表</el-radio>
-            <el-radio value="CRUD">标准 CRUD</el-radio>
-          </el-radio-group>
-        </el-form-item>
         <el-form-item label="模块前缀" prop="modulePrefix">
           <el-input v-model="form.modulePrefix" placeholder="如 order、dict-type" @blur="syncApiFromPrefix" />
           <div class="form-tip">权限码前缀，如 order:create、order:table-edit</div>
@@ -45,7 +45,7 @@
           <el-switch v-model="form.persistPermissions" />
           <div class="form-tip">默认开启：写入 BUTTON / TABLE_BUTTON / API 并挂到当前菜单下</div>
         </el-form-item>
-        <el-form-item v-if="form.template !== 'BLANK'" label="PageUi 搜索">
+        <el-form-item label="PageUi 搜索">
           <el-switch v-model="form.generatePageUi" />
           <div class="form-tip">写入综合查询占位配置（已有配置不会覆盖）</div>
         </el-form-item>
@@ -63,7 +63,6 @@
         <el-tag v-for="code in result.permissionCodes" :key="code" size="small" class="codegen-code-tag">
           {{ code }}
         </el-tag>
-        <span v-if="!result.permissionCodes.length" class="form-tip">空白页未生成额外权限</span>
       </div>
 
       <el-tabs v-model="activeTab">
@@ -104,7 +103,6 @@ import {
   generate,
   type RouteCodegenRequest,
   type RouteCodegenResult,
-  type RouteCodegenTemplate,
 } from '@/api/route'
 import type { SysRoute } from '@/types'
 
@@ -119,7 +117,6 @@ const formRef = ref<FormInstance>()
 const apiTouched = ref(false)
 
 const form = reactive<RouteCodegenRequest>({
-  template: 'CRUD',
   modulePrefix: '',
   apiBasePath: '',
   persistPermissions: true,
@@ -127,7 +124,6 @@ const form = reactive<RouteCodegenRequest>({
 })
 
 const rules: FormRules = {
-  template: [{ required: true, message: '请选择模板', trigger: 'change' }],
   modulePrefix: [{ required: true, message: '请填写模块前缀', trigger: 'blur' }],
   apiBasePath: [{ required: true, message: '请填写 API 路径', trigger: 'blur' }],
 }
@@ -155,7 +151,6 @@ function open(row: SysRoute) {
   result.value = null
   activeTab.value = 'sql'
   apiTouched.value = false
-  form.template = 'CRUD' as RouteCodegenTemplate
   form.modulePrefix = defaultPrefix(row.path)
   form.apiBasePath = `/api/${form.modulePrefix}`
   form.persistPermissions = true
@@ -170,11 +165,10 @@ async function handleSubmit() {
     submitting.value = true
     try {
       const res = await generate(route.value!.id, {
-        template: form.template,
         modulePrefix: form.modulePrefix.trim(),
         apiBasePath: form.apiBasePath.trim(),
         persistPermissions: form.persistPermissions,
-        generatePageUi: form.template === 'BLANK' ? false : form.generatePageUi,
+        generatePageUi: form.generatePageUi,
       })
       result.value = res.data
       activeTab.value = 'sql'
@@ -230,6 +224,12 @@ defineExpose({ open })
 <style scoped>
 .codegen-tip {
   margin-bottom: 16px;
+}
+
+.codegen-steps {
+  margin: 8px 0;
+  padding-left: 18px;
+  line-height: 1.7;
 }
 
 .codegen-meta {
