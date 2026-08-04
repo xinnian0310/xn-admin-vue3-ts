@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:view-mode="viewMode"
     v-model:page="page"
     v-model:page-size="size"
@@ -81,7 +81,7 @@
         </el-card>
       </div>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <DictTypeSave ref="saveRef" @success="loadData" />
 </template>
@@ -90,7 +90,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'

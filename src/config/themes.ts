@@ -119,9 +119,7 @@ export function buildThemeColorsFromParts(parts: CustomThemeParts): ThemeColors 
       text: sidebarLight ? '#64748b' : 'rgba(255, 255, 255, 0.75)',
       textActive: sidebarLight ? '#0f172a' : '#ffffff',
       active: sidebarLight ? primary : '#ffffff',
-      activeBg: sidebarLight
-        ? `rgba(${hexToRgbCss(primary)}, 0.12)`
-        : 'rgba(255, 255, 255, 0.16)',
+      activeBg: sidebarLight ? `rgba(${hexToRgbCss(primary)}, 0.12)` : 'rgba(255, 255, 255, 0.16)',
       hoverBg: sidebarLight ? 'rgba(15, 23, 42, 0.05)' : 'rgba(255, 255, 255, 0.1)',
       border: sidebarLight ? mixHex(sidebarBg, '#000000', 0.12) : 'rgba(255, 255, 255, 0.12)',
       railBg: mixHex(sidebarBg, sidebarLight ? '#000000' : '#ffffff', 0.1),
@@ -316,10 +314,7 @@ export function resolveActiveTheme(input: ResolveThemeInput): AppTheme {
 }
 
 /** @deprecated 请用 resolveActiveTheme；保留给旧调用兼容 */
-export function resolveThemeColors(
-  themeId: string,
-  customParts: CustomThemeParts,
-): ThemeColors {
+export function resolveThemeColors(themeId: string, customParts: CustomThemeParts): ThemeColors {
   if (themeId === CUSTOM_THEME_ID) {
     return buildThemeColorsFromParts(customParts)
   }

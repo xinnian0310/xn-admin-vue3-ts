@@ -6,7 +6,13 @@
     destroy-on-close
     @closed="handleClosed"
   >
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="90px" :disabled="mode === 'view'">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="90px"
+      :disabled="mode === 'view'"
+    >
       <el-form-item label="编码" prop="code">
         <el-input v-model="form.code" :disabled="mode === 'view' || mode === 'edit'" />
       </el-form-item>
@@ -36,7 +42,9 @@
     </el-form>
     <template #footer>
       <el-button @click="visible = false">{{ mode === 'view' ? '关闭' : '取消' }}</el-button>
-      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit">保存</el-button>
+      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit"
+        >保存</el-button
+      >
     </template>
   </el-dialog>
 </template>

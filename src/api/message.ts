@@ -1,5 +1,13 @@
 import request from '@/utils/request'
-import type { ApiResponse, Message, MessageForm, MessageReader, MessageSendForm, MyMessage, PageResult } from '@/types'
+import type {
+  ApiResponse,
+  Message,
+  MessageForm,
+  MessageReader,
+  MessageSendForm,
+  MyMessage,
+  PageResult,
+} from '@/types'
 
 export type MessageListParams = {
   page: number

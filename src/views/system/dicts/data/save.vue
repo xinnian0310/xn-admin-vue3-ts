@@ -6,7 +6,13 @@
     destroy-on-close
     @closed="handleClosed"
   >
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="90px" :disabled="mode === 'view'">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="90px"
+      :disabled="mode === 'view'"
+    >
       <el-form-item label="字典标签" prop="label">
         <el-input v-model="form.label" :disabled="mode === 'view'" />
       </el-form-item>
@@ -15,7 +21,12 @@
       </el-form-item>
       <el-form-item label="标签样式" prop="listClass">
         <el-select v-model="form.listClass" clearable placeholder="默认" style="width: 100%">
-          <el-option v-for="opt in DICT_LIST_CLASS_OPTIONS" :key="opt.value" :label="opt.label" :value="opt.value" />
+          <el-option
+            v-for="opt in DICT_LIST_CLASS_OPTIONS"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </el-select>
         <div class="preview-tip">
           预览：
@@ -41,7 +52,9 @@
     </el-form>
     <template #footer>
       <el-button @click="visible = false">{{ mode === 'view' ? '关闭' : '取消' }}</el-button>
-      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit">保存</el-button>
+      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit"
+        >保存</el-button
+      >
     </template>
   </el-dialog>
 </template>

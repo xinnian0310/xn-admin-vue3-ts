@@ -1,13 +1,6 @@
 /** 列渲染类型 */
 export type TableColumnType =
-  | 'selection'
-  | 'index'
-  | 'text'
-  | 'datetime'
-  | 'tag'
-  | 'switch'
-  | 'iconText'
-  | 'slot'
+  'selection' | 'index' | 'text' | 'datetime' | 'tag' | 'switch' | 'iconText' | 'slot'
 
 export type TableColumnAlign = 'left' | 'center' | 'right'
 export type TableColumnFixed = boolean | 'left' | 'right'

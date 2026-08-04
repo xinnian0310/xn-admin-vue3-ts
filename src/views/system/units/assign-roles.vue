@@ -46,7 +46,9 @@ const roleIds = ref<number[]>([])
 const roleOptions = ref<Role[]>([])
 
 const availableRoles = computed(() =>
-  isSuperAdmin.value ? roleOptions.value : roleOptions.value.filter((r) => r.code !== 'SUPER_ADMIN'),
+  isSuperAdmin.value
+    ? roleOptions.value
+    : roleOptions.value.filter((r) => r.code !== 'SUPER_ADMIN'),
 )
 
 async function open(row: SysUnit) {

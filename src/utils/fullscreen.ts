@@ -44,7 +44,9 @@ export function isFullscreenEnabled() {
   )
 }
 
-export function toggleBrowserFullscreen(target: HTMLElement = document.documentElement): Promise<void> {
+export function toggleBrowserFullscreen(
+  target: HTMLElement = document.documentElement,
+): Promise<void> {
   if (isBrowserFullscreen()) {
     const doc = document as FsDocument
     const exit =

@@ -69,7 +69,9 @@
         <div v-if="form.backgroundUrl" class="bg-current">
           <span class="muted">当前：</span>
           <code>{{ form.backgroundUrl }}</code>
-          <el-button v-if="mode !== 'view'" link type="danger" @click="form.backgroundUrl = ''">清除</el-button>
+          <el-button v-if="mode !== 'view'" link type="danger" @click="form.backgroundUrl = ''"
+            >清除</el-button
+          >
         </div>
         <div class="form-tip">留空则使用系统默认渐变背景</div>
       </el-form-item>
@@ -166,7 +168,11 @@
 
         <el-form :model="previewForm" @submit.prevent>
           <el-form-item>
-            <el-input v-model="previewForm.username" placeholder="请输入用户名" :prefix-icon="User" />
+            <el-input
+              v-model="previewForm.username"
+              placeholder="请输入用户名"
+              :prefix-icon="User"
+            />
           </el-form-item>
           <el-form-item>
             <el-input
@@ -265,7 +271,11 @@ const previewForm = reactive({
 })
 
 const positionCustomized = computed(
-  () => form.boxX != null && form.boxY != null && Number.isFinite(form.boxX) && Number.isFinite(form.boxY),
+  () =>
+    form.boxX != null &&
+    form.boxY != null &&
+    Number.isFinite(form.boxX) &&
+    Number.isFinite(form.boxY),
 )
 
 const currentFitTip = computed(
@@ -417,7 +427,9 @@ async function handleUpload(options: UploadRequestOptions) {
 function onDragStart(e: PointerEvent) {
   if (mode.value === 'view' || !previewRef.value) return
   const target = e.target as HTMLElement
-  if (target.closest('input, textarea, button, .el-input, .el-button, .captcha-canvas, .slider-wrap')) {
+  if (
+    target.closest('input, textarea, button, .el-input, .el-button, .captcha-canvas, .slider-wrap')
+  ) {
     return
   }
   e.preventDefault()

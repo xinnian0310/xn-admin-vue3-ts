@@ -9,14 +9,7 @@ export interface LoginLog {
 }
 
 export type OperBusinessType =
-  | 'INSERT'
-  | 'UPDATE'
-  | 'DELETE'
-  | 'GRANT'
-  | 'IMPORT'
-  | 'EXPORT'
-  | 'CLEAN'
-  | 'OTHER'
+  'INSERT' | 'UPDATE' | 'DELETE' | 'GRANT' | 'IMPORT' | 'EXPORT' | 'CLEAN' | 'OTHER'
 
 export interface OperLog {
   id: number

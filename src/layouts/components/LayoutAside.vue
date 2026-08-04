@@ -1,20 +1,20 @@
 <template>
   <el-aside v-show="visible" :width="width" class="layout-aside">
     <div v-if="showLogo" class="layout-aside__logo">
-      <AppBrandLogo />
+      <xnAppBrandLogo />
       <span>{{ title }}</span>
     </div>
     <div v-else-if="subtitle" class="layout-aside__subtitle">{{ subtitle }}</div>
     <el-scrollbar class="layout-aside__scroll">
-      <SidebarMenu :menus="menus" />
+      <xnSidebarMenu :menus="menus" />
     </el-scrollbar>
   </el-aside>
 </template>
 
 <script setup lang="ts">
 import type { MenuItem } from '@/types/menu'
-import AppBrandLogo from '@/components/AppBrandLogo/AppBrandLogo.vue'
-import SidebarMenu from '@/components/SidebarMenu/SidebarMenu.vue'
+import xnAppBrandLogo from '@/components/xnAppBrandLogo/xnAppBrandLogo.vue'
+import xnSidebarMenu from '@/components/xnSidebarMenu/xnSidebarMenu.vue'
 import { appConfig } from '@/config/app'
 
 withDefaults(

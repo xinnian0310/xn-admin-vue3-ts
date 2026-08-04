@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:page="page"
     v-model:page-size="size"
     :total="total"
@@ -7,15 +7,25 @@
     @page-change="applyLocalPage"
   >
     <template #aside>
-      <TreePanel title="安全策略" width="380px" :filterable="false">
+      <xnTreePanel title="安全策略" width="380px" :filterable="false">
         <el-form :model="form" label-width="140px" class="security-aside-form" @submit.prevent>
           <div class="section-title">登录防护</div>
           <el-form-item label="失败锁定阈值">
-            <el-input-number v-model="form.maxFailures" :min="1" :max="50" controls-position="right" />
+            <el-input-number
+              v-model="form.maxFailures"
+              :min="1"
+              :max="50"
+              controls-position="right"
+            />
             <span class="hint">次</span>
           </el-form-item>
           <el-form-item label="锁定时长">
-            <el-input-number v-model="form.lockMinutes" :min="1" :max="1440" controls-position="right" />
+            <el-input-number
+              v-model="form.lockMinutes"
+              :min="1"
+              :max="1440"
+              controls-position="right"
+            />
             <span class="hint">分钟</span>
           </el-form-item>
           <el-form-item label="IP 每分钟限流">
@@ -39,11 +49,21 @@
 
           <div class="section-title">密码策略</div>
           <el-form-item label="最小长度">
-            <el-input-number v-model="form.pwdMinLength" :min="6" :max="50" controls-position="right" />
+            <el-input-number
+              v-model="form.pwdMinLength"
+              :min="6"
+              :max="50"
+              controls-position="right"
+            />
             <span class="hint">位</span>
           </el-form-item>
           <el-form-item label="最大长度">
-            <el-input-number v-model="form.pwdMaxLength" :min="6" :max="50" controls-position="right" />
+            <el-input-number
+              v-model="form.pwdMaxLength"
+              :min="6"
+              :max="50"
+              controls-position="right"
+            />
             <span class="hint">位</span>
           </el-form-item>
           <el-form-item label="必须大写字母">
@@ -59,11 +79,21 @@
             <el-switch v-model="form.pwdRequireSpecial" />
           </el-form-item>
           <el-form-item label="密码有效期">
-            <el-input-number v-model="form.pwdExpireDays" :min="0" :max="3650" controls-position="right" />
+            <el-input-number
+              v-model="form.pwdExpireDays"
+              :min="0"
+              :max="3650"
+              controls-position="right"
+            />
             <span class="hint">天（0=不过期）</span>
           </el-form-item>
           <el-form-item label="历史密码限制">
-            <el-input-number v-model="form.pwdHistoryCount" :min="0" :max="20" controls-position="right" />
+            <el-input-number
+              v-model="form.pwdHistoryCount"
+              :min="0"
+              :max="20"
+              controls-position="right"
+            />
             <span class="hint">次（0=不限制）</span>
           </el-form-item>
           <el-form-item label="新建/重置强制改密">
@@ -86,7 +116,7 @@
             @button-click="buttonClick"
           />
         </template>
-      </TreePanel>
+      </xnTreePanel>
     </template>
 
     <template #table>
@@ -118,14 +148,14 @@
         </template>
       </xnTable>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
-import TreePanel from '@/components/TreePanel/TreePanel.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
+import xnTreePanel from '@/components/xnTreePanel/xnTreePanel.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
 import xnTable from '@/components/xnTable/xnTable.vue'

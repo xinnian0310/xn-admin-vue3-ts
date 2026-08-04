@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:page="page"
     v-model:page-size="size"
     :total="total"
@@ -41,7 +41,7 @@
         </template>
       </xnTable>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <MessageSave ref="saveRef" @success="loadData" />
 
@@ -51,7 +51,13 @@
         <el-checkbox v-model="sendForm.sendToAll">全部启用用户</el-checkbox>
       </el-form-item>
       <el-form-item v-if="!sendForm.sendToAll" label="接收用户">
-        <el-select v-model="sendForm.userIds" multiple filterable placeholder="选择用户" style="width: 100%">
+        <el-select
+          v-model="sendForm.userIds"
+          multiple
+          filterable
+          placeholder="选择用户"
+          style="width: 100%"
+        >
           <el-option
             v-for="u in userOptions"
             :key="u.id"
@@ -81,7 +87,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
@@ -90,7 +96,7 @@ import MessageSave from './save.vue'
 import { usePageUi } from '@/composables/usePageUi'
 import { batchRemove, list, readers, remove, send } from '@/api/message'
 import { list as listUsers } from '@/api/user'
-import type { Message, MessageReader, MessageStatus, User } from '@/types'
+import type { Message, MessageReader, User } from '@/types'
 import type { ButtonListItem } from '@/types/button'
 import type { SearchForm } from '@/types/search'
 import type { SaveMode } from '@/types/save'

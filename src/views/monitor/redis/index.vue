@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:page="page"
     v-model:page-size="size"
     :total="total"
@@ -39,7 +39,7 @@
         </template>
       </xnTable>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <el-dialog v-model="detailVisible" :title="detailTitle" width="640px" destroy-on-close>
     <el-descriptions v-if="currentKey" :column="1" border>
@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
@@ -122,7 +122,9 @@ function selectionChangeHandle(rows: unknown[]) {
 }
 
 function applyLocalPage() {
-  const kw = String(queryForm.value.FuzzyWord ?? '').trim().toLowerCase()
+  const kw = String(queryForm.value.FuzzyWord ?? '')
+    .trim()
+    .toLowerCase()
   let rows = allData.value
   if (kw) {
     rows = rows.filter((r) => r.key.toLowerCase().includes(kw))

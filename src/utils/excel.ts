@@ -8,14 +8,14 @@ function headerTitle(col: ExcelImportColumn) {
 }
 
 /** 将单元格中文（或编码）映射为 option.value；支持逗号分隔多选 */
-export function resolveOptionValue(
-  raw: string,
-  options?: ExcelImportColumn['options'],
-): string {
+export function resolveOptionValue(raw: string, options?: ExcelImportColumn['options']): string {
   if (!raw || !options?.length) return raw
   const text = raw.trim()
   if (!text) return ''
-  const parts = text.split(/[,，;；]/).map((s) => s.trim()).filter(Boolean)
+  const parts = text
+    .split(/[,，;；]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
   return parts
     .map((part) => {
       const byLabel = options.find((o) => o.label === part)
@@ -171,8 +171,7 @@ export function parseExcelFile(
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const book = XLSX.read(data, { type: 'array' })
-        const sheetName =
-          book.SheetNames.find((n) => n === '导入模板') || book.SheetNames[0]
+        const sheetName = book.SheetNames.find((n) => n === '导入模板') || book.SheetNames[0]
         if (!sheetName) {
           reject(new Error('Excel 中没有工作表'))
           return

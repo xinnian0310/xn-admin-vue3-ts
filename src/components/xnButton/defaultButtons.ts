@@ -15,7 +15,9 @@ export const XN_BUTTON_NAMES = {
   DELETE: '删除',
 } as const
 
-export function createDefaultButtonList(permissions: DefaultButtonPermissions = {}): ButtonListItem[] {
+export function createDefaultButtonList(
+  permissions: DefaultButtonPermissions = {},
+): ButtonListItem[] {
   return [
     {
       name: XN_BUTTON_NAMES.ADD,

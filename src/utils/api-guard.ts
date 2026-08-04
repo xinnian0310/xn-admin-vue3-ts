@@ -26,9 +26,7 @@ let loaded = false
 /** 将 /api/users/{id} 编译为正则 ^/api/users/[^/]+$ */
 function toRegex(path: string): RegExp {
   const segments = path.split(/\{[^/}]+\}/)
-  const escaped = segments
-    .map((seg) => seg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .join('[^/]+')
+  const escaped = segments.map((seg) => seg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[^/]+')
   return new RegExp(`^${escaped}$`)
 }
 

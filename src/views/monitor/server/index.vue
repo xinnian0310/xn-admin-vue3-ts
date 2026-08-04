@@ -26,7 +26,9 @@
                   {{ item.status || '—' }}
                 </el-tag>
               </div>
-              <div class="infra-card__endpoint" :title="item.endpoint">{{ item.endpoint || '—' }}</div>
+              <div class="infra-card__endpoint" :title="item.endpoint">
+                {{ item.endpoint || '—' }}
+              </div>
               <div class="infra-card__msg" :title="item.message">{{ item.message || '—' }}</div>
               <div class="infra-card__actions">
                 <el-button
@@ -63,11 +65,17 @@
     <el-row :gutter="16" class="info-row">
       <el-col :xs="24" :lg="12">
         <el-card shadow="never" class="info-card">
-          <template #header><div class="info-card__header"><el-icon><Cpu /></el-icon><span>服务器信息</span></div></template>
+          <template #header
+            ><div class="info-card__header">
+              <el-icon><Cpu /></el-icon><span>服务器信息</span>
+            </div></template
+          >
           <el-descriptions :column="1" border class="info-desc">
             <el-descriptions-item label="操作系统">{{ data.system.osName }}</el-descriptions-item>
             <el-descriptions-item label="系统架构">{{ data.system.osArch }}</el-descriptions-item>
-            <el-descriptions-item label="系统版本">{{ data.system.osVersion }}</el-descriptions-item>
+            <el-descriptions-item label="系统版本">{{
+              data.system.osVersion
+            }}</el-descriptions-item>
             <el-descriptions-item label="主机名称">{{ data.system.hostName }}</el-descriptions-item>
             <el-descriptions-item label="服务器 IP">{{ data.system.ip }}</el-descriptions-item>
             <el-descriptions-item label="CPU 核心数">{{ data.cpu.cores }} 核</el-descriptions-item>
@@ -77,15 +85,23 @@
       </el-col>
       <el-col :xs="24" :lg="12">
         <el-card shadow="never" class="info-card">
-          <template #header><div class="info-card__header"><el-icon><Coin /></el-icon><span>JVM 信息</span></div></template>
+          <template #header
+            ><div class="info-card__header">
+              <el-icon><Coin /></el-icon><span>JVM 信息</span>
+            </div></template
+          >
           <el-descriptions :column="1" border class="info-desc">
             <el-descriptions-item label="Java 版本">{{ data.jvm.version }}</el-descriptions-item>
             <el-descriptions-item label="运行厂商">{{ data.jvm.vendor }}</el-descriptions-item>
             <el-descriptions-item label="堆内存 (已用/最大)">
               {{ formatBytes(data.jvm.used) }} / {{ formatBytes(data.jvm.max) }}
             </el-descriptions-item>
-            <el-descriptions-item label="启动时间">{{ data.jvm.startTime || '—' }}</el-descriptions-item>
-            <el-descriptions-item label="运行时长">{{ formatUptime(data.jvm.uptimeSeconds) }}</el-descriptions-item>
+            <el-descriptions-item label="启动时间">{{
+              data.jvm.startTime || '—'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="运行时长">{{
+              formatUptime(data.jvm.uptimeSeconds)
+            }}</el-descriptions-item>
             <el-descriptions-item label="安装路径">{{ data.jvm.home }}</el-descriptions-item>
           </el-descriptions>
         </el-card>
@@ -94,7 +110,9 @@
 
     <!-- 磁盘状态 -->
     <div class="page-card">
-      <div class="info-card__header disk-title"><el-icon><Files /></el-icon><span>磁盘状态</span></div>
+      <div class="info-card__header disk-title">
+        <el-icon><Files /></el-icon><span>磁盘状态</span>
+      </div>
       <el-table :data="data.disks" border stripe>
         <el-table-column prop="name" label="盘符 / 挂载点" min-width="160" />
         <el-table-column prop="type" label="文件系统" min-width="120" />
@@ -141,8 +159,26 @@ let timer: ReturnType<typeof setInterval> | null = null
 const emptyData: ServerMonitor = {
   cpu: { cores: 0, sysUsage: 0, processUsage: 0 },
   memory: { total: 0, used: 0, free: 0, usage: 0 },
-  jvm: { total: 0, used: 0, free: 0, max: 0, usage: 0, version: '', vendor: '', home: '', uptimeSeconds: 0 },
-  system: { osName: '', osArch: '', osVersion: '', hostName: '', ip: '', userDir: '', availableProcessors: 0 },
+  jvm: {
+    total: 0,
+    used: 0,
+    free: 0,
+    max: 0,
+    usage: 0,
+    version: '',
+    vendor: '',
+    home: '',
+    uptimeSeconds: 0,
+  },
+  system: {
+    osName: '',
+    osArch: '',
+    osVersion: '',
+    hostName: '',
+    ip: '',
+    userDir: '',
+    availableProcessors: 0,
+  },
   disks: [],
 }
 const emptyComp = (): InfraComponent => ({
@@ -223,7 +259,12 @@ function gaugeOption(value: number) {
         progress: { show: true, width: 10, roundCap: true, itemStyle: { color } },
         axisLine: { roundCap: true, lineStyle: { width: 10, color: [[1, '#ebeef5']] } },
         axisTick: { show: false },
-        splitLine: { show: true, length: 8, distance: 2, lineStyle: { color: '#c0c4cc', width: 1 } },
+        splitLine: {
+          show: true,
+          length: 8,
+          distance: 2,
+          lineStyle: { color: '#c0c4cc', width: 1 },
+        },
         axisLabel: { distance: 14, color: '#909399', fontSize: 11 },
         pointer: { show: true, length: '46%', width: 3, itemStyle: { color } },
         anchor: { show: true, showAbove: true, size: 6, itemStyle: { color } },

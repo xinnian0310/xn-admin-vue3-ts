@@ -42,7 +42,9 @@
               <div v-else-if="fileName" class="xn-import__drop xn-import__drop--done">
                 <el-icon :size="28" color="var(--el-color-success)"><CircleCheckFilled /></el-icon>
                 <div class="xn-import__drop-name">{{ fileName }}</div>
-                <div class="xn-import__drop-meta">共 {{ rows.length }} 行有效数据 · 点击或拖拽可重新选择</div>
+                <div class="xn-import__drop-meta">
+                  共 {{ rows.length }} 行有效数据 · 点击或拖拽可重新选择
+                </div>
               </div>
               <div v-else class="xn-import__drop">
                 <el-icon :size="36" class="xn-import__drop-icon"><UploadFilled /></el-icon>
@@ -58,7 +60,11 @@
         <div class="xn-import__preview-head">
           <span>数据预览</span>
           <span class="xn-import__preview-count">
-            {{ rows.length > previewLimit ? `前 ${previewLimit} / 共 ${rows.length} 行` : `${rows.length} 行` }}
+            {{
+              rows.length > previewLimit
+                ? `前 ${previewLimit} / 共 ${rows.length} 行`
+                : `${rows.length} 行`
+            }}
           </span>
         </div>
         <el-table :data="previewRows" border stripe max-height="280" size="small">
@@ -117,7 +123,12 @@ import { CircleCheckFilled, Download, Loading, UploadFilled } from '@element-plu
 import { ElMessage } from 'element-plus'
 import type { UploadFile } from 'element-plus'
 import type { ExcelImportColumn, ExcelImportSubmit, ImportResult } from '@/types/excel'
-import { downloadExcelTemplate, mapImportRows, parseExcelFile, validateImportRows } from '@/utils/excel'
+import {
+  downloadExcelTemplate,
+  mapImportRows,
+  parseExcelFile,
+  validateImportRows,
+} from '@/utils/excel'
 
 defineOptions({ name: 'XnImportDialog' })
 
@@ -303,7 +314,9 @@ defineExpose({ open })
   border-radius: 8px;
   border: 1px dashed var(--el-border-color);
   background: var(--el-fill-color-blank);
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .xn-import__uploader :deep(.el-upload-dragger:hover) {

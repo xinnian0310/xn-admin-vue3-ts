@@ -14,11 +14,11 @@ export type LoginPageConfigListParams = {
 export function getActive() {
   // 使用独立 axios，避免登录前接口守卫 / 401 跳转干扰
   return axios
-    .get<any, ApiResponse<LoginPageConfig | null>>('/api/login-page-configs/active', {
+    .get<ApiResponse<LoginPageConfig | null>>('/api/login-page-configs/active', {
       timeout: 10000,
     })
     .then((res) => {
-      const data = res.data as ApiResponse<LoginPageConfig | null>
+      const data = res.data
       if (data.code !== 200) {
         return Promise.reject(new Error(data.message || '获取登录页配置失败'))
       }
@@ -30,7 +30,9 @@ export function getActive() {
 }
 
 export function list(params?: LoginPageConfigListParams) {
-  return request.get<any, ApiResponse<PageResult<LoginPageConfig>>>('/login-page-configs', { params })
+  return request.get<any, ApiResponse<PageResult<LoginPageConfig>>>('/login-page-configs', {
+    params,
+  })
 }
 
 export function get(id: number) {
@@ -54,7 +56,9 @@ export function remove(id: number) {
 }
 
 export function batchRemove(ids: number[]) {
-  return request.post<any, ApiResponse<{ count: number }>>('/login-page-configs/batch-delete', { ids })
+  return request.post<any, ApiResponse<{ count: number }>>('/login-page-configs/batch-delete', {
+    ids,
+  })
 }
 
 export function uploadBackground(file: File) {

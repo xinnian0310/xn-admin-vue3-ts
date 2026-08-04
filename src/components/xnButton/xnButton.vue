@@ -6,7 +6,11 @@
         trigger="click"
         @command="(cmd: string) => handleDropdownCommand(item, cmd)"
       >
-        <el-button :type="item.typeColor || 'primary'" :icon="resolveBtnIcon(item.icon)" :disabled="isDisabled(item)">
+        <el-button
+          :type="item.typeColor || 'primary'"
+          :icon="resolveBtnIcon(item.icon)"
+          :disabled="isDisabled(item)"
+        >
           {{ item.name }}
           <el-icon class="xn-button__arrow"><ArrowDown /></el-icon>
         </el-button>
@@ -92,9 +96,7 @@ function resolveBtnIcon(icon?: Component | string) {
 }
 
 function visibleDropdownItems(item: ButtonListItem) {
-  return (item.searchItem ?? []).filter(
-    (sub) => !sub.permission || hasPermission(sub.permission),
-  )
+  return (item.searchItem ?? []).filter((sub) => !sub.permission || hasPermission(sub.permission))
 }
 
 function isDisabled(item: ButtonListItem) {

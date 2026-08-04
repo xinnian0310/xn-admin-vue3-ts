@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:view-mode="viewMode"
     v-model:page="page"
     v-model:page-size="size"
@@ -51,7 +51,7 @@
         </template>
       </xnTable>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <DictDataSave ref="saveRef" :dict-type="dictType" @success="loadData" />
 </template>
@@ -61,7 +61,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
@@ -115,7 +115,9 @@ const columns: TableColumnItem[] = [
 
 function tagType(listClass?: string): 'primary' | 'success' | 'info' | 'warning' | 'danger' | '' {
   const allowed = ['primary', 'success', 'info', 'warning', 'danger']
-  return allowed.includes(listClass || '') ? (listClass as 'primary' | 'success' | 'info' | 'warning' | 'danger') : ''
+  return allowed.includes(listClass || '')
+    ? (listClass as 'primary' | 'success' | 'info' | 'warning' | 'danger')
+    : ''
 }
 
 function goBack() {

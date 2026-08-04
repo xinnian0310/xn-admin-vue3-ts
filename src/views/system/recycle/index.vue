@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:page="page"
     v-model:page-size="size"
     :total="total"
@@ -38,13 +38,13 @@
         </template>
       </xnTable>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'

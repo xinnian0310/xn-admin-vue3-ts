@@ -60,10 +60,7 @@
           >
             <template #default="{ row }">
               <span class="xn-table__icon-text">
-                <AppIcon
-                  v-if="resolveIconName(row, col)"
-                  :name="resolveIconName(row, col)"
-                />
+                <xnAppIcon v-if="resolveIconName(row, col)" :name="resolveIconName(row, col)" />
                 <span>{{ formatText(row, col) }}</span>
               </span>
             </template>
@@ -81,10 +78,7 @@
             :class-name="col.className"
           >
             <template #default="{ row }">
-              <el-tag
-                v-if="resolveOption(row, col)"
-                :type="resolveOption(row, col)?.type"
-              >
+              <el-tag v-if="resolveOption(row, col)" :type="resolveOption(row, col)?.type">
                 {{ resolveOption(row, col)?.label }}
               </el-tag>
               <span v-else>{{ emptyOf(col) }}</span>
@@ -159,7 +153,7 @@
       </div>
     </div>
 
-    <ColumnSettingDialog
+    <xnColumnSettingDialog
       v-if="tableKey"
       v-model="columnSettingVisible"
       :columns="settingRows"
@@ -181,8 +175,8 @@
 import { computed, onMounted, provide, ref, shallowRef, watch, type Component } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh, Setting } from '@element-plus/icons-vue'
-import AppIcon from '@/components/AppIcon/AppIcon.vue'
-import ColumnSettingDialog from '@/components/xnTable/ColumnSettingDialog.vue'
+import xnAppIcon from '@/components/xnAppIcon/xnAppIcon.vue'
+import xnColumnSettingDialog from '@/components/xnTable/xnColumnSettingDialog.vue'
 import { getTableColumns, saveTableColumns, type TableColumnSetting } from '@/api/table-column'
 import { CRUD_API_KEY } from '@/composables/useCrudApi'
 import { loadCrudApi } from '@/utils/api-loader'
@@ -268,7 +262,9 @@ const emit = defineEmits<{
   'update:pageSize': [value: number]
   'page-change': []
   'selection-change': [rows: unknown[]]
-  'switch-change': [payload: { row: Record<string, unknown>; prop: string; value: string | number | boolean }]
+  'switch-change': [
+    payload: { row: Record<string, unknown>; prop: string; value: string | number | boolean },
+  ]
   'data-change': [payload: { records: unknown[]; total: number; loading: boolean }]
   success: []
 }>()
@@ -326,10 +322,7 @@ function columnIdentity(col: TableColumnItem) {
 }
 
 function toSettingRow(col: TableColumnItem, index: number): TableColumnSetting {
-  const widthNum =
-    col.width == null || col.width === ''
-      ? undefined
-      : Number(col.width)
+  const widthNum = col.width == null || col.width === '' ? undefined : Number(col.width)
   const locked = col.type === 'selection'
   return {
     key: columnIdentity(col),
@@ -379,9 +372,7 @@ const resolvedColumns = computed(() =>
   applyColumnSettings(props.columns ?? [], savedColumnSettings.value),
 )
 
-const visibleColumns = computed(() =>
-  resolvedColumns.value.filter((col) => col.visible !== false),
-)
+const visibleColumns = computed(() => resolvedColumns.value.filter((col) => col.visible !== false))
 
 const settingRows = computed(() =>
   resolvedColumns.value.map((col, index) => toSettingRow(col, index)),
@@ -415,9 +406,7 @@ const displayTotal = computed(() => {
   return filteredAllData.value.length
 })
 
-const displayLoading = computed(() =>
-  isApiMode.value ? innerLoading.value : props.loading,
-)
+const displayLoading = computed(() => (isApiMode.value ? innerLoading.value : props.loading))
 
 function isPageResult(payload: unknown): payload is PageResult<unknown> {
   return (
@@ -718,8 +707,7 @@ function resolveColumnMinWidth(col: TableColumnItem) {
 }
 
 function resolveColumnClassName(col: TableColumnItem) {
-  const parts = [col.className, isActionsColumn(col) ? 'xn-table-col-actions' : '']
-    .filter(Boolean)
+  const parts = [col.className, isActionsColumn(col) ? 'xn-table-col-actions' : ''].filter(Boolean)
   return parts.join(' ') || undefined
 }
 

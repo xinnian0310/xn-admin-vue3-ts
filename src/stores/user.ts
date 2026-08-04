@@ -1,7 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { User } from '@/types'
-import { getApiRegistry, getCurrentUser, login as loginApi, logout as logoutApi, refreshToken as refreshTokenApi, updateCurrentUser } from '@/api/auth'
+import {
+  getApiRegistry,
+  getCurrentUser,
+  login as loginApi,
+  logout as logoutApi,
+  refreshToken as refreshTokenApi,
+  updateCurrentUser,
+} from '@/api/auth'
 import type { ProfileUpdatePayload } from '@/api/auth'
 import { usePermissionStore } from '@/stores/permission'
 import { useTagsViewStore } from '@/stores/tagsView'
@@ -60,7 +67,11 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function login(username: string, password: string, captcha?: { captchaId?: string; captchaCode?: string }) {
+  async function login(
+    username: string,
+    password: string,
+    captcha?: { captchaId?: string; captchaCode?: string },
+  ) {
     clearSessionViews()
     // 重新登录必须重置动态路由/菜单，否则会沿用内存里旧菜单树（看不到新加的「代码生成」等）
     resetDynamicRoutes()

@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:view-mode="viewMode"
     v-model:page="page"
     v-model:page-size="size"
@@ -48,7 +48,9 @@
         <el-card v-for="row in tableData" :key="row.id" shadow="hover">
           <div class="post-card__name">{{ row.name }}</div>
           <code class="post-code">{{ row.code }}</code>
-          <div class="post-card__meta">排序 {{ row.sort }} · {{ row.status === 1 ? '启用' : '停用' }}</div>
+          <div class="post-card__meta">
+            排序 {{ row.sort }} · {{ row.status === 1 ? '启用' : '停用' }}
+          </div>
           <xnTableActions
             :items="tableButtonItems"
             :row="row"
@@ -58,7 +60,7 @@
         </el-card>
       </div>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <PostSave ref="saveRef" @success="loadData" />
   <XnImportDialog
@@ -74,7 +76,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
@@ -179,7 +181,8 @@ async function buttonClick(action: string) {
     } catch (e: unknown) {
       ElMessage.error(e instanceof Error ? e.message : '导出失败')
     }
-  } else if (action === 'edit' && selected.value.length === 1) openSave('edit', selected.value[0].id)
+  } else if (action === 'edit' && selected.value.length === 1)
+    openSave('edit', selected.value[0].id)
   else if (action === 'view' && selected.value.length === 1) openSave('view', selected.value[0].id)
   else if (action === 'delete') handleBatchDelete()
 }

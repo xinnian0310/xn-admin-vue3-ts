@@ -36,9 +36,7 @@ export function buildQueryString(params: Record<string, unknown>): string {
 }
 
 /** 将 xnSearch daterange（YYYY-MM-DD[]）转成后端 begin/end ISO 时间 */
-export function rangeToBeginEnd(
-  range: unknown,
-): { beginTime?: string; endTime?: string } {
+export function rangeToBeginEnd(range: unknown): { beginTime?: string; endTime?: string } {
   if (!Array.isArray(range) || range.length < 2) return {}
   const begin = String(range[0] ?? '').trim()
   const end = String(range[1] ?? '').trim()

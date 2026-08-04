@@ -73,24 +73,20 @@ export const useNoticeStore = defineStore('notice', () => {
         position: 'top-right',
         message: h('div', { class: 'notice-ws-notify' }, [
           h('div', { class: 'notice-ws-notify__text' }, title),
-          h(
-            'div',
-            { class: 'notice-ws-notify__actions' },
-            [
-              h(
-                ElButton,
-                {
-                  type: 'primary',
-                  size: 'small',
-                  onClick: () => {
-                    notify.close()
-                    void openNoticeById(id)
-                  },
+          h('div', { class: 'notice-ws-notify__actions' }, [
+            h(
+              ElButton,
+              {
+                type: 'primary',
+                size: 'small',
+                onClick: () => {
+                  notify.close()
+                  void openNoticeById(id)
                 },
-                () => '查看',
-              ),
-            ],
-          ),
+              },
+              () => '查看',
+            ),
+          ]),
         ]),
       })
       fetchMine()

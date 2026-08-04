@@ -136,7 +136,9 @@ html.dark .el-select__wrapper {
 /* 卡片列表：hover 跟随主题主色 */
 .page-card-grid .el-card {
   border: 1px solid var(--app-border-color);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .page-card-grid .el-card:hover {
@@ -198,4 +200,3 @@ html.dark .el-select__wrapper {
   flex-shrink: 0;
   padding-top: 0;
 }
-

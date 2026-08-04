@@ -4,39 +4,56 @@
 
 对接微服务后端 [`xn-admin-cloud`](../xn-admin-cloud/)（经网关 `8088`），提供 JWT 登录、RBAC、动态路由/菜单、page-ui 驱动 CRUD、主题、通知与系统监控等能力。
 
+## 质量检查
+
+```bash
+npm run lint          # ESLint：代码规范与潜在问题检查
+npm run typecheck     # TypeScript / vue-tsc：仅做类型检查，不产出构建
+npm run test          # Vitest：跑单元测试（非 watch）
+npm run ci            # 全量检查：typecheck + lint + format:check + test + build
+```
+
+提交前会经 Husky 跑 lint-staged（ESLint 修复 + Prettier 格式化）；提交信息需符合 [Conventional Commits](https://www.conventionalcommits.org/)（如 `feat: xxx`）。Gitee Go 流水线见 `.workflow/ci.yml`。
+
+在 Cursor / VS Code 中打开本仓库并安装推荐扩展后：**保存文件会自动 Prettier 格式化，并执行 ESLint 可自动修复项**（见 `.vscode/settings.json`）。
+
 ## 技术栈
 
-| 类别 | 技术 |
-|------|------|
-| 框架 | Vue 3.5、TypeScript 6、Vite 8 |
-| UI | Element Plus、@element-plus/icons-vue、Iconify |
-| 状态 / 路由 | Pinia、Vue Router 5 |
-| 请求 | Axios |
-| 图表 / 编辑器 | ECharts、wangEditor |
-| Excel | ExcelJS、xlsx |
+| 类别          | 技术                                           |
+| ------------- | ---------------------------------------------- |
+| 框架          | Vue 3.5、TypeScript 6、Vite 8                  |
+| UI            | Element Plus、@element-plus/icons-vue、Iconify |
+| 状态 / 路由   | Pinia、Vue Router 5                            |
+| 请求          | Axios                                          |
+| 图表 / 编辑器 | ECharts、wangEditor                            |
+| Excel         | ExcelJS、xlsx                                  |
 
 ## 快速启动
 
-要求：Node.js 18+
+要求：Node.js 20+（见 `.nvmrc`）
 
 ```bash
-npm install
-npm run dev
+npm install           # 安装依赖
+npm run dev           # 启动开发服务
 ```
 
 开发地址：http://localhost:5173
 
 Vite 已代理到网关：
 
-| 前缀 | 目标 |
-|------|------|
-| `/api` | `http://localhost:8088` |
-| `/uploads` | `http://localhost:8088` |
-| `/ws` | `http://localhost:8088`（WebSocket） |
+| 前缀       | 目标                                 |
+| ---------- | ------------------------------------ |
+| `/api`     | `http://localhost:8088`              |
+| `/uploads` | `http://localhost:8088`              |
+| `/ws`      | `http://localhost:8088`（WebSocket） |
 
 ```bash
-npm run build    # vue-tsc + vite build
-npm run preview  # 预览构建产物
+npm run build         # vue-tsc 类型检查 + vite 生产构建
+npm run preview       # 本地预览构建产物
+npm run format        # Prettier：格式化代码
+npm run format:check  # Prettier：仅检查格式，不改文件
+npm run lint:fix     # ESLint：自动修复可修复项
+npm run test:watch    # Vitest：watch 模式
 ```
 
 ## 目录结构
@@ -60,28 +77,28 @@ src/
 
 每个组件目录下有独立文档，入口如下：
 
-| 组件 | 说明 | 文档 |
-|------|------|------|
-| AppIcon | 统一图标（Element / Iconify / SVG） | [README](./src/components/AppIcon/README.md) |
-| AppBrandLogo | 品牌 Logo | [README](./src/components/AppBrandLogo/README.md) |
-| IconPicker | 图标选择器 | [README](./src/components/IconPicker/README.md) |
-| NoticeInbox | 消息中心抽屉 | [README](./src/components/NoticeInbox/README.md) |
-| PageLayout | 列表页骨架 | [README](./src/components/PageLayout/README.md) |
-| RichEditor | 富文本编辑器 | [README](./src/components/RichEditor/README.md) |
-| SidebarMenu | 多级菜单 | [README](./src/components/SidebarMenu/README.md) |
-| TagsView | 页面标签栏 | [README](./src/components/TagsView/README.md) |
-| ThemePicker | 主题设置 | [README](./src/components/ThemePicker/README.md) |
-| TreePanel | 左侧树面板 | [README](./src/components/TreePanel/README.md) |
-| xnButton | 工具栏 / 行操作按钮 | [README](./src/components/xnButton/README.md) |
-| xnImport | Excel 导入对话框 | [README](./src/components/xnImport/README.md) |
-| xnSearch | 配置化搜索表单 | [README](./src/components/xnSearch/README.md) |
-| xnTable | 配置化表格 | [README](./src/components/xnTable/README.md) |
+| 组件           | 说明                                | 文档                                                |
+| -------------- | ----------------------------------- | --------------------------------------------------- |
+| xnAppIcon      | 统一图标（Element / Iconify / SVG） | [README](./src/components/xnAppIcon/README.md)      |
+| xnAppBrandLogo | 品牌 Logo                           | [README](./src/components/xnAppBrandLogo/README.md) |
+| xnIconPicker   | 图标选择器                          | [README](./src/components/xnIconPicker/README.md)   |
+| xnNoticeInbox  | 消息中心抽屉                        | [README](./src/components/xnNoticeInbox/README.md)  |
+| xnPageLayout   | 列表页骨架                          | [README](./src/components/xnPageLayout/README.md)   |
+| xnRichEditor   | 富文本编辑器                        | [README](./src/components/xnRichEditor/README.md)   |
+| xnSidebarMenu  | 多级菜单                            | [README](./src/components/xnSidebarMenu/README.md)  |
+| xnTagsView     | 页面标签栏                          | [README](./src/components/xnTagsView/README.md)     |
+| xnThemePicker  | 主题设置                            | [README](./src/components/xnThemePicker/README.md)  |
+| xnTreePanel    | 左侧树面板                          | [README](./src/components/xnTreePanel/README.md)    |
+| xnButton       | 工具栏 / 行操作按钮                 | [README](./src/components/xnButton/README.md)       |
+| xnImport       | Excel 导入对话框                    | [README](./src/components/xnImport/README.md)       |
+| xnSearch       | 配置化搜索表单                      | [README](./src/components/xnSearch/README.md)       |
+| xnTable        | 配置化表格                          | [README](./src/components/xnTable/README.md)        |
 
 典型列表页组合：
 
 ```
-PageLayout
-├── #aside → TreePanel（可选）
+xnPageLayout
+├── #aside → xnTreePanel（可选）
 ├── #search → xnSearch
 ├── #toolbar → xnButton
 └── #table → xnTable

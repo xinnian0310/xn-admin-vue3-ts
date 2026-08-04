@@ -36,5 +36,7 @@ export function listLockedAccounts() {
 }
 
 export function unlockAccount(username: string) {
-  return request.delete<any, ApiResponse<null>>(`/security-policy/locks/${encodeURIComponent(username)}`)
+  return request.delete<any, ApiResponse<null>>(
+    `/security-policy/locks/${encodeURIComponent(username)}`,
+  )
 }

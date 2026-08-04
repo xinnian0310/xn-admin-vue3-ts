@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:view-mode="viewMode"
     v-model:page="page"
     v-model:page-size="size"
@@ -9,7 +9,7 @@
     @page-change="loadData"
   >
     <template #aside>
-      <TreePanel
+      <xnTreePanel
         title="单位"
         width="240px"
         v-model:filter="unitKeyword"
@@ -128,7 +128,7 @@
         </el-card>
       </div>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <UserSave ref="saveRef" @success="loadData" />
   <XnImportDialog
@@ -144,8 +144,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
-import TreePanel from '@/components/TreePanel/TreePanel.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
+import xnTreePanel from '@/components/xnTreePanel/xnTreePanel.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
@@ -192,7 +192,10 @@ const unitKeyword = ref('')
 const selectedUnitId = ref<number | null>(null)
 const selectedUnitKey = computed(() => selectedUnitId.value ?? undefined)
 
-function flattenUnits(nodes: SysUnit[], path: string[] = []): Array<{ code: string; label: string }> {
+function flattenUnits(
+  nodes: SysUnit[],
+  path: string[] = [],
+): Array<{ code: string; label: string }> {
   const result: Array<{ code: string; label: string }> = []
   for (const node of nodes) {
     const names = [...path, node.name]
@@ -213,12 +216,14 @@ const userImportColumns = computed<ExcelImportColumn[]>(() => {
     label: u.label,
     value: u.code,
   }))
-  const roleExample = roleOptions.find((o) => o.value === 'USER')?.label || roleOptions[0]?.label || '普通用户'
+  const roleExample =
+    roleOptions.find((o) => o.value === 'USER')?.label || roleOptions[0]?.label || '普通用户'
   const unitExample =
     unitOptions.find((o) => o.value === 'TECH_RD1')?.label || unitOptions[0]?.label || '研发一部'
 
   const postOptions = posts.value.map((p) => ({ label: p.name, value: p.code }))
-  const postExample = postOptions.find((o) => o.value === 'staff')?.label || postOptions[0]?.label || '普通员工'
+  const postExample =
+    postOptions.find((o) => o.value === 'staff')?.label || postOptions[0]?.label || '普通员工'
 
   return [
     { key: 'username', title: '用户名', required: true, example: 'zhangsan', width: 14 },

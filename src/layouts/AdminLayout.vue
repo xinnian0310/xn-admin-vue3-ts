@@ -38,9 +38,7 @@ const layoutMap = {
   columns: ColumnsLayout,
 } as const
 
-const layoutComponent = computed(
-  () => layoutMap[appConfig.ui.layout.mode] ?? SideLayout,
-)
+const layoutComponent = computed(() => layoutMap[appConfig.ui.layout.mode] ?? SideLayout)
 
 function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape' && tagsViewStore.isFullscreen) {

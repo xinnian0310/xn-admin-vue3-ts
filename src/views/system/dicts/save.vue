@@ -6,12 +6,22 @@
     destroy-on-close
     @closed="handleClosed"
   >
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="90px" :disabled="mode === 'view'">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="90px"
+      :disabled="mode === 'view'"
+    >
       <el-form-item label="字典名称" prop="name">
         <el-input v-model="form.name" :disabled="mode === 'view'" />
       </el-form-item>
       <el-form-item label="字典编码" prop="type">
-        <el-input v-model="form.type" :disabled="mode === 'view' || editingBuiltIn" placeholder="如 sys_common_status" />
+        <el-input
+          v-model="form.type"
+          :disabled="mode === 'view' || editingBuiltIn"
+          placeholder="如 sys_common_status"
+        />
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-radio-group v-model="form.status">
@@ -25,7 +35,9 @@
     </el-form>
     <template #footer>
       <el-button @click="visible = false">{{ mode === 'view' ? '关闭' : '取消' }}</el-button>
-      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit">保存</el-button>
+      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit"
+        >保存</el-button
+      >
     </template>
   </el-dialog>
 </template>

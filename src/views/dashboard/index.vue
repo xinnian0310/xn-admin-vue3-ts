@@ -7,7 +7,9 @@
           <div class="home-intro__head">
             <div class="home-intro__title">
               {{ home.intro.title }}
-              <el-tag type="primary" effect="plain" round size="small">{{ home.intro.version }}</el-tag>
+              <el-tag type="primary" effect="plain" round size="small">{{
+                home.intro.version
+              }}</el-tag>
             </div>
             <p class="home-intro__desc">{{ home.intro.description }}</p>
           </div>
@@ -104,7 +106,12 @@
             <div v-for="c in home.contacts" :key="c.label" class="contact-item">
               <el-icon class="contact-item__icon"><component :is="iconOf(c.icon)" /></el-icon>
               <span class="contact-item__label">{{ c.label }}</span>
-              <a v-if="c.link" :href="c.link" target="_blank" class="contact-item__value contact-item__value--link">
+              <a
+                v-if="c.link"
+                :href="c.link"
+                target="_blank"
+                class="contact-item__value contact-item__value--link"
+              >
                 {{ c.value }}
               </a>
               <span v-else class="contact-item__value">{{ c.value }}</span>
@@ -122,7 +129,12 @@
           <p class="donation-tip">{{ home.donation.tip }}</p>
           <div class="donation-body">
             <div class="donation-qr">
-              <el-image v-if="home.donation.qrcode" :src="home.donation.qrcode" fit="contain" class="donation-qr__img" />
+              <el-image
+                v-if="home.donation.qrcode"
+                :src="home.donation.qrcode"
+                fit="contain"
+                class="donation-qr__img"
+              />
               <div v-else class="donation-qr__placeholder">
                 <el-icon :size="28"><Money /></el-icon>
                 <span>收款码占位</span>
@@ -145,8 +157,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import {
-  Lock, Guide, Monitor, Bell, User, Message, Link, ChatDotRound,
-  Coin, Clock, Phone, Coffee, Money,
+  Lock,
+  Guide,
+  Monitor,
+  Bell,
+  User,
+  Message,
+  Link,
+  ChatDotRound,
+  Coin,
+  Clock,
+  Phone,
+  Coffee,
+  Money,
 } from '@element-plus/icons-vue'
 import type { Component } from 'vue'
 import { homeConfig, changelogTypeMeta } from '@/config/home'
@@ -156,7 +179,19 @@ defineOptions({ name: 'Dashboard' })
 const home = homeConfig
 
 const iconMap: Record<string, Component> = {
-  Lock, Guide, Monitor, Bell, User, Message, Link, ChatDotRound, Coin, Clock, Phone, Coffee, Money,
+  Lock,
+  Guide,
+  Monitor,
+  Bell,
+  User,
+  Message,
+  Link,
+  ChatDotRound,
+  Coin,
+  Clock,
+  Phone,
+  Coffee,
+  Money,
 }
 
 function iconOf(name: string): Component {
@@ -164,7 +199,10 @@ function iconOf(name: string): Component {
 }
 
 const donationTotal = computed(() =>
-  home.donation.donors.reduce((sum, d) => sum + d.amount, 0).toFixed(2).replace(/\.00$/, ''),
+  home.donation.donors
+    .reduce((sum, d) => sum + d.amount, 0)
+    .toFixed(2)
+    .replace(/\.00$/, ''),
 )
 </script>
 

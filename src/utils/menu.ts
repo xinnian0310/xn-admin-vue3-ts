@@ -20,7 +20,11 @@ export function findMenuByPath(items: MenuItem[], path: string): MenuItem | unde
   return undefined
 }
 
-export function collectOpenMenuIds(items: MenuItem[], path: string, openIds: string[] = []): string[] | null {
+export function collectOpenMenuIds(
+  items: MenuItem[],
+  path: string,
+  openIds: string[] = [],
+): string[] | null {
   for (const item of items) {
     if (item.path === path) {
       // 可跳转的父级菜单：打开自身，便于看到子项

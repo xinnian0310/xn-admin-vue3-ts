@@ -20,7 +20,12 @@ export type { DictType, DictTypeForm, DictData, DictDataForm } from './dict'
 export type { Post, PostForm } from './post'
 export type { JobLog } from './job-log'
 export type { RecycleBinItem } from './recycle'
-export type { LoginPageConfig, LoginPageConfigForm, LoginCaptchaType, LoginBackgroundFit } from './login-page'
+export type {
+  LoginPageConfig,
+  LoginPageConfigForm,
+  LoginCaptchaType,
+  LoginBackgroundFit,
+} from './login-page'
 export { BACKGROUND_FIT_OPTIONS, resolveBackgroundSize } from './login-page'
 export { DICT_LIST_CLASS_OPTIONS } from './dict'
 export type { LoginLog, OperLog, ExceptionLog } from './log'

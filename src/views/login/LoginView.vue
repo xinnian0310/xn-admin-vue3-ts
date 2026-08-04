@@ -6,18 +6,9 @@
         <p>{{ appConfig.app.subtitle }}</p>
       </div>
 
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        @submit.prevent="handleLogin"
-      >
+      <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleLogin">
         <el-form-item prop="username">
-          <el-input
-            v-model="form.username"
-            placeholder="请输入用户名"
-            :prefix-icon="User"
-          />
+          <el-input v-model="form.username" placeholder="请输入用户名" :prefix-icon="User" />
         </el-form-item>
         <el-form-item prop="password">
           <el-input
@@ -30,10 +21,7 @@
           />
         </el-form-item>
 
-        <el-form-item
-          v-if="captchaEnabled && captchaType === 'IMAGE'"
-          prop="captcha"
-        >
+        <el-form-item v-if="captchaEnabled && captchaType === 'IMAGE'" prop="captcha">
           <div class="captcha-row">
             <el-input
               v-model="form.captcha"
@@ -60,19 +48,11 @@
           </div>
         </el-form-item>
 
-        <el-form-item
-          v-if="captchaEnabled && captchaType === 'SLIDER'"
-          prop="sliderOk"
-        >
+        <el-form-item v-if="captchaEnabled && captchaType === 'SLIDER'" prop="sliderOk">
           <div class="slider-wrap">
             <div class="slider-track">
-              <div
-                class="slider-progress"
-                :style="{ width: `${sliderPercent}%` }"
-              />
-              <span class="slider-text">{{
-                sliderOk ? "验证通过" : "拖动滑块完成验证"
-              }}</span>
+              <div class="slider-progress" :style="{ width: `${sliderPercent}%` }" />
+              <span class="slider-text">{{ sliderOk ? '验证通过' : '拖动滑块完成验证' }}</span>
             </div>
             <div
               class="slider-thumb"
@@ -86,12 +66,7 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button
-            type="primary"
-            class="login-btn"
-            :loading="loading"
-            @click="handleLogin"
-          >
+          <el-button type="primary" class="login-btn" :loading="loading" @click="handleLogin">
             登 录
           </el-button>
         </el-form-item>
@@ -101,172 +76,166 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
-import { useRouter } from "vue-router";
-import { User, Lock } from "@element-plus/icons-vue";
-import type { FormInstance, FormRules } from "element-plus";
-import { ElMessage } from "element-plus";
-import { appConfig } from "@/config/app";
-import { useUserStore } from "@/stores/user";
-import { getActive } from "@/api/login-page";
-import { fetchCaptcha, verifySliderCaptcha } from "@/api/auth";
-import type { LoginBackgroundFit, LoginCaptchaType } from "@/types";
-import { resolveBackgroundSize } from "@/types";
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { User, Lock } from '@element-plus/icons-vue'
+import type { FormInstance, FormRules } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import { appConfig } from '@/config/app'
+import { useUserStore } from '@/stores/user'
+import { getActive } from '@/api/login-page'
+import { fetchCaptcha, verifySliderCaptcha } from '@/api/auth'
+import type { LoginBackgroundFit, LoginCaptchaType } from '@/types'
+import { resolveBackgroundSize } from '@/types'
 
-const router = useRouter();
-const userStore = useUserStore();
-const formRef = ref<FormInstance>();
-const loading = ref(false);
+const router = useRouter()
+const userStore = useUserStore()
+const formRef = ref<FormInstance>()
+const loading = ref(false)
 
-const backgroundUrl = ref<string | null>(null);
-const backgroundFit = ref<LoginBackgroundFit>("COVER");
-const boxX = ref(50);
-const boxY = ref(50);
-const captchaEnabled = ref(false);
-const captchaType = ref<LoginCaptchaType | null>(null);
-const captchaId = ref("");
-const captchaImage = ref("");
+const backgroundUrl = ref<string | null>(null)
+const backgroundFit = ref<LoginBackgroundFit>('COVER')
+const boxX = ref(50)
+const boxY = ref(50)
+const captchaEnabled = ref(false)
+const captchaType = ref<LoginCaptchaType | null>(null)
+const captchaId = ref('')
+const captchaImage = ref('')
 
-const sliderPercent = ref(0);
-const sliderOk = ref(false);
-const sliding = ref(false);
-const slideStartX = ref(0);
-const slideStartPercent = ref(0);
+const sliderPercent = ref(0)
+const sliderOk = ref(false)
+const sliding = ref(false)
+const slideStartX = ref(0)
+const slideStartPercent = ref(0)
 
 const form = reactive({
-  username: "SuperAdmin",
-  password: "",
-  captcha: "",
+  username: 'SuperAdmin',
+  password: '',
+  captcha: '',
   sliderOk: false,
-});
+})
 
 const pageStyle = computed(() => {
   if (backgroundUrl.value) {
     return {
       backgroundImage: `url(${backgroundUrl.value})`,
       backgroundSize: resolveBackgroundSize(backgroundFit.value),
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
-    };
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    }
   }
   return {
-    background:
-      "linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #a8dadc 100%)",
-  };
-});
+    background: 'linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #a8dadc 100%)',
+  }
+})
 
 const cardStyle = computed(() => ({
   left: `${boxX.value}%`,
   top: `${boxY.value}%`,
-  transform: "translate(-50%, -50%)",
-}));
+  transform: 'translate(-50%, -50%)',
+}))
 
 const rules = computed<FormRules>(() => {
   const base: FormRules = {
-    username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
-    password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-  };
-  if (captchaEnabled.value && captchaType.value === "IMAGE") {
-    base.captcha = [
-      { required: true, message: "请输入验证码", trigger: "blur" },
-    ];
+    username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+    password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
   }
-  if (captchaEnabled.value && captchaType.value === "SLIDER") {
+  if (captchaEnabled.value && captchaType.value === 'IMAGE') {
+    base.captcha = [{ required: true, message: '请输入验证码', trigger: 'blur' }]
+  }
+  if (captchaEnabled.value && captchaType.value === 'SLIDER') {
     base.sliderOk = [
       {
         validator: (_r, _value, callback) => {
           if (!sliderOk.value) {
-            callback(new Error("请完成滑块验证"));
-            return;
+            callback(new Error('请完成滑块验证'))
+            return
           }
-          callback();
+          callback()
         },
-        trigger: "change",
+        trigger: 'change',
       },
-    ];
+    ]
   }
-  return base;
-});
+  return base
+})
 
 async function refreshCaptcha() {
-  if (!captchaEnabled.value) return;
-  form.captcha = "";
-  resetSlider();
+  if (!captchaEnabled.value) return
+  form.captcha = ''
+  resetSlider()
   try {
-    const res = await fetchCaptcha();
-    const data = res.data;
+    const res = await fetchCaptcha()
+    const data = res.data
     if (!data) {
-      captchaId.value = "";
-      captchaImage.value = "";
-      return;
+      captchaId.value = ''
+      captchaImage.value = ''
+      return
     }
-    captchaId.value = data.captchaId;
-    captchaType.value = data.captchaType;
-    captchaImage.value = data.imageBase64 || "";
+    captchaId.value = data.captchaId
+    captchaType.value = data.captchaType
+    captchaImage.value = data.imageBase64 || ''
   } catch {
-    ElMessage.error("获取验证码失败");
+    ElMessage.error('获取验证码失败')
   }
 }
 
 function resetSlider() {
-  sliderPercent.value = 0;
-  sliderOk.value = false;
-  form.sliderOk = false;
+  sliderPercent.value = 0
+  sliderOk.value = false
+  form.sliderOk = false
 }
 
 function onSliderStart(e: PointerEvent) {
-  if (sliderOk.value) return;
-  sliding.value = true;
-  slideStartX.value = e.clientX;
-  slideStartPercent.value = sliderPercent.value;
-  window.addEventListener("pointermove", onSliderMove);
-  window.addEventListener("pointerup", onSliderEnd);
+  if (sliderOk.value) return
+  sliding.value = true
+  slideStartX.value = e.clientX
+  slideStartPercent.value = sliderPercent.value
+  window.addEventListener('pointermove', onSliderMove)
+  window.addEventListener('pointerup', onSliderEnd)
 }
 
 function onSliderMove(e: PointerEvent) {
-  if (!sliding.value) return;
-  const track = document.querySelector(".slider-wrap") as HTMLElement | null;
-  const width = track?.clientWidth || 280;
-  const delta = ((e.clientX - slideStartX.value) / width) * 100;
-  sliderPercent.value = Math.min(
-    100,
-    Math.max(0, slideStartPercent.value + delta),
-  );
+  if (!sliding.value) return
+  const track = document.querySelector('.slider-wrap') as HTMLElement | null
+  const width = track?.clientWidth || 280
+  const delta = ((e.clientX - slideStartX.value) / width) * 100
+  sliderPercent.value = Math.min(100, Math.max(0, slideStartPercent.value + delta))
 }
 
 async function onSliderEnd() {
-  sliding.value = false;
-  window.removeEventListener("pointermove", onSliderMove);
-  window.removeEventListener("pointerup", onSliderEnd);
+  sliding.value = false
+  window.removeEventListener('pointermove', onSliderMove)
+  window.removeEventListener('pointerup', onSliderEnd)
   if (sliderPercent.value >= 92) {
-    sliderPercent.value = 100;
+    sliderPercent.value = 100
     try {
-      await verifySliderCaptcha(captchaId.value, 100);
-      sliderOk.value = true;
-      form.sliderOk = true;
-      formRef.value?.clearValidate("sliderOk");
+      await verifySliderCaptcha(captchaId.value, 100)
+      sliderOk.value = true
+      form.sliderOk = true
+      formRef.value?.clearValidate('sliderOk')
     } catch {
-      resetSlider();
-      await refreshCaptcha();
+      resetSlider()
+      await refreshCaptcha()
     }
   } else {
-    resetSlider();
+    resetSlider()
   }
 }
 
 async function loadPageConfig() {
   try {
-    const res = await getActive();
-    const cfg = res.data;
-    if (!cfg) return;
-    backgroundUrl.value = cfg.backgroundUrl || null;
-    backgroundFit.value = (cfg.backgroundFit as LoginBackgroundFit) || "COVER";
-    boxX.value = cfg.boxX ?? 50;
-    boxY.value = cfg.boxY ?? 50;
-    captchaEnabled.value = !!cfg.captchaEnabled;
-    captchaType.value = (cfg.captchaType as LoginCaptchaType) || null;
+    const res = await getActive()
+    const cfg = res.data
+    if (!cfg) return
+    backgroundUrl.value = cfg.backgroundUrl || null
+    backgroundFit.value = (cfg.backgroundFit as LoginBackgroundFit) || 'COVER'
+    boxX.value = cfg.boxX ?? 50
+    boxY.value = cfg.boxY ?? 50
+    captchaEnabled.value = !!cfg.captchaEnabled
+    captchaType.value = (cfg.captchaType as LoginCaptchaType) || null
     if (captchaEnabled.value) {
-      await refreshCaptcha();
+      await refreshCaptcha()
     }
   } catch {
     // 无配置或接口失败时使用默认样式
@@ -274,41 +243,39 @@ async function loadPageConfig() {
 }
 
 async function handleLogin() {
-  if (!formRef.value) return;
+  if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
-    if (!valid) return;
-    loading.value = true;
+    if (!valid) return
+    loading.value = true
     try {
       const data = await userStore.login(form.username, form.password, {
         captchaId: captchaEnabled.value ? captchaId.value : undefined,
         captchaCode:
-          captchaEnabled.value && captchaType.value === "IMAGE"
-            ? form.captcha
-            : undefined,
-      });
+          captchaEnabled.value && captchaType.value === 'IMAGE' ? form.captcha : undefined,
+      })
       if (data.user?.mustChangePassword) {
-        ElMessage.warning("请先修改密码后再使用系统");
-        router.push({ path: "/profile", query: { forcePwd: "1" } });
+        ElMessage.warning('请先修改密码后再使用系统')
+        router.push({ path: '/profile', query: { forcePwd: '1' } })
       } else {
-        ElMessage.success("登录成功");
-        router.push("/dashboard");
+        ElMessage.success('登录成功')
+        router.push('/dashboard')
       }
     } catch {
       if (captchaEnabled.value) {
-        await refreshCaptcha();
+        await refreshCaptcha()
       }
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  });
+  })
 }
 
-onMounted(loadPageConfig);
+onMounted(loadPageConfig)
 
 onUnmounted(() => {
-  window.removeEventListener("pointermove", onSliderMove);
-  window.removeEventListener("pointerup", onSliderEnd);
-});
+  window.removeEventListener('pointermove', onSliderMove)
+  window.removeEventListener('pointerup', onSliderEnd)
+})
 </script>
 
 <style scoped>

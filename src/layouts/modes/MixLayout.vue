@@ -3,7 +3,7 @@
   <el-container class="layout-mix" direction="vertical">
     <el-header v-show="!isFullscreen" class="layout-mix__header">
       <div class="layout-mix__brand">
-        <AppBrandLogo />
+        <xnAppBrandLogo />
         <span>{{ appConfig.app.name }}</span>
       </div>
       <el-menu
@@ -17,7 +17,7 @@
         @select="onTopSelect"
       >
         <el-menu-item v-for="item in rootMenus" :key="item.id" :index="item.id">
-          <AppIcon v-if="item.icon" :name="item.icon" class="layout-mix__icon" />
+          <xnAppIcon v-if="item.icon" :name="item.icon" class="layout-mix__icon" />
           <span>{{ item.title }}</span>
         </el-menu-item>
       </el-menu>
@@ -34,7 +34,7 @@
         width="200px"
       />
       <el-container class="layout-mix__main">
-        <TagsView v-show="!isFullscreen" />
+        <xnTagsView v-show="!isFullscreen" />
         <LayoutContent />
       </el-container>
     </el-container>
@@ -44,16 +44,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import AppBrandLogo from '@/components/AppBrandLogo/AppBrandLogo.vue'
-import AppIcon from '@/components/AppIcon/AppIcon.vue'
-import TagsView from '@/components/TagsView/TagsView.vue'
+import xnAppBrandLogo from '@/components/xnAppBrandLogo/xnAppBrandLogo.vue'
+import xnAppIcon from '@/components/xnAppIcon/xnAppIcon.vue'
+import xnTagsView from '@/components/xnTagsView/xnTagsView.vue'
 import { useMenuStore } from '@/stores/menu'
 import { useThemeStore } from '@/stores/theme'
-import {
-  filterHiddenMenus,
-  findFirstNavigablePath,
-  findTopLevelMenu,
-} from '@/utils/menu'
+import { filterHiddenMenus, findFirstNavigablePath, findTopLevelMenu } from '@/utils/menu'
 import { appConfig } from '@/config/app'
 import LayoutAside from '../components/LayoutAside.vue'
 import LayoutHeader from '../components/LayoutHeader.vue'

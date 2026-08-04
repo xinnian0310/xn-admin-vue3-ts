@@ -1,7 +1,7 @@
 <template>
-  <PageLayout :loading="loading">
+  <xnPageLayout :loading="loading">
     <template #aside>
-      <TreePanel
+      <xnTreePanel
         title="存储路径"
         width="240px"
         :data="treeData"
@@ -17,7 +17,7 @@
             <el-tag size="small" effect="plain">{{ storageLabel }}</el-tag>
           </div>
         </template>
-      </TreePanel>
+      </xnTreePanel>
     </template>
 
     <template #search>
@@ -26,12 +26,7 @@
 
     <template #toolbar>
       <xnButton :list-item="buttonItems" :selected="selected" @button-click="buttonClick" />
-      <input
-        ref="fileInputRef"
-        type="file"
-        class="file-input-hidden"
-        @change="onFileSelected"
-      />
+      <input ref="fileInputRef" type="file" class="file-input-hidden" @change="onFileSelected" />
     </template>
 
     <template #toolbar-extra>
@@ -66,22 +61,18 @@
           {{ row.directory ? '—' : formatSize(row.size) }}
         </template>
         <template #actions="{ row }">
-          <xnTableActions
-            :items="rowActionsFor(row)"
-            :row="row"
-            @action-click="onTableAction"
-          />
+          <xnTableActions :items="rowActionsFor(row)" :row="row" @action-click="onTableAction" />
         </template>
       </xnTable>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
-import TreePanel from '@/components/TreePanel/TreePanel.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
+import xnTreePanel from '@/components/xnTreePanel/xnTreePanel.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'

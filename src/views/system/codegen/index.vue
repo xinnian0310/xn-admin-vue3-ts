@@ -1,5 +1,5 @@
 <template>
-  <PageLayout :loading="loading">
+  <xnPageLayout :loading="loading">
     <template #search>
       <xnSearch :search-item="searchItems" @query-form="inquires" @reset="reset" />
     </template>
@@ -30,7 +30,7 @@
         description="暂无数据表。默认已包含 sys_*；若仍为空请检查数据源，或先建业务表再生成。"
       />
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <el-dialog
     v-model="wizardVisible"
@@ -62,7 +62,11 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="模块前缀" required>
-              <el-input v-model="form.modulePrefix" placeholder="如 order、product" @blur="syncDerived" />
+              <el-input
+                v-model="form.modulePrefix"
+                placeholder="如 order、product"
+                @blur="syncDerived"
+              />
               <div class="form-tip">权限码前缀，如 order:create、order:table-edit</div>
             </el-form-item>
           </el-col>
@@ -154,7 +158,7 @@
           type="info"
           :closable="false"
           show-icon
-          title="将生成后端 CRUD + 前端标准列表页（PageLayout / xnSearch / xnButton / xnTable），打包 ZIP 下载；请按包内 README 拷贝到工程后重启。"
+          title="将生成后端 CRUD + 前端标准列表页（xnPageLayout / xnSearch / xnButton / xnTable），打包 ZIP 下载；请按包内 README 拷贝到工程后重启。"
         />
       </el-form>
     </div>
@@ -163,8 +167,16 @@
       <div class="dialog-footer">
         <el-button @click="wizardVisible = false">取消</el-button>
         <el-button v-if="step > 0" @click="step--">上一步</el-button>
-        <el-button v-if="step < 2" type="primary" :disabled="!canNext" @click="step++">下一步</el-button>
-        <el-button v-else type="success" :loading="generating" :disabled="!canGenerate" @click="doGenerate">
+        <el-button v-if="step < 2" type="primary" :disabled="!canNext" @click="step++"
+          >下一步</el-button
+        >
+        <el-button
+          v-else
+          type="success"
+          :loading="generating"
+          :disabled="!canGenerate"
+          @click="doGenerate"
+        >
           生成并下载
         </el-button>
       </div>
@@ -175,7 +187,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
@@ -229,7 +241,16 @@ const generating = ref(false)
 const step = ref(0)
 const tableRemarks = ref('')
 
-const javaTypes = ['String', 'Integer', 'Long', 'Double', 'BigDecimal', 'Boolean', 'LocalDateTime', 'LocalDate']
+const javaTypes = [
+  'String',
+  'Integer',
+  'Long',
+  'Double',
+  'BigDecimal',
+  'Boolean',
+  'LocalDateTime',
+  'LocalDate',
+]
 
 const form = reactive<TableCodegenRequest>({
   tableName: '',
@@ -254,8 +275,13 @@ const columns: TableColumnItem[] = [
 
 const canNext = computed(() => {
   if (step.value === 0) {
-    return !!form.modulePrefix?.trim() && !!form.apiBasePath?.trim() && !!form.menuTitle?.trim()
-      && !!form.menuPath?.trim() && !!form.viewPath?.trim()
+    return (
+      !!form.modulePrefix?.trim() &&
+      !!form.apiBasePath?.trim() &&
+      !!form.menuTitle?.trim() &&
+      !!form.menuPath?.trim() &&
+      !!form.viewPath?.trim()
+    )
   }
   if (step.value === 1) {
     return (form.columns || []).length > 0
@@ -270,7 +296,9 @@ function selectionChangeHandle(rows: unknown[]) {
 }
 
 function applyFilter() {
-  const kw = String(queryForm.value.FuzzyWord ?? '').trim().toLowerCase()
+  const kw = String(queryForm.value.FuzzyWord ?? '')
+    .trim()
+    .toLowerCase()
   tableData.value = kw
     ? allTables.value.filter(
         (t) =>
@@ -418,7 +446,10 @@ async function doGenerate() {
     const res = await generate({ ...form, columns: [...form.columns] })
     const data = res.data
     if (data?.zipBase64) {
-      downloadZipBase64(data.zipBase64, `${data.className || form.modulePrefix || form.tableName}-codegen.zip`)
+      downloadZipBase64(
+        data.zipBase64,
+        `${data.className || form.modulePrefix || form.tableName}-codegen.zip`,
+      )
     }
     ElMessage.success(
       `生成完成：新写入 ${data?.persistedPermissionCount ?? 0} 条权限${data?.pageUiPersisted ? '，已写入 PageUi' : ''}`,

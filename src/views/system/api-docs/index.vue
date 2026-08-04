@@ -48,7 +48,11 @@
         </el-table-column>
         <el-table-column prop="path" label="路径" min-width="360" show-overflow-tooltip />
       </el-table>
-      <el-empty v-if="!loading && !filteredApis.length" description="暂无 API 登记数据" :image-size="90" />
+      <el-empty
+        v-if="!loading && !filteredApis.length"
+        description="暂无 API 登记数据"
+        :image-size="90"
+      />
     </div>
   </div>
 </template>

@@ -148,7 +148,12 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Refresh } from '@element-plus/icons-vue'
-import { ElMessage, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus'
+import {
+  ElMessage,
+  type FormInstance,
+  type FormRules,
+  type UploadRequestOptions,
+} from 'element-plus'
 import { storeToRefs } from 'pinia'
 import { changePassword, getPasswordRules, uploadAvatar, type PasswordRules } from '@/api/auth'
 import { usePermissionStore } from '@/stores/permission'
@@ -173,9 +178,7 @@ const passwordRules = ref<PasswordRules | null>(null)
 
 const canEdit = computed(() => !isSuperAdmin.value)
 const user = computed(() => userStore.user)
-const forcePwd = computed(
-  () => route.query.forcePwd === '1' || !!user.value?.mustChangePassword,
-)
+const forcePwd = computed(() => route.query.forcePwd === '1' || !!user.value?.mustChangePassword)
 const pwdRulesTip = computed(() => passwordRules.value?.tip || '')
 const pwdPlaceholder = computed(() => {
   const min = passwordRules.value?.minLength ?? 6

@@ -1,10 +1,4 @@
-export type SearchItemType =
-  | 'input'
-  | 'number'
-  | 'select'
-  | 'date'
-  | 'daterange'
-  | 'datetime'
+export type SearchItemType = 'input' | 'number' | 'select' | 'date' | 'daterange' | 'datetime'
 
 export interface SearchItemOption {
   label: string

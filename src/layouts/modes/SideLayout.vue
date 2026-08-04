@@ -5,14 +5,14 @@
 
     <el-container class="layout-side__main">
       <LayoutHeader :visible="!isFullscreen" />
-      <TagsView v-show="!isFullscreen" />
+      <xnTagsView v-show="!isFullscreen" />
       <LayoutContent />
     </el-container>
   </el-container>
 </template>
 
 <script setup lang="ts">
-import TagsView from '@/components/TagsView/TagsView.vue'
+import xnTagsView from '@/components/xnTagsView/xnTagsView.vue'
 import LayoutAside from '../components/LayoutAside.vue'
 import LayoutHeader from '../components/LayoutHeader.vue'
 import LayoutContent from '../components/LayoutContent.vue'

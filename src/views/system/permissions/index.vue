@@ -1,7 +1,7 @@
 <template>
-  <PageLayout>
+  <xnPageLayout>
     <template #aside>
-      <TreePanel
+      <xnTreePanel
         title="选择角色"
         width="240px"
         v-model:filter="roleKeyword"
@@ -17,7 +17,7 @@
           <span class="role-item__name">{{ role.name }}</span>
           <el-tag v-if="role.builtIn" type="warning">内置</el-tag>
         </div>
-      </TreePanel>
+      </xnTreePanel>
     </template>
 
     <template #toolbar>
@@ -49,7 +49,7 @@
 
       <template v-else>
         <div v-loading="treeLoading" class="role-perm__body">
-          <TreePanel
+          <xnTreePanel
             ref="menuTreeRef"
             title="菜单"
             width="260px"
@@ -69,7 +69,9 @@
                   :disabled="data.disabled || data.permissionId == null"
                   class="menu-node__check"
                   @click.stop
-                  @change="!data.disabled && data.permissionId != null && toggleItem(data.permissionId)"
+                  @change="
+                    !data.disabled && data.permissionId != null && toggleItem(data.permissionId)
+                  "
                 />
                 <span class="menu-node__name">{{ data.name }}</span>
                 <el-tag
@@ -90,7 +92,7 @@
                 </el-tag>
               </span>
             </template>
-          </TreePanel>
+          </xnTreePanel>
 
           <section class="role-perm__detail">
             <template v-if="selectedRoute">
@@ -117,7 +119,9 @@
                     <span>敏感信息</span>
                     <span class="perm-group__count">{{ detailGroups.capability.length }}</span>
                   </div>
-                  <p class="perm-group__hint">控制列表/详情/导出是否显示手机号、邮箱明文（字段范围在系统配置中设置）</p>
+                  <p class="perm-group__hint">
+                    控制列表/详情/导出是否显示手机号、邮箱明文（字段范围在系统配置中设置）
+                  </p>
                   <div class="perm-group__items">
                     <el-checkbox
                       v-for="item in detailGroups.capability"
@@ -189,10 +193,7 @@
                         :model-value="isChecked(item.id)"
                         @change="toggleItem(item.id)"
                       />
-                      <el-tag
-                        :type="methodTagType(item.method)"
-                        class="perm-api__method"
-                      >
+                      <el-tag :type="methodTagType(item.method)" class="perm-api__method">
                         {{ item.method || '-' }}
                       </el-tag>
                       <span class="perm-api__name">{{ item.name }}</span>
@@ -234,7 +235,7 @@
       description="请从最左侧选择一个角色"
       :image-size="120"
     />
-  </PageLayout>
+  </xnPageLayout>
 </template>
 
 <script setup lang="ts">
@@ -242,8 +243,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Lock } from '@element-plus/icons-vue'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
-import TreePanel from '@/components/TreePanel/TreePanel.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
+import xnTreePanel from '@/components/xnTreePanel/xnTreePanel.vue'
 import { assignPermissions, get, getOptions } from '@/api/role'
 import { list as listPermissions } from '@/api/permission'
 import { list as listRoutes } from '@/api/route'
@@ -275,7 +276,7 @@ const saving = ref(false)
 const checkedIds = ref<Set<number>>(new Set())
 const savedIds = ref<Set<number>>(new Set())
 const selectedRouteId = ref<number | null>(null)
-const menuTreeRef = ref<InstanceType<typeof TreePanel>>()
+const menuTreeRef = ref<InstanceType<typeof xnTreePanel>>()
 
 const permissionById = new Map<number, Permission>()
 const permissionByCode = new Map<string, Permission>()
@@ -320,20 +321,19 @@ const filteredRoles = computed(() => {
   if (!keyword) return roles.value
   return roles.value.filter(
     (role) =>
-      role.name.toLowerCase().includes(keyword) ||
-      role.code.toLowerCase().includes(keyword),
+      role.name.toLowerCase().includes(keyword) || role.code.toLowerCase().includes(keyword),
   )
 })
 
 const menuTree = computed<MenuNode[]>(() => toMenuNodes(routeTree.value))
 
 const selectedRoute = computed<SysRoute | null>(() =>
-  selectedRouteId.value != null ? routeById.get(selectedRouteId.value) ?? null : null,
+  selectedRouteId.value != null ? (routeById.get(selectedRouteId.value) ?? null) : null,
 )
 
 const selectedMenu = computed<Permission | null>(() => {
   const code = selectedRoute.value?.permission
-  return code ? permissionByCode.get(code) ?? null : null
+  return code ? (permissionByCode.get(code) ?? null) : null
 })
 
 const detailGroups = computed(() => {
@@ -345,10 +345,7 @@ const detailGroups = computed(() => {
   }
   for (const child of selectedMenu.value?.children ?? []) {
     // 能力型权限独立成组；兼容旧数据仍挂在 API 下的敏感权限
-    if (
-      child.action === 'capability' ||
-      child.code === 'user:sensitive:view'
-    ) {
+    if (child.action === 'capability' || child.code === 'user:sensitive:view') {
       groups.capability.push(child)
     } else if (child.type === 'API') {
       groups.api.push(child)
@@ -369,7 +366,9 @@ const assignableItems = computed(() => [
 ])
 
 const isAllChecked = computed(
-  () => assignableItems.value.length > 0 && assignableItems.value.every((item) => checkedIds.value.has(item.id)),
+  () =>
+    assignableItems.value.length > 0 &&
+    assignableItems.value.every((item) => checkedIds.value.has(item.id)),
 )
 
 const isIndeterminate = computed(() => {
@@ -496,7 +495,8 @@ function firstAssignableRouteId(nodes: MenuNode[]): number | null {
       if (
         !node.disabled &&
         (!requireAssignable ||
-          collectDirectAssignable(node.code ? permissionByCode.get(node.code) : undefined).length > 0)
+          collectDirectAssignable(node.code ? permissionByCode.get(node.code) : undefined).length >
+            0)
       ) {
         return node.id
       }

@@ -27,6 +27,4 @@ export interface ImportResult {
   errors?: Array<{ row: number; message: string }>
 }
 
-export type ExcelImportSubmit = (
-  rows: Record<string, string>[],
-) => Promise<ImportResult | void>
+export type ExcelImportSubmit = (rows: Record<string, string>[]) => Promise<ImportResult | void>

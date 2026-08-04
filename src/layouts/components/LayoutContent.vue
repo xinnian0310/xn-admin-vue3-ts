@@ -7,10 +7,7 @@
         </keep-alive>
       </router-view>
     </div>
-    <footer
-      v-if="footerText && !tagsViewStore.isFullscreen"
-      class="layout-content__footer"
-    >
+    <footer v-if="footerText && !tagsViewStore.isFullscreen" class="layout-content__footer">
       {{ footerText }}
     </footer>
   </el-main>
@@ -51,7 +48,7 @@ const footerText = computed(() => appConfig.app.footer?.trim() || '')
   position: relative;
 }
 
-/* PageLayout：撑满高度，内部自行滚动 */
+/* xnPageLayout：撑满高度，内部自行滚动 */
 .layout-content__body :deep(> .page-layout),
 .layout-content__body :deep(> .el-container) {
   flex: 1;

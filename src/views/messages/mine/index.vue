@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:page="page"
     v-model:page-size="size"
     :total="total"
@@ -44,9 +44,14 @@
         </template>
       </xnTable>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
-  <el-dialog v-model="detailVisible" :title="current?.title || '消息详情'" width="720px" destroy-on-close>
+  <el-dialog
+    v-model="detailVisible"
+    :title="current?.title || '消息详情'"
+    width="720px"
+    destroy-on-close
+  >
     <div v-if="current" class="message-detail">
       <div class="message-detail__meta">
         <span>发送人：{{ current.senderName || '—' }}</span>
@@ -60,19 +65,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
 import xnTable from '@/components/xnTable/xnTable.vue'
 import { usePageUi } from '@/composables/usePageUi'
-import {
-  batchRemoveMine,
-  listMine,
-  markRead,
-  removeMine,
-  unreadCount,
-} from '@/api/message'
+import { batchRemoveMine, listMine, markRead, removeMine, unreadCount } from '@/api/message'
 import type { MyMessage } from '@/types'
 import type { SearchForm } from '@/types/search'
 import type { TableColumnItem } from '@/types/table'
@@ -109,7 +108,9 @@ function selectionChangeHandle(rows: unknown[]) {
 }
 
 function applyLocalPage() {
-  const kw = String(queryForm.value.FuzzyWord ?? '').trim().toLowerCase()
+  const kw = String(queryForm.value.FuzzyWord ?? '')
+    .trim()
+    .toLowerCase()
   const readFilter = queryForm.value.read
   let rows = allData.value
   if (kw) {
@@ -117,7 +118,12 @@ function applyLocalPage() {
       [r.title, r.senderName].filter(Boolean).some((v) => String(v).toLowerCase().includes(kw)),
     )
   }
-  if (readFilter === true || readFilter === false || readFilter === 'true' || readFilter === 'false') {
+  if (
+    readFilter === true ||
+    readFilter === false ||
+    readFilter === 'true' ||
+    readFilter === 'false'
+  ) {
     const wantRead = readFilter === true || readFilter === 'true'
     rows = rows.filter((r) => r.read === wantRead)
   }

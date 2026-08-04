@@ -3,7 +3,7 @@
   <el-container class="layout-columns">
     <aside v-show="!isFullscreen" class="layout-columns__rail">
       <div class="layout-columns__brand" :title="appConfig.app.name">
-        <AppBrandLogo />
+        <xnAppBrandLogo />
       </div>
       <button
         v-for="item in rootMenus"
@@ -14,7 +14,7 @@
         :title="item.title"
         @click="onRailClick(item)"
       >
-        <AppIcon v-if="item.icon" :name="item.icon" :size="20" />
+        <xnAppIcon v-if="item.icon" :name="item.icon" :size="20" />
         <span v-else class="layout-columns__rail-text">{{ item.title.charAt(0) }}</span>
       </button>
     </aside>
@@ -30,7 +30,7 @@
 
     <el-container class="layout-columns__main">
       <LayoutHeader :visible="!isFullscreen" />
-      <TagsView v-show="!isFullscreen" />
+      <xnTagsView v-show="!isFullscreen" />
       <LayoutContent />
     </el-container>
   </el-container>
@@ -39,16 +39,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import AppBrandLogo from '@/components/AppBrandLogo/AppBrandLogo.vue'
-import AppIcon from '@/components/AppIcon/AppIcon.vue'
-import TagsView from '@/components/TagsView/TagsView.vue'
+import xnAppBrandLogo from '@/components/xnAppBrandLogo/xnAppBrandLogo.vue'
+import xnAppIcon from '@/components/xnAppIcon/xnAppIcon.vue'
+import xnTagsView from '@/components/xnTagsView/xnTagsView.vue'
 import type { MenuItem } from '@/types/menu'
 import { useMenuStore } from '@/stores/menu'
-import {
-  filterHiddenMenus,
-  findFirstNavigablePath,
-  findTopLevelMenu,
-} from '@/utils/menu'
+import { filterHiddenMenus, findFirstNavigablePath, findTopLevelMenu } from '@/utils/menu'
 import { appConfig } from '@/config/app'
 import LayoutAside from '../components/LayoutAside.vue'
 import LayoutHeader from '../components/LayoutHeader.vue'

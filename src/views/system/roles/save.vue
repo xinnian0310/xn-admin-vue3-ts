@@ -6,7 +6,13 @@
     destroy-on-close
     @closed="handleClosed"
   >
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" :disabled="mode === 'view'">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="100px"
+      :disabled="mode === 'view'"
+    >
       <el-form-item label="名称" prop="name">
         <el-input v-model="form.name" :disabled="mode === 'view' || editingBuiltIn" />
       </el-form-item>
@@ -36,7 +42,9 @@
     </el-form>
     <template #footer>
       <el-button @click="visible = false">{{ mode === 'view' ? '关闭' : '取消' }}</el-button>
-      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit">保存</el-button>
+      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit"
+        >保存</el-button
+      >
     </template>
   </el-dialog>
 </template>
@@ -102,7 +110,8 @@ async function loadDetail(id: number) {
   form.code = res.data.code
   form.name = res.data.name
   form.description = res.data.description ?? ''
-  form.dataScope = res.data.dataScope || (res.data.code === 'SUPER_ADMIN' ? 'ALL' : 'UNIT_AND_CHILDREN')
+  form.dataScope =
+    res.data.dataScope || (res.data.code === 'SUPER_ADMIN' ? 'ALL' : 'UNIT_AND_CHILDREN')
 }
 
 async function open(openMode: SaveMode, id?: number) {

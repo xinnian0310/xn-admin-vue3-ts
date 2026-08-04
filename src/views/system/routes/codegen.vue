@@ -26,12 +26,18 @@
       <el-descriptions v-if="route" :column="1" border class="codegen-meta" size="small">
         <el-descriptions-item label="菜单">{{ route.title }}</el-descriptions-item>
         <el-descriptions-item label="路径">{{ route.path }}</el-descriptions-item>
-        <el-descriptions-item label="视图">views/{{ route.viewPath }}/index.vue</el-descriptions-item>
+        <el-descriptions-item label="视图"
+          >views/{{ route.viewPath }}/index.vue</el-descriptions-item
+        >
       </el-descriptions>
 
       <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" class="codegen-form">
         <el-form-item label="模块前缀" prop="modulePrefix">
-          <el-input v-model="form.modulePrefix" placeholder="如 order、dict-type" @blur="syncApiFromPrefix" />
+          <el-input
+            v-model="form.modulePrefix"
+            placeholder="如 order、dict-type"
+            @blur="syncApiFromPrefix"
+          />
           <div class="form-tip">权限码前缀，如 order:create、order:table-edit</div>
         </el-form-item>
         <el-form-item label="API 路径" prop="apiBasePath">
@@ -60,7 +66,12 @@
         :title="`生成完成：新写入 ${result.persistedPermissionCount} 条权限${result.pageUiPersisted ? '，已写入 PageUi' : ''}`"
       />
       <div class="codegen-codes">
-        <el-tag v-for="code in result.permissionCodes" :key="code" size="small" class="codegen-code-tag">
+        <el-tag
+          v-for="code in result.permissionCodes"
+          :key="code"
+          size="small"
+          class="codegen-code-tag"
+        >
           {{ code }}
         </el-tag>
       </div>
@@ -99,11 +110,7 @@
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import {
-  generate,
-  type RouteCodegenRequest,
-  type RouteCodegenResult,
-} from '@/api/route'
+import { generate, type RouteCodegenRequest, type RouteCodegenResult } from '@/api/route'
 import type { SysRoute } from '@/types'
 
 defineOptions({ name: 'RoutesCodegen' })

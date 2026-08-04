@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:view-mode="viewMode"
     v-model:page="page"
     v-model:page-size="size"
@@ -78,7 +78,7 @@
         </el-card>
       </div>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <NoticeSave ref="saveRef" @success="loadData" />
 
@@ -98,14 +98,23 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
 import xnTable from '@/components/xnTable/xnTable.vue'
 import NoticeSave from './save.vue'
 import { usePageUi } from '@/composables/usePageUi'
-import { list, batchPublish, batchRemove, batchRevoke, publish, readers, remove, revoke } from '@/api/notice'
+import {
+  list,
+  batchPublish,
+  batchRemove,
+  batchRevoke,
+  publish,
+  readers,
+  remove,
+  revoke,
+} from '@/api/notice'
 import type { Notice, NoticeReader, NoticeStatus } from '@/types'
 import type { ButtonListItem } from '@/types/button'
 import type { SearchForm } from '@/types/search'
@@ -323,9 +332,7 @@ async function handleBatchPublish() {
     ElMessage.warning('请至少选择一项')
     return
   }
-  const invalid = selected.value.filter(
-    (r) => r.status !== 'DRAFT' && r.status !== 'REVOKED',
-  )
+  const invalid = selected.value.filter((r) => r.status !== 'DRAFT' && r.status !== 'REVOKED')
   if (invalid.length) {
     ElMessage.warning('仅草稿或已撤回可下发，请取消勾选其他状态项')
     return

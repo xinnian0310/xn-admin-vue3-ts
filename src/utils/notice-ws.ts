@@ -51,7 +51,10 @@ export function connectNoticeWs() {
 
   manualClose = false
   clearTimers()
-  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+  if (
+    socket &&
+    (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)
+  ) {
     return
   }
 

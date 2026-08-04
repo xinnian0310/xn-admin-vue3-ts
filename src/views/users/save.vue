@@ -6,9 +6,18 @@
     destroy-on-close
     @closed="handleClosed"
   >
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" :disabled="mode === 'view'">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="80px"
+      :disabled="mode === 'view'"
+    >
       <el-form-item label="用户名" prop="username">
-        <el-input v-model="form.username" :disabled="mode === 'view' || (editingId !== null && form.username === 'admin')" />
+        <el-input
+          v-model="form.username"
+          :disabled="mode === 'view' || (editingId !== null && form.username === 'admin')"
+        />
       </el-form-item>
       <el-form-item label="密码" prop="password">
         <el-input
@@ -24,7 +33,9 @@
       </el-form-item>
       <el-form-item label="邮箱" prop="email">
         <el-input v-model="form.email" :disabled="sensitiveFieldsLocked" />
-        <div v-if="sensitiveFieldsLocked" class="form-tip">无「查看敏感信息」权限，已脱敏且不可修改</div>
+        <div v-if="sensitiveFieldsLocked" class="form-tip">
+          无「查看敏感信息」权限，已脱敏且不可修改
+        </div>
       </el-form-item>
       <el-form-item label="手机号" prop="phone">
         <el-input v-model="form.phone" :disabled="sensitiveFieldsLocked" />
@@ -53,7 +64,13 @@
         />
       </el-form-item>
       <el-form-item label="岗位" prop="postId">
-        <el-select v-model="form.postId" clearable filterable placeholder="请选择岗位" style="width: 100%">
+        <el-select
+          v-model="form.postId"
+          clearable
+          filterable
+          placeholder="请选择岗位"
+          style="width: 100%"
+        >
           <el-option v-for="p in postOptions" :key="p.id" :label="p.name" :value="p.id" />
         </el-select>
       </el-form-item>
@@ -66,7 +83,9 @@
     </el-form>
     <template #footer>
       <el-button @click="visible = false">{{ mode === 'view' ? '关闭' : '取消' }}</el-button>
-      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit">保存</el-button>
+      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit"
+        >保存</el-button
+      >
     </template>
   </el-dialog>
 </template>
@@ -108,7 +127,9 @@ const sensitiveFieldsLocked = computed(
 )
 
 const availableRoles = computed(() =>
-  isSuperAdmin.value ? roleOptions.value : roleOptions.value.filter((r) => r.code !== 'SUPER_ADMIN'),
+  isSuperAdmin.value
+    ? roleOptions.value
+    : roleOptions.value.filter((r) => r.code !== 'SUPER_ADMIN'),
 )
 
 const form = reactive<UserForm>({

@@ -6,10 +6,7 @@ const REQUIRED = ['list', 'get', 'create', 'update', 'remove'] as const
  * 预加载 @/api 下所有模块，按文件名解析
  * 例如 api="route" → @/api/route.ts
  */
-const apiModules = import.meta.glob('@/api/*.ts', { eager: true }) as Record<
-  string,
-  CrudApiModule
->
+const apiModules = import.meta.glob('@/api/*.ts', { eager: true }) as Record<string, CrudApiModule>
 
 function resolveModule(name: string): CrudApiModule | undefined {
   const normalized = name

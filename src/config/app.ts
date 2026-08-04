@@ -211,7 +211,10 @@ function cloneDefault(): AppConfig {
 export const appConfig: AppConfig = reactive(cloneDefault())
 
 /** 深合并：仅用 remote 中非 undefined 的字段覆盖 target */
-export function deepMergeAppConfig<T extends Record<string, unknown>>(target: T, remote: unknown): T {
+export function deepMergeAppConfig<T extends Record<string, unknown>>(
+  target: T,
+  remote: unknown,
+): T {
   if (remote == null || typeof remote !== 'object' || Array.isArray(remote)) {
     return target
   }
@@ -221,12 +224,12 @@ export function deepMergeAppConfig<T extends Record<string, unknown>>(target: T,
     if (value === undefined) continue
     const current = (target as Record<string, unknown>)[key]
     if (
-      value !== null
-      && typeof value === 'object'
-      && !Array.isArray(value)
-      && current !== null
-      && typeof current === 'object'
-      && !Array.isArray(current)
+      value !== null &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      current !== null &&
+      typeof current === 'object' &&
+      !Array.isArray(current)
     ) {
       deepMergeAppConfig(current as Record<string, unknown>, value)
     } else {
@@ -237,12 +240,18 @@ export function deepMergeAppConfig<T extends Record<string, unknown>>(target: T,
 }
 
 /** 用远端配置覆盖运行时 appConfig，并重新 apply 样式 */
-export function applyRemoteAppConfig(remote: Partial<AppConfig> | null | undefined) {
+export function applyRemoteAppConfig(
+  remote: Partial<AppConfig> | Record<string, unknown> | null | undefined,
+) {
   if (!remote) return
-  deepMergeAppConfig(appConfig as unknown as Record<string, unknown>, remote)
-  if (remote.app) {
-    if ('logoWidth' in remote.app) appConfig.app.logoWidth = remote.app.logoWidth ?? null
-    if ('logoHeight' in remote.app) appConfig.app.logoHeight = remote.app.logoHeight ?? null
+  deepMergeAppConfig(
+    appConfig as unknown as Record<string, unknown>,
+    remote as Record<string, unknown>,
+  )
+  const app = (remote as Partial<AppConfig>).app
+  if (app) {
+    if ('logoWidth' in app) appConfig.app.logoWidth = app.logoWidth ?? null
+    if ('logoHeight' in app) appConfig.app.logoHeight = app.logoHeight ?? null
   }
   applyAppConfig(appConfig)
 }
@@ -272,7 +281,11 @@ function applyFavicon(href: string) {
     link.rel = 'icon'
     document.head.appendChild(link)
   }
-  link.type = path.endsWith('.svg') ? 'image/svg+xml' : path.endsWith('.png') ? 'image/png' : 'image/x-icon'
+  link.type = path.endsWith('.svg')
+    ? 'image/svg+xml'
+    : path.endsWith('.png')
+      ? 'image/png'
+      : 'image/x-icon'
   link.href = path
 }
 
@@ -335,10 +348,7 @@ export interface ApplyLayoutThemeOptions {
 }
 
 /** 应用侧栏 / 顶栏 / 主色主题到 CSS 变量（含 Element Plus） */
-export function applyLayoutTheme(
-  colors: ThemeColors,
-  options: ApplyLayoutThemeOptions = {},
-) {
+export function applyLayoutTheme(colors: ThemeColors, options: ApplyLayoutThemeOptions = {}) {
   const appearance = options.appearance ?? 'light'
   const mainBgImage = options.mainBgImage ?? null
   const root = document.documentElement

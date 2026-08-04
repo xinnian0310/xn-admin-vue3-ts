@@ -1,5 +1,12 @@
 import request from '@/utils/request'
-import type { ApiResponse, InfraStatus, OnlineUser, RedisMonitor, ServerMonitor, SqlMonitor } from '@/types'
+import type {
+  ApiResponse,
+  InfraStatus,
+  OnlineUser,
+  RedisMonitor,
+  ServerMonitor,
+  SqlMonitor,
+} from '@/types'
 
 export function getOnlineUsers() {
   return request.get<any, ApiResponse<OnlineUser[]>>('/monitor/online')

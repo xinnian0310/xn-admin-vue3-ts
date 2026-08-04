@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:page="page"
     v-model:page-size="size"
     :total="total"
@@ -7,7 +7,7 @@
     @page-change="applyLocalPage"
   >
     <template #aside>
-      <TreePanel
+      <xnTreePanel
         ref="menuTreeRef"
         title="菜单"
         v-model:filter="menuKeyword"
@@ -32,7 +32,7 @@
             </el-tag>
           </span>
         </template>
-      </TreePanel>
+      </xnTreePanel>
     </template>
 
     <template #search>
@@ -40,11 +40,7 @@
     </template>
 
     <template #toolbar>
-      <xnButton
-        :list-item="toolbarButtons"
-        :selected="selected"
-        @button-click="buttonClick"
-      />
+      <xnButton :list-item="toolbarButtons" :selected="selected" @button-click="buttonClick" />
     </template>
 
     <template #toolbar-extra>
@@ -93,7 +89,7 @@
         @page-change="applyLocalPage"
       >
         <template #icon="{ row }">
-          <AppIcon v-if="row.icon" :name="row.icon" />
+          <xnAppIcon v-if="row.icon" :name="row.icon" />
           <span v-else>-</span>
         </template>
         <template #action="{ row }">
@@ -129,7 +125,7 @@
         </template>
       </xnTable>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <el-dialog v-model="dialogVisible" :title="dialogTitle" width="520px" @closed="resetForm">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
@@ -158,7 +154,7 @@
           </div>
         </el-form-item>
         <el-form-item label="图标">
-          <IconPicker v-model="form.icon" placeholder="选择按钮图标(可留空)" />
+          <xnIconPicker v-model="form.icon" placeholder="选择按钮图标(可留空)" />
         </el-form-item>
         <el-form-item label="按钮颜色">
           <el-select v-model="form.buttonColor" placeholder="选择颜色" style="width: 160px">
@@ -167,12 +163,7 @@
                 {{ form.name || '示例' }}
               </el-button>
             </template>
-            <el-option
-              v-for="c in buttonColors"
-              :key="c.value"
-              :label="c.label"
-              :value="c.value"
-            >
+            <el-option v-for="c in buttonColors" :key="c.value" :label="c.label" :value="c.value">
               <el-button :type="buttonTypeOf(c.value)">
                 {{ form.name || '示例' }}
               </el-button>
@@ -203,10 +194,7 @@
       <el-form-item label="排序" prop="sort">
         <el-input-number v-model="form.sort" :min="0" :max="9999" />
       </el-form-item>
-      <div
-        v-if="editingBuiltIn"
-        class="perm-content__form-tip perm-content__form-tip--warn"
-      >
+      <div v-if="editingBuiltIn" class="perm-content__form-tip perm-content__form-tip--warn">
         内置权限的路径 / 方法不可修改，仅可调整名称与排序。
       </div>
     </el-form>
@@ -221,10 +209,10 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
-import TreePanel from '@/components/TreePanel/TreePanel.vue'
-import AppIcon from '@/components/AppIcon/AppIcon.vue'
-import IconPicker from '@/components/IconPicker/IconPicker.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
+import xnTreePanel from '@/components/xnTreePanel/xnTreePanel.vue'
+import xnAppIcon from '@/components/xnAppIcon/xnAppIcon.vue'
+import xnIconPicker from '@/components/xnIconPicker/xnIconPicker.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
@@ -292,7 +280,7 @@ const menuKeyword = ref('')
 const routeTree = ref<SysRoute[]>([])
 const selectedRouteId = ref<number | null>(null)
 const activeType = ref<ContentType>('BUTTON')
-const menuTreeRef = ref<InstanceType<typeof TreePanel>>()
+const menuTreeRef = ref<InstanceType<typeof xnTreePanel>>()
 
 const tableData = ref<Permission[]>([])
 const total = ref(0)
@@ -385,9 +373,7 @@ const columns = computed<TableColumnItem[]>(() => {
 
 const editingBuiltIn = computed(() => isEdit.value && !!editingRow.value?.builtIn)
 
-const dialogTitle = computed(
-  () => `${isEdit.value ? '编辑' : '新增'}${typeLabel(form.value.type)}`,
-)
+const dialogTitle = computed(() => `${isEdit.value ? '编辑' : '新增'}${typeLabel(form.value.type)}`)
 
 const menuPrefix = computed(() => {
   const code = selectedMenu.value?.code
@@ -401,7 +387,9 @@ function selectionChangeHandle(rows: unknown[]) {
 }
 
 function applyLocalPage() {
-  const kw = String(queryForm.value.FuzzyWord ?? '').trim().toLowerCase()
+  const kw = String(queryForm.value.FuzzyWord ?? '')
+    .trim()
+    .toLowerCase()
   let rows = groups.value[activeType.value] ?? []
   if (kw) {
     rows = rows.filter((r) =>

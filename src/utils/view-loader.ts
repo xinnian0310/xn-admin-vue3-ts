@@ -36,7 +36,10 @@ export function listAvailableViews(): string[] {
 }
 
 /** 根据菜单路由记录生成 Vue Router 配置 */
-export function buildRouteRecord(routePath: string, meta: Record<string, unknown> = {}): RouteRecordRaw {
+export function buildRouteRecord(
+  routePath: string,
+  meta: Record<string, unknown> = {},
+): RouteRecordRaw {
   const path = routePath.replace(/^\//, '')
   return {
     path,
@@ -47,14 +50,22 @@ export function buildRouteRecord(routePath: string, meta: Record<string, unknown
 }
 
 /** 生成 save 子路由 */
-export function buildSaveRouteRecord(basePath: string, meta: Record<string, unknown> = {}): RouteRecordRaw[] {
+export function buildSaveRouteRecord(
+  basePath: string,
+  meta: Record<string, unknown> = {},
+): RouteRecordRaw[] {
   const base = basePath.replace(/^\//, '')
   return [
     {
       path: `${base}/save/:id?`,
       name: `${base.replace(/\//g, '-')}-save`,
       component: loadSaveView(basePath),
-      meta: { ...meta, hidden: true, title: meta.title ? `${meta.title} - 编辑` : '编辑', routePath: basePath },
+      meta: {
+        ...meta,
+        hidden: true,
+        title: meta.title ? `${meta.title} - 编辑` : '编辑',
+        routePath: basePath,
+      },
     },
   ]
 }

@@ -15,7 +15,13 @@
       description="访问路径可写 system/roles 或 /system/roles（缺省会自动补 /），对应 views/system/roles/index.vue。视图目录随路径自动生成，不可编辑。菜单类型可带下级；目录仅作分组。权限标识由系统自动生成。"
     />
 
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" :disabled="mode === 'view'">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="100px"
+      :disabled="mode === 'view'"
+    >
       <el-form-item label="标题" prop="title">
         <el-input v-model="form.title" />
       </el-form-item>
@@ -53,7 +59,11 @@
         </el-input>
       </el-form-item>
       <el-form-item label="图标" prop="icon">
-        <IconPicker v-model="form.icon" :disabled="mode === 'view'" placeholder="选择 Element / Iconify / SVG 图标" />
+        <xnIconPicker
+          v-model="form.icon"
+          :disabled="mode === 'view'"
+          placeholder="选择 Element / Iconify / SVG 图标"
+        />
       </el-form-item>
       <el-form-item label="排序" prop="sort">
         <el-input-number v-model="form.sort" :min="0" />
@@ -79,7 +89,9 @@
     </el-form>
     <template #footer>
       <el-button @click="visible = false">{{ mode === 'view' ? '关闭' : '取消' }}</el-button>
-      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit">保存</el-button>
+      <el-button v-if="mode !== 'view'" type="primary" :loading="submitting" @click="handleSubmit"
+        >保存</el-button
+      >
     </template>
   </el-dialog>
 </template>
@@ -89,7 +101,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { useCrudApi } from '@/composables/useCrudApi'
-import IconPicker from '@/components/IconPicker/IconPicker.vue'
+import xnIconPicker from '@/components/xnIconPicker/xnIconPicker.vue'
 import { autoViewPath, normalizeRoutePath } from '@/utils/route-path'
 import { hasIndexView } from '@/utils/view-loader'
 import type { SysRoute, SysRouteForm } from '@/types'
@@ -148,7 +160,7 @@ function pathForInput(path: string) {
 }
 
 function syncViewPath() {
-  const normalized = normalizeRoutePath(form.path)
+  const normalized = normalizeRoutePath(form.path ?? '')
   form.viewPath = normalized ? autoViewPath(normalized) : ''
 }
 
@@ -232,8 +244,7 @@ async function handleSubmit() {
   await formRef.value.validate(async (valid) => {
     if (!valid) return
 
-    const normalizedPath =
-      form.type === 'MENU' ? normalizeRoutePath(form.path) : undefined
+    const normalizedPath = form.type === 'MENU' ? normalizeRoutePath(form.path ?? '') : undefined
     const viewPath = normalizedPath ? autoViewPath(normalizedPath) : undefined
 
     if (form.type === 'MENU' && normalizedPath && !hasIndexView(normalizedPath)) {

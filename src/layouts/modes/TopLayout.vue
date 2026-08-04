@@ -3,24 +3,24 @@
   <el-container class="layout-top" direction="vertical">
     <el-header v-show="!isFullscreen" class="layout-top__header">
       <div class="layout-top__brand">
-        <AppBrandLogo />
+        <xnAppBrandLogo />
         <span>{{ appConfig.app.name }}</span>
       </div>
       <div class="layout-top__menu">
-        <SidebarMenu mode="horizontal" />
+        <xnSidebarMenu mode="horizontal" />
       </div>
       <LayoutHeader embed class="layout-top__user" />
     </el-header>
 
-    <TagsView v-show="!isFullscreen" />
+    <xnTagsView v-show="!isFullscreen" />
     <LayoutContent />
   </el-container>
 </template>
 
 <script setup lang="ts">
-import AppBrandLogo from '@/components/AppBrandLogo/AppBrandLogo.vue'
-import SidebarMenu from '@/components/SidebarMenu/SidebarMenu.vue'
-import TagsView from '@/components/TagsView/TagsView.vue'
+import xnAppBrandLogo from '@/components/xnAppBrandLogo/xnAppBrandLogo.vue'
+import xnSidebarMenu from '@/components/xnSidebarMenu/xnSidebarMenu.vue'
+import xnTagsView from '@/components/xnTagsView/xnTagsView.vue'
 import { appConfig } from '@/config/app'
 import LayoutHeader from '../components/LayoutHeader.vue'
 import LayoutContent from '../components/LayoutContent.vue'

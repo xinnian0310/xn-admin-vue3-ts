@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:page="page"
     v-model:page-size="size"
     :total="total"
@@ -41,7 +41,7 @@
         </template>
       </xnTable>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <JobSave ref="saveRef" @success="loadData" />
 </template>
@@ -50,7 +50,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
@@ -139,8 +139,7 @@ function buttonClick(action: string) {
   else if (action === 'delete') handleBatchDelete()
   else if (action === 'run' && selected.value.length === 1) handleRun(selected.value[0])
   else if (action === 'logs') {
-    const query =
-      selected.value.length === 1 ? { jobId: String(selected.value[0].id) } : undefined
+    const query = selected.value.length === 1 ? { jobId: String(selected.value[0].id) } : undefined
     router.push({ path: '/system/jobs/logs', query })
   }
 }

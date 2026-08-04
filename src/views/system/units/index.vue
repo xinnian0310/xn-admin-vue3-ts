@@ -1,5 +1,5 @@
 <template>
-  <PageLayout
+  <xnPageLayout
     v-model:view-mode="viewMode"
     v-model:page="page"
     v-model:page-size="size"
@@ -8,11 +8,7 @@
     :loading="viewMode === 'card' ? cardLoading : false"
   >
     <template #search>
-      <xnSearch
-        :search-item="searchItems"
-        @query-form="inquires"
-        @reset="reset"
-      />
+      <xnSearch :search-item="searchItems" @query-form="inquires" @reset="reset" />
     </template>
 
     <template #toolbar>
@@ -71,12 +67,7 @@
 
     <template #card>
       <div class="page-card-grid">
-        <el-card
-          v-for="row in cardRows"
-          :key="row.id"
-          shadow="hover"
-          class="unit-card"
-        >
+        <el-card v-for="row in cardRows" :key="row.id" shadow="hover" class="unit-card">
           <div class="unit-card__header">
             <div>
               <div class="unit-card__name">{{ row.name }}</div>
@@ -87,7 +78,7 @@
             </el-tag>
           </div>
           <div class="unit-card__body">
-    <div class="unit-card__row">
+            <div class="unit-card__row">
               <span class="label">默认角色</span>
               <span>{{ (row.roleList || []).map((r) => r.name).join('、') || '—' }}</span>
             </div>
@@ -113,7 +104,7 @@
         </el-card>
       </div>
     </template>
-  </PageLayout>
+  </xnPageLayout>
 
   <UnitsAssignRoles ref="assignRef" @success="() => tableRef?.loadData(queryForm)" />
 </template>
@@ -121,7 +112,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import PageLayout from '@/components/PageLayout/PageLayout.vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
 import xnButton from '@/components/xnButton/xnButton.vue'
 import xnTableActions from '@/components/xnButton/xnTableActions.vue'
@@ -192,11 +183,7 @@ function flattenUnits(nodes: SysUnit[]): SysUnit[] {
 
 const cardRows = computed(() => flattenUnits(tableRecords.value))
 
-function onTableDataChange(payload: {
-  records: unknown[]
-  total: number
-  loading: boolean
-}) {
+function onTableDataChange(payload: { records: unknown[]; total: number; loading: boolean }) {
   tableRecords.value = payload.records as SysUnit[]
   cardTotal.value = payload.total
   cardLoading.value = payload.loading

@@ -134,7 +134,7 @@ request.interceptors.response.use(
     if (res.data !== undefined) {
       res.data = normalizeDateTimes(res.data)
     }
-    return res
+    return res as unknown as typeof response
   },
   (error) => {
     const status = error.response?.status as number | undefined

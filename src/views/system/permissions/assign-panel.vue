@@ -15,7 +15,13 @@
         show-overflow-tooltip
       />
       <el-table-column prop="name" label="名称" min-width="120" />
-      <el-table-column v-if="type === 'API'" prop="path" label="api" min-width="180" show-overflow-tooltip />
+      <el-table-column
+        v-if="type === 'API'"
+        prop="path"
+        label="api"
+        min-width="180"
+        show-overflow-tooltip
+      />
       <el-table-column v-if="type === 'API'" prop="method" label="方法" width="80" />
       <el-table-column prop="sort" label="排序" width="70" />
       <el-table-column prop="builtIn" label="内置" width="70">
@@ -27,7 +33,12 @@
       </el-table-column>
       <el-table-column label="操作" width="120" align="center" fixed="right">
         <template #default="{ row }">
-          <el-button v-permission="'permission-content:table-edit'" link type="primary" @click="openForm(row)">
+          <el-button
+            v-permission="'permission-content:table-edit'"
+            link
+            type="primary"
+            @click="openForm(row)"
+          >
             编辑
           </el-button>
           <el-button
@@ -55,7 +66,12 @@
           <el-input v-model="form.code" :disabled="editingId !== null" />
         </el-form-item>
         <el-form-item v-if="isButtonLike && !editingId" label="按钮" prop="buttonAction">
-          <el-select v-model="buttonAction" placeholder="请选择按钮" style="width: 100%" @change="handleButtonActionChange">
+          <el-select
+            v-model="buttonAction"
+            placeholder="请选择按钮"
+            style="width: 100%"
+            @change="handleButtonActionChange"
+          >
             <el-option
               v-for="opt in availableStandardButtons"
               :key="opt.action"
@@ -157,9 +173,7 @@ const typeLabel = computed(() => typeLabels[props.type] ?? props.type)
 
 const availableStandardButtons = computed(() => {
   const existingActions = new Set(
-    props.items
-      .map((item) => item.code.split(':').pop())
-      .filter(Boolean),
+    props.items.map((item) => item.code.split(':').pop()).filter(Boolean),
   )
   return standardButtonPool.value.filter((item) => !existingActions.has(item.action))
 })
@@ -256,7 +270,8 @@ async function handleSubmit() {
         payload.code = buildApiCode(form.method ?? 'GET', form.path ?? '')
       }
       if (isButtonLike.value && props.buttonPrefix) {
-        const action = form.buttonAction || form.code.split(':').pop() || BUTTON_LABEL_ACTION.value[form.name]
+        const action =
+          form.buttonAction || form.code.split(':').pop() || BUTTON_LABEL_ACTION.value[form.name]
         if (action) {
           payload.code = buildButtonCode(action)
         }

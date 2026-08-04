@@ -8,10 +8,15 @@
   >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" :disabled="readonly">
       <el-form-item label="标题" prop="title">
-        <el-input v-model="form.title" maxlength="200" show-word-limit placeholder="请输入公告标题" />
+        <el-input
+          v-model="form.title"
+          maxlength="200"
+          show-word-limit
+          placeholder="请输入公告标题"
+        />
       </el-form-item>
       <el-form-item label="内容" prop="content">
-        <RichEditor v-model="form.content" :disabled="readonly" height="360px" />
+        <xnRichEditor v-model="form.content" :disabled="readonly" height="360px" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -27,7 +32,7 @@
 import { computed, reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import RichEditor from '@/components/RichEditor/RichEditor.vue'
+import xnRichEditor from '@/components/xnRichEditor/xnRichEditor.vue'
 import { create, get, update } from '@/api/notice'
 import type { NoticeForm } from '@/types'
 import { saveDialogTitle, type SaveMode } from '@/types/save'

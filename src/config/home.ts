@@ -41,7 +41,10 @@ export interface DonationItem {
   message?: string
 }
 
-export const changelogTypeMeta: Record<ChangelogType, { label: string; tag: 'success' | 'warning' | 'info' }> = {
+export const changelogTypeMeta: Record<
+  ChangelogType,
+  { label: string; tag: 'success' | 'warning' | 'info' }
+> = {
   feature: { label: '新增', tag: 'success' },
   fix: { label: '修复', tag: 'warning' },
   refactor: { label: '优化', tag: 'info' },
@@ -54,7 +57,11 @@ export const homeConfig = {
     description:
       '心念科技，以“心有所念，码有所成”为理念，专注于IT开发与软件创新。我们致力于将每一个想法转化为可靠的软件产品，通过技术赋能企业数字化发展，提供软件定制开发、系统建设、小程序开发及智能化应用解决方案。心有所念，技术同行，让每一个创意都拥有实现的可能。',
     features: [
-      { icon: 'Lock', title: 'RBAC 权限', desc: '用户 / 角色 / 单位 / 权限内容四级模型，接口与按钮级管控' },
+      {
+        icon: 'Lock',
+        title: 'RBAC 权限',
+        desc: '用户 / 角色 / 单位 / 权限内容四级模型，接口与按钮级管控',
+      },
       { icon: 'Guide', title: '动态路由', desc: '菜单与路由由后端下发，前端零改动即可增删页面' },
       { icon: 'Monitor', title: '系统监控', desc: '在线用户、服务器 CPU / 内存 / 磁盘实时可视' },
       { icon: 'Bell', title: '消息公告', desc: 'WebSocket 实时推送，已读回执与站内信一体' },
@@ -85,8 +92,18 @@ export const homeConfig = {
 
   contacts: [
     { icon: 'User', label: '公司', value: '心念科技' },
-    { icon: 'Message', label: '邮箱', value: 'support@xinnian.com', link: 'mailto:support@xinnian.com' },
-    { icon: 'Link', label: '官网', value: 'https://xinnian.example.com', link: 'https://xinnian.example.com' },
+    {
+      icon: 'Message',
+      label: '邮箱',
+      value: 'support@xinnian.com',
+      link: 'mailto:support@xinnian.com',
+    },
+    {
+      icon: 'Link',
+      label: '官网',
+      value: 'https://xinnian.example.com',
+      link: 'https://xinnian.example.com',
+    },
     { icon: 'ChatDotRound', label: '交流群', value: '123456789' },
   ] as ContactItem[],
 
@@ -113,7 +130,7 @@ export const homeConfig = {
       version: 'v1.1.0',
       date: '2026-05-09',
       items: [
-        { type: 'feature', text: '页面标签栏（TagsView）与多种布局模式' },
+        { type: 'feature', text: '页面标签栏（xnTagsView）与多种布局模式' },
         { type: 'refactor', text: '主题系统重构，支持一键换肤' },
       ],
     },

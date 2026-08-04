@@ -30,9 +30,7 @@ function buildAffixTags(): TagView[] {
 }
 
 function pruneCachedViews(state: { visitedViews: TagView[]; cachedViews: string[] }) {
-  const keep = new Set(
-    state.visitedViews.map((v) => v.name).filter((n): n is string => !!n),
-  )
+  const keep = new Set(state.visitedViews.map((v) => v.name).filter((n): n is string => !!n))
   state.cachedViews = state.cachedViews.filter((name) => keep.has(name))
 }
 
@@ -122,9 +120,7 @@ export const useTagsViewStore = defineStore('tagsView', {
     },
 
     delOthersViews(tag: TagView) {
-      this.visitedViews = this.visitedViews.filter(
-        (v) => v.affix || v.path === tag.path,
-      )
+      this.visitedViews = this.visitedViews.filter((v) => v.affix || v.path === tag.path)
       pruneCachedViews(this)
       saveToStorage(this.visitedViews)
     },
