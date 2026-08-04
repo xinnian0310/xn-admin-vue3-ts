@@ -1,5 +1,5 @@
 import axios from 'axios'
-import request from '@/utils/request'
+import request, { formatRequestError } from '@/utils/request'
 import type { ApiResponse } from '@/types'
 import type { AppConfig } from '@/config/app'
 
@@ -16,6 +16,7 @@ export type SystemConfigPayload = {
   }
   storage: AppConfig['storage']
   logRetention: AppConfig['logRetention']
+  sensitiveData: AppConfig['sensitiveData']
 }
 
 /** 公开配置（登录前，无需鉴权） */
@@ -28,6 +29,9 @@ export function getPublicConfig() {
         return Promise.reject(new Error(data.message || '获取系统配置失败'))
       }
       return data
+    })
+    .catch((error) => {
+      return Promise.reject(new Error(formatRequestError(error, '获取系统配置失败')))
     })
 }
 

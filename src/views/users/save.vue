@@ -23,10 +23,11 @@
         <el-input v-model="form.nickname" />
       </el-form-item>
       <el-form-item label="邮箱" prop="email">
-        <el-input v-model="form.email" />
+        <el-input v-model="form.email" :disabled="sensitiveFieldsLocked" />
+        <div v-if="sensitiveFieldsLocked" class="form-tip">无「查看敏感信息」权限，已脱敏且不可修改</div>
       </el-form-item>
       <el-form-item label="手机号" prop="phone">
-        <el-input v-model="form.phone" />
+        <el-input v-model="form.phone" :disabled="sensitiveFieldsLocked" />
       </el-form-item>
       <el-form-item label="角色" prop="roleIds">
         <el-select
@@ -87,7 +88,7 @@ defineOptions({ name: 'UsersSave' })
 
 const emit = defineEmits<{ success: [] }>()
 
-const { isSuperAdmin } = usePermission()
+const { isSuperAdmin, hasPermission } = usePermission()
 
 const visible = ref(false)
 const mode = ref<SaveMode>('add')
@@ -101,6 +102,10 @@ const formRef = ref<FormInstance>()
 
 const dialogTitle = computed(() => saveDialogTitle(mode.value, '用户'))
 const pwdTip = computed(() => passwordRules.value?.tip || '不少于 6 位')
+/** 编辑/查看且无敏感权限时锁定邮箱、手机号，避免掩码被提交写回 */
+const sensitiveFieldsLocked = computed(
+  () => mode.value !== 'add' && editingId.value != null && !hasPermission('user:sensitive:view'),
+)
 
 const availableRoles = computed(() =>
   isSuperAdmin.value ? roleOptions.value : roleOptions.value.filter((r) => r.code !== 'SUPER_ADMIN'),

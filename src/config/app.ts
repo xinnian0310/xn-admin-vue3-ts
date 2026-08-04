@@ -116,6 +116,12 @@ export const defaultAppConfig = {
     exceptionDays: 90,
     jobDays: 90,
   },
+  /** 用户敏感字段脱敏（列表/详情/导出） */
+  sensitiveData: {
+    enabled: true,
+    /** 可选：phone、email */
+    fields: ['phone', 'email'] as string[],
+  },
 }
 
 export type AppConfig = {
@@ -190,6 +196,10 @@ export type AppConfig = {
     operDays: number
     exceptionDays: number
     jobDays: number
+  }
+  sensitiveData: {
+    enabled: boolean
+    fields: string[]
   }
 }
 

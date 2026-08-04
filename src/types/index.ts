@@ -74,6 +74,8 @@ export interface User {
   nickname: string
   email: string
   phone: string
+  /** 后端已对邮箱/手机号打码（无 user:sensitive:view） */
+  sensitiveMasked?: boolean
   avatar?: string
   status: number
   role?: string

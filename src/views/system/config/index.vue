@@ -375,6 +375,32 @@
           </el-form-item>
         </el-form>
       </el-tab-pane>
+
+      <el-tab-pane label="数据脱敏" name="sensitiveData">
+        <el-form
+          :model="form"
+          label-width="140px"
+          class="system-config-page__form"
+        >
+          <el-alert
+            type="info"
+            :closable="false"
+            show-icon
+            class="system-config-page__alert"
+            title="无「查看敏感信息」权限的角色，在用户列表/详情/导出中会对勾选字段打码。授权：角色权限 → 用户管理 → 敏感信息。"
+          />
+          <el-form-item label="启用脱敏">
+            <el-switch v-model="form.sensitiveData.enabled" />
+            <span class="hint">关闭后不再打码</span>
+          </el-form-item>
+          <el-form-item label="敏感字段">
+            <el-checkbox-group v-model="form.sensitiveData.fields">
+              <el-checkbox value="phone">手机号</el-checkbox>
+              <el-checkbox value="email">邮箱</el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -424,6 +450,10 @@ function createForm(): SystemConfigPayload {
       minio: { ...d.storage.minio },
     },
     logRetention: { ...d.logRetention },
+    sensitiveData: {
+      enabled: d.sensitiveData.enabled,
+      fields: [...d.sensitiveData.fields],
+    },
   };
 }
 
@@ -468,6 +498,9 @@ function assignForm(data: SystemConfigPayload) {
     form.logRetention,
     data.logRetention || defaultAppConfig.logRetention,
   );
+  const sd = data.sensitiveData || defaultAppConfig.sensitiveData;
+  form.sensitiveData.enabled = sd.enabled !== false;
+  form.sensitiveData.fields = [...(sd.fields?.length ? sd.fields : defaultAppConfig.sensitiveData.fields)];
 }
 
 async function loadConfig() {
@@ -539,6 +572,11 @@ onMounted(() => {
       },
     },
     storage: { minio: { ...appConfig.storage.minio } },
+    logRetention: { ...appConfig.logRetention },
+    sensitiveData: {
+      enabled: appConfig.sensitiveData.enabled,
+      fields: [...appConfig.sensitiveData.fields],
+    },
   });
   loadConfig();
 });

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import request from '@/utils/request'
+import request, { formatRequestError } from '@/utils/request'
 import type { ApiResponse, LoginPageConfig, LoginPageConfigForm, PageResult } from '@/types'
 
 export type LoginPageConfigListParams = {
@@ -13,15 +13,20 @@ export type LoginPageConfigListParams = {
 /** 当前启用的登录页配置（无需登录） */
 export function getActive() {
   // 使用独立 axios，避免登录前接口守卫 / 401 跳转干扰
-  return axios.get<any, ApiResponse<LoginPageConfig | null>>('/api/login-page-configs/active', {
-    timeout: 10000,
-  }).then((res) => {
-    const data = res.data as ApiResponse<LoginPageConfig | null>
-    if (data.code !== 200) {
-      return Promise.reject(new Error(data.message || '获取登录页配置失败'))
-    }
-    return data
-  })
+  return axios
+    .get<any, ApiResponse<LoginPageConfig | null>>('/api/login-page-configs/active', {
+      timeout: 10000,
+    })
+    .then((res) => {
+      const data = res.data as ApiResponse<LoginPageConfig | null>
+      if (data.code !== 200) {
+        return Promise.reject(new Error(data.message || '获取登录页配置失败'))
+      }
+      return data
+    })
+    .catch((error) => {
+      return Promise.reject(new Error(formatRequestError(error, '获取登录页配置失败')))
+    })
 }
 
 export function list(params?: LoginPageConfigListParams) {

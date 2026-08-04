@@ -53,9 +53,11 @@
             ref="menuTreeRef"
             title="菜单"
             width="260px"
-            :filterable="false"
+            v-model:filter="menuKeyword"
+            filter-placeholder="搜索菜单名称/权限码"
             :data="menuTree"
             :tree-props="{ label: 'name', children: 'children', disabled: 'disabled' }"
+            :filter-node-method="filterMenuNode"
             :current-key="selectedRouteId ?? undefined"
             class="role-perm__menus"
             @node-click="onMenuClick"
@@ -110,14 +112,15 @@
               </div>
 
               <el-scrollbar v-if="assignableItems.length" class="role-perm__detail-scroll">
-                <div v-if="buttonItems.length" class="perm-group">
+                <div v-if="detailGroups.capability.length" class="perm-group">
                   <div class="perm-group__title">
-                    <span>按钮权限</span>
-                    <span class="perm-group__count">{{ buttonItems.length }}</span>
+                    <span>敏感信息</span>
+                    <span class="perm-group__count">{{ detailGroups.capability.length }}</span>
                   </div>
+                  <p class="perm-group__hint">控制列表/详情/导出是否显示手机号、邮箱明文（字段范围在系统配置中设置）</p>
                   <div class="perm-group__items">
                     <el-checkbox
-                      v-for="item in buttonItems"
+                      v-for="item in detailGroups.capability"
                       :key="item.id"
                       border
                       :model-value="isChecked(item.id)"
@@ -125,13 +128,47 @@
                       @change="toggleItem(item.id)"
                     >
                       {{ item.name }}
-                      <el-tag
-                        :type="item.type === 'BUTTON' ? 'primary' : 'warning'"
-                        effect="plain"
-                        class="perm-btn__type"
-                      >
-                        {{ typeLabel(item.type) }}
-                      </el-tag>
+                      <el-tag type="danger" effect="plain" class="perm-btn__type">敏感</el-tag>
+                    </el-checkbox>
+                  </div>
+                </div>
+
+                <div v-if="detailGroups.button.length" class="perm-group">
+                  <div class="perm-group__title">
+                    <span>按钮</span>
+                    <span class="perm-group__count">{{ detailGroups.button.length }}</span>
+                  </div>
+                  <p class="perm-group__hint">页面工具栏（新增 / 导入 / 导出等）</p>
+                  <div class="perm-group__items">
+                    <el-checkbox
+                      v-for="item in detailGroups.button"
+                      :key="item.id"
+                      border
+                      :model-value="isChecked(item.id)"
+                      class="perm-btn"
+                      @change="toggleItem(item.id)"
+                    >
+                      {{ item.name }}
+                    </el-checkbox>
+                  </div>
+                </div>
+
+                <div v-if="detailGroups.tableButton.length" class="perm-group">
+                  <div class="perm-group__title">
+                    <span>表格按钮</span>
+                    <span class="perm-group__count">{{ detailGroups.tableButton.length }}</span>
+                  </div>
+                  <p class="perm-group__hint">表格操作列（查看 / 编辑 / 删除等）</p>
+                  <div class="perm-group__items">
+                    <el-checkbox
+                      v-for="item in detailGroups.tableButton"
+                      :key="item.id"
+                      border
+                      :model-value="isChecked(item.id)"
+                      class="perm-btn"
+                      @change="toggleItem(item.id)"
+                    >
+                      {{ item.name }}
                     </el-checkbox>
                   </div>
                 </div>
@@ -229,6 +266,7 @@ interface MenuNode {
 const route = useRoute()
 
 const roleKeyword = ref('')
+const menuKeyword = ref('')
 const roles = ref<Role[]>([])
 const currentRole = ref<Role | null>(null)
 const routeTree = ref<SysRoute[]>([])
@@ -275,13 +313,6 @@ onBeforeRouteLeave(async () => {
   return confirmDiscardChanges()
 })
 
-const typeLabels: Record<string, string> = {
-  MENU: '菜单',
-  BUTTON: '按钮',
-  API: '接口',
-  TABLE_BUTTON: '表格按钮',
-}
-
 const isSuperAdminRole = computed(() => currentRole.value?.code === 'SUPER_ADMIN')
 
 const filteredRoles = computed(() => {
@@ -306,18 +337,36 @@ const selectedMenu = computed<Permission | null>(() => {
 })
 
 const detailGroups = computed(() => {
-  const groups = { api: [] as Permission[], button: [] as Permission[], tableButton: [] as Permission[] }
+  const groups = {
+    capability: [] as Permission[],
+    api: [] as Permission[],
+    button: [] as Permission[],
+    tableButton: [] as Permission[],
+  }
   for (const child of selectedMenu.value?.children ?? []) {
-    if (child.type === 'API') groups.api.push(child)
-    else if (child.type === 'BUTTON') groups.button.push(child)
-    else if (child.type === 'TABLE_BUTTON') groups.tableButton.push(child)
+    // 能力型权限独立成组；兼容旧数据仍挂在 API 下的敏感权限
+    if (
+      child.action === 'capability' ||
+      child.code === 'user:sensitive:view'
+    ) {
+      groups.capability.push(child)
+    } else if (child.type === 'API') {
+      groups.api.push(child)
+    } else if (child.type === 'BUTTON') {
+      groups.button.push(child)
+    } else if (child.type === 'TABLE_BUTTON') {
+      groups.tableButton.push(child)
+    }
   }
   return groups
 })
 
-const buttonItems = computed(() => [...detailGroups.value.button, ...detailGroups.value.tableButton])
-
-const assignableItems = computed(() => [...buttonItems.value, ...detailGroups.value.api])
+const assignableItems = computed(() => [
+  ...detailGroups.value.capability,
+  ...detailGroups.value.button,
+  ...detailGroups.value.tableButton,
+  ...detailGroups.value.api,
+])
 
 const isAllChecked = computed(
   () => assignableItems.value.length > 0 && assignableItems.value.every((item) => checkedIds.value.has(item.id)),
@@ -327,6 +376,20 @@ const isIndeterminate = computed(() => {
   const checked = assignableItems.value.filter((item) => checkedIds.value.has(item.id)).length
   return checked > 0 && checked < assignableItems.value.length
 })
+
+function filterMenuNode(value: string, data: { name?: string; code?: string }) {
+  if (!value) return true
+  const q = value.trim().toLowerCase()
+  if (!q) return true
+  return (
+    String(data.name ?? '')
+      .toLowerCase()
+      .includes(q) ||
+    String(data.code ?? '')
+      .toLowerCase()
+      .includes(q)
+  )
+}
 
 function toMenuNodes(nodes: SysRoute[]): MenuNode[] {
   return [...nodes]
@@ -387,10 +450,6 @@ function menuStat(node: MenuNode | Record<string, unknown>) {
   const items = collectAssignableUnderRoute(node as MenuNode)
   const checked = items.filter((item) => checkedIds.value.has(item.id)).length
   return { total: items.length, checked }
-}
-
-function typeLabel(type: string) {
-  return typeLabels[type] ?? type
 }
 
 function methodTagType(method?: string) {
@@ -479,6 +538,7 @@ async function selectRole(role: Role) {
   }
   currentRole.value = role
   selectedRouteId.value = null
+  menuKeyword.value = ''
   checkedIds.value = new Set()
   savedIds.value = new Set()
   await loadTrees()
@@ -768,6 +828,13 @@ onUnmounted(() => {
   font-weight: 600;
   color: #606266;
   margin-bottom: 12px;
+}
+
+.perm-group__hint {
+  margin: -4px 0 12px;
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.4;
 }
 
 .perm-group__count {
