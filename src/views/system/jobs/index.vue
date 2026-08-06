@@ -1,11 +1,5 @@
 <template>
-  <xnPageLayout
-    v-model:page="page"
-    v-model:page-size="size"
-    :total="total"
-    :loading="loading"
-    @page-change="loadData"
-  >
+  <xnPageLayout v-model:page="page" v-model:page-size="size" :total="total" @page-change="loadData">
     <template #search>
       <xnSearch :search-item="searchItems" @query-form="inquires" @reset="reset" />
     </template>

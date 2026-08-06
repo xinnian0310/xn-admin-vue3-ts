@@ -2,7 +2,8 @@
  * 应用全局配置
  *
  * - 本地默认值在此定义；后端「系统配置」启动时 merge 覆盖
- * - 项目名称 / 应用介绍 / 页脚：改 app.name、app.intro、app.footer
+ * - 应用介绍只保留 intro：本地留空，公开接口按 clientId 投影后写入
+ * - 多前端隔离存于云端 app.clients，前端配置与运行时不挂 clients
  * - favicon / 侧栏 Logo：共用 app.logo（保存时同步写入 app.favicon）
  * - UI 行为、Element Plus 尺寸、布局字号集中管理
  * - 主题色由 theme store 管理，不在此覆盖
@@ -34,10 +35,9 @@ const elementPlusLocales: Record<ElementPlusLocale, Language> = {
 /** 本地默认（与后端 AppConfigVO 默认值保持一致） */
 export const defaultAppConfig = {
   app: {
-    name: '心念后台管理系统',
-    /** 管理端首页 / 官网开源项目介绍 */
-    intro:
-      '面向中后台的 Vue3 + 微服务管理脚手架：JWT 登录、RBAC 动态路由、page-ui 驱动 CRUD、多布局与主题、通知推送与系统监控一站集成，对接 xn-admin-cloud 网关即可开箱使用。',
+    name: '心念后台管理系统（Vue3 TS）',
+    /** 应用介绍：本地留空，由公开配置按 client 投影后写入 */
+    intro: '',
     favicon: '/xinnian-tech-logo.png',
     logo: '/xinnian-tech-logo.png',
     logoWidth: 28 as number | null,
@@ -253,6 +253,8 @@ export function applyRemoteAppConfig(
     if ('logoWidth' in app) appConfig.app.logoWidth = app.logoWidth ?? null
     if ('logoHeight' in app) appConfig.app.logoHeight = app.logoHeight ?? null
   }
+  // 运行时只用投影后的 name/intro，不保留云端 clients 映射
+  delete (appConfig.app as Record<string, unknown>).clients
   applyAppConfig(appConfig)
 }
 

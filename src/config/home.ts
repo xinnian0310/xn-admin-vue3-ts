@@ -1,7 +1,7 @@
 /**
  * 首页展示配置
  *
- * - 标题 / 简介：由「系统配置」app.name、app.intro 下发，此处 intro 仅作本地兜底
+ * - 标题：可与本地 app.name 对齐；简介 description 本地留空，由系统配置投影后的 app.intro 下发
  * - 技术选型 / 特性卡片仍在此维护
  * - 联系 / 捐赠优先走 GET /api/site-contact/public
  * - intro.version 取自 package.json（构建时由 Vite 注入）
@@ -52,10 +52,9 @@ export const changelogTypeMeta: Record<
 
 export const homeConfig = {
   intro: {
-    title: '心念后台管理系统',
+    title: '心念后台管理系统（Vue3 TS）',
     version: `v${__APP_VERSION__}`,
-    description:
-      '面向中后台的 Vue3 + 微服务管理脚手架：JWT 登录、RBAC 动态路由、page-ui 驱动 CRUD、多布局与主题、通知推送与系统监控一站集成，对接 xn-admin-cloud 网关即可开箱使用。',
+    description: '',
     features: [
       {
         icon: 'Lock',

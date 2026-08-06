@@ -6,6 +6,7 @@
         <p class="system-config-page__hint">
           与前端 app.ts
           对齐：保存后即时生效。登录页背景/验证码请在「登录页设置」中配置；主题色请在右上角主题面板调整。
+          「项目名称 / 应用介绍」按当前前端工程（{{ clientId }}）单独存储，不影响其他前端项目。
         </p>
       </div>
       <div class="system-config-page__actions">
@@ -26,11 +27,18 @@
     <el-tabs v-model="activeTab" tab-position="left" class="system-config-page__tabs">
       <el-tab-pane label="应用信息" name="app">
         <el-form :model="form" label-width="120px" class="system-config-page__form">
+          <el-form-item label="当前前端工程">
+            <el-input :model-value="clientId" disabled />
+            <p class="system-config-page__field-hint">
+              项目名称 / 应用介绍按此 clientId
+              写入数据库（app.clients），各技术栈互不影响；页脚与品牌图标仍共享。
+            </p>
+          </el-form-item>
           <el-form-item label="项目名称" required>
             <el-input
               v-model="form.app.name"
               maxlength="50"
-              placeholder="侧栏 / 登录页 / 管理端首页标题 / 官网项目副标题"
+              placeholder="侧栏 / 登录页 / 管理端首页标题 / 官网项目副标题（仅本工程）"
             />
           </el-form-item>
           <el-form-item label="应用介绍">
@@ -40,7 +48,7 @@
               :rows="4"
               maxlength="500"
               show-word-limit
-              placeholder="管理端首页与官网开源项目介绍文案"
+              placeholder="管理端首页与官网开源项目介绍文案（仅本工程）"
             />
           </el-form-item>
           <el-form-item label="页脚">
@@ -400,11 +408,15 @@ import {
   uploadBrandAsset,
   type SystemConfigPayload,
 } from '@/api/system-config'
+import { APP_CLIENT_ID } from '@/config/client'
 import { useUiPreferenceStore } from '@/stores/uiPreference'
 import { parsePxInt, toPx } from '@/utils/px'
 
 defineOptions({ name: 'SystemConfig' })
 
+const clientId = APP_CLIENT_ID
+/** 共享兜底 name（写入 app.name，供未配置 clients 的工程使用）；介绍只存 clients */
+const sharedBrand = reactive({ name: '' })
 const loading = ref(false)
 const saving = ref(false)
 const activeTab = ref('app')
@@ -455,7 +467,7 @@ function onBrandIconPreview(file: UploadUserFile) {
 function createForm(): SystemConfigPayload {
   const d = JSON.parse(JSON.stringify(defaultAppConfig)) as AppConfig
   return {
-    app: { ...d.app },
+    app: { ...d.app, clients: { ...(d.app.clients || {}) } },
     session: { ...d.session },
     ui: {
       dialog: { ...d.ui.dialog },
@@ -548,6 +560,14 @@ const fontMainPx = pxField(
 
 function assignForm(data: SystemConfigPayload) {
   Object.assign(form.app, data.app)
+  form.app.clients = { ...(data.app?.clients || {}) }
+  sharedBrand.name = data.app?.name || ''
+  const profile = form.app.clients[APP_CLIENT_ID]
+  // 名称：本工程 profile > 本地默认 > 共享兜底
+  if (profile?.name) form.app.name = profile.name
+  else form.app.name = defaultAppConfig.app.name || sharedBrand.name
+  // 介绍：只认云端 clients，本地不兜底长文
+  form.app.intro = profile?.intro ?? ''
   // 品牌图标：favicon / logo 共用同一张图
   const icon = (form.app.logo || form.app.favicon || '').trim()
   form.app.logo = icon
@@ -597,13 +617,27 @@ async function handleSave() {
     form.app.logo = icon
     form.app.favicon = icon
     const payload: SystemConfigPayload = JSON.parse(JSON.stringify(form))
+    const clientName = payload.app.name.trim()
+    const clientIntro = payload.app.intro ?? ''
+    payload.app.clients = {
+      ...(payload.app.clients || {}),
+      [APP_CLIENT_ID]: { name: clientName, intro: clientIntro },
+    }
+    // 名称保留共享兜底；介绍只写在 clients，根 intro 留空避免与 clients 重复
+    payload.app.name = (sharedBrand.name || clientName).trim()
+    payload.app.intro = ''
     const res = await updateSystemConfig(payload)
     if (res.data) {
       assignForm(res.data)
-      applyRemoteAppConfig(res.data)
-    } else {
-      applyRemoteAppConfig(payload)
     }
+    applyRemoteAppConfig({
+      ...(res.data || payload),
+      app: {
+        ...(res.data || payload).app,
+        name: clientName,
+        intro: clientIntro,
+      },
+    })
     captureGlobalUiBaseline()
     const pref = useUiPreferenceStore().preference
     if (pref) applyUserUiPreference(pref)
@@ -681,6 +715,13 @@ onMounted(() => {
 
 .system-config-page__hint {
   margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--app-text-muted, #909399);
+}
+
+.system-config-page__field-hint {
+  margin: 6px 0 0;
   font-size: 12px;
   line-height: 1.5;
   color: var(--app-text-muted, #909399);

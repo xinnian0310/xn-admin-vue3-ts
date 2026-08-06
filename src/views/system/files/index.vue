@@ -1,5 +1,5 @@
 <template>
-  <xnPageLayout :loading="loading">
+  <xnPageLayout>
     <template #aside>
       <xnTreePanel
         title="存储路径"

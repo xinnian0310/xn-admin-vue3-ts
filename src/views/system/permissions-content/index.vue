@@ -3,7 +3,6 @@
     v-model:page="page"
     v-model:page-size="size"
     :total="total"
-    :loading="loading"
     @page-change="applyLocalPage"
   >
     <template #aside>

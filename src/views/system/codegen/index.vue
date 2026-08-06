@@ -1,5 +1,5 @@
 <template>
-  <xnPageLayout :loading="loading">
+  <xnPageLayout>
     <template #search>
       <xnSearch :search-item="searchItems" @query-form="inquires" @reset="reset" />
     </template>

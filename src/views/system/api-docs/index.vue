@@ -1,83 +1,146 @@
 <template>
-  <div class="page-card api-docs-page">
-    <div class="page-header">
-      <h2 class="page-title">接口文档</h2>
-      <div class="api-docs-actions">
-        <el-radio-group v-model="mode">
-          <el-radio-button value="swagger">Swagger UI</el-radio-button>
-          <el-radio-button value="registry">权限 API 列表</el-radio-button>
-        </el-radio-group>
-        <el-button
-          v-if="mode === 'registry'"
-          v-permission="'api-docs:view'"
-          :icon="Refresh"
-          :loading="loading"
-          @click="loadApis"
-        >
-          刷新
-        </el-button>
-        <el-button v-if="mode === 'swagger'" tag="a" href="/swagger-ui/index.html" target="_blank">
-          新窗口打开
-        </el-button>
-      </div>
-    </div>
+  <xnPageLayout class="api-docs-page" :show-view-switch="false">
+    <template #toolbar>
+      <span class="api-docs-hint">{{ modeHint }}</span>
+    </template>
 
-    <iframe
-      v-if="mode === 'swagger'"
-      class="swagger-frame"
-      src="/swagger-ui/index.html"
-      title="Swagger UI"
-    />
+    <template #toolbar-extra>
+      <el-radio-group v-model="mode" size="default">
+        <el-radio-button value="ui">UI</el-radio-button>
+        <el-radio-button value="api">API</el-radio-button>
+      </el-radio-group>
+      <el-button
+        v-if="mode === 'ui'"
+        tag="a"
+        href="/swagger-ui/index.html"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        新窗口打开
+      </el-button>
+    </template>
 
-    <div v-else class="registry-panel" v-loading="loading">
-      <div class="registry-toolbar">
-        <el-input
-          v-model="keyword"
-          clearable
-          placeholder="搜索方法 / 路径"
-          style="max-width: 320px"
-        />
-        <span class="registry-count">共 {{ filteredApis.length }} 条</span>
-      </div>
-      <el-table :data="filteredApis" border stripe height="100%">
-        <el-table-column type="index" label="#" width="55" align="center" />
-        <el-table-column prop="method" label="方法" width="100">
-          <template #default="{ row }">
-            <el-tag :type="methodTag(row.method)" effect="plain">{{ row.method }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="path" label="路径" min-width="360" show-overflow-tooltip />
-      </el-table>
-      <el-empty
-        v-if="!loading && !filteredApis.length"
-        description="暂无 API 登记数据"
-        :image-size="90"
-      />
+    <template v-if="mode === 'api'" #search>
+      <xnSearch :search-item="searchItems" @query-form="onQuery" @reset="onReset" />
+    </template>
+
+    <template v-if="mode === 'api'" #table>
+      <xnTable
+        v-model:page="page"
+        v-model:page-size="size"
+        :data="pagedApis"
+        :total="filteredApis.length"
+        :loading="loading"
+        table-key="system:api-docs"
+        entity-name="接口"
+        name-field="path"
+        :columns="columns"
+        :action-items="[]"
+        stripe
+        @page-change="noop"
+      >
+        <template #method="{ row }">
+          <el-tag :type="methodTag(row.method)" effect="plain" size="small">
+            {{ row.method }}
+          </el-tag>
+        </template>
+      </xnTable>
+    </template>
+
+    <div v-if="mode === 'ui'" class="swagger-wrap">
+      <iframe class="swagger-frame" :src="swaggerSrc" title="Swagger UI" />
     </div>
-  </div>
+  </xnPageLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Refresh } from '@element-plus/icons-vue'
+import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
+import xnSearch from '@/components/xnSearch/xnSearch.vue'
+import xnTable from '@/components/xnTable/xnTable.vue'
 import { getApiRegistry } from '@/api/auth'
+import type { SearchForm, SearchItem } from '@/types/search'
+import type { TableColumnItem } from '@/types/table'
 
 defineOptions({ name: 'SystemApiDocs' })
 
 type ApiItem = { method: string; path: string }
+type DocsMode = 'ui' | 'api'
 
-const mode = ref<'swagger' | 'registry'>('swagger')
+const MODE_KEY = 'xn-api-docs-mode'
+
+function readStoredMode(): DocsMode {
+  return localStorage.getItem(MODE_KEY) === 'api' ? 'api' : 'ui'
+}
+
+const mode = ref<DocsMode>(readStoredMode())
 const loading = ref(false)
-const keyword = ref('')
 const apis = ref<ApiItem[]>([])
+const page = ref(1)
+const size = ref(20)
+const queryForm = ref<SearchForm>({})
+/** 避免 iframe 缓存旧 404 页：切换到 UI 时刷新 */
+const swaggerTick = ref(0)
+
+const swaggerSrc = computed(() => `/swagger-ui/index.html?t=${swaggerTick.value}`)
+
+const modeHint = computed(() =>
+  mode.value === 'ui'
+    ? 'Swagger UI：在线查看与调试 OpenAPI 接口'
+    : 'API 登记：权限系统扫描到的方法/路径（供角色权限对照）',
+)
+
+const searchItems: SearchItem[] = [
+  {
+    label: '方法',
+    prop: 'method',
+    type: 'select',
+    placeholder: '全部方法',
+    clearable: true,
+    width: 140,
+    options: [
+      { label: 'GET', value: 'GET' },
+      { label: 'POST', value: 'POST' },
+      { label: 'PUT', value: 'PUT' },
+      { label: 'PATCH', value: 'PATCH' },
+      { label: 'DELETE', value: 'DELETE' },
+    ],
+  },
+  {
+    label: '路径',
+    prop: 'keyword',
+    type: 'input',
+    placeholder: '搜索路径关键字',
+    width: 280,
+  },
+]
+
+const columns: TableColumnItem[] = [
+  { type: 'index', label: '#', width: 60, align: 'center' },
+  { type: 'slot', slot: 'method', prop: 'method', label: '方法', width: 110 },
+  { prop: 'path', label: '路径', minWidth: 360, showOverflowTooltip: true },
+]
 
 const filteredApis = computed(() => {
-  const q = keyword.value.trim().toLowerCase()
-  if (!q) return apis.value
-  return apis.value.filter(
-    (a) => a.method.toLowerCase().includes(q) || a.path.toLowerCase().includes(q),
-  )
+  const method = String(queryForm.value.method ?? '')
+    .trim()
+    .toUpperCase()
+  const keyword = String(queryForm.value.keyword ?? '')
+    .trim()
+    .toLowerCase()
+  return apis.value.filter((a) => {
+    if (method && a.method.toUpperCase() !== method) return false
+    if (!keyword) return true
+    return a.path.toLowerCase().includes(keyword) || a.method.toLowerCase().includes(keyword)
+  })
 })
+
+const pagedApis = computed(() => {
+  const start = (page.value - 1) * size.value
+  return filteredApis.value.slice(start, start + size.value)
+})
+
+function noop() {}
 
 function methodTag(method: string) {
   const m = (method || '').toUpperCase()
@@ -86,6 +149,16 @@ function methodTag(method: string) {
   if (m === 'PUT' || m === 'PATCH') return 'warning'
   if (m === 'DELETE') return 'danger'
   return 'info'
+}
+
+function onQuery(form: SearchForm) {
+  queryForm.value = { ...form }
+  page.value = 1
+}
+
+function onReset() {
+  queryForm.value = {}
+  page.value = 1
 }
 
 async function loadApis() {
@@ -101,57 +174,47 @@ async function loadApis() {
 }
 
 watch(mode, (val) => {
-  if (val === 'registry' && !apis.value.length) {
+  localStorage.setItem(MODE_KEY, val)
+  if (val === 'api' && !apis.value.length) {
     loadApis()
+  }
+  if (val === 'ui') {
+    swaggerTick.value = Date.now()
   }
 })
 
 onMounted(() => {
-  if (mode.value === 'registry') loadApis()
+  if (mode.value === 'api') loadApis()
+  else swaggerTick.value = Date.now()
 })
 </script>
 
 <style scoped>
 .api-docs-page {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - 140px);
+  min-height: 0;
 }
 
-.api-docs-actions {
+.api-docs-hint {
+  font-size: 13px;
+  color: var(--app-text-muted, #909399);
+  line-height: 1.4;
+}
+
+.swagger-wrap {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  flex-direction: column;
 }
 
 .swagger-frame {
   flex: 1;
   width: 100%;
-  min-height: 680px;
+  min-height: 640px;
+  height: 100%;
   border: 1px solid var(--app-border-color, var(--el-border-color));
   border-radius: 8px;
-  margin-top: 12px;
   background: var(--app-card-bg, #fff);
-}
-
-.registry-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 480px;
-  margin-top: 12px;
-  gap: 12px;
-}
-
-.registry-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.registry-count {
-  font-size: 13px;
-  color: var(--app-text-muted, #909399);
 }
 </style>
