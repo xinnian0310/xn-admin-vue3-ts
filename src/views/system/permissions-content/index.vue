@@ -231,7 +231,7 @@ interface MenuNode {
   id: number
   name: string
   code?: string
-  type: 'DIR' | 'MENU'
+  type: 'DIR' | 'MENU' | 'LINK'
   permissionControl: boolean
   disabled: boolean
   childCount: number

@@ -26,5 +26,7 @@ declare module 'vue-router' {
     activeMenu?: string
     noCache?: boolean
     permission?: string
+    /** LINK 类型外链地址 */
+    linkUrl?: string
   }
 }
