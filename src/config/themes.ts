@@ -1,4 +1,4 @@
-/** 内置主题：侧栏 / 顶栏 / 主色（同步 EP 组件与业务页） */
+/** 内置主题：侧栏 / 顶栏 / 主色（各预设侧栏色明显区分） */
 
 import { hexToRgbCss, isLightColor, mixHex } from '@/utils/color'
 
@@ -49,40 +49,91 @@ export const DEFAULT_THEME_SOURCE: ThemeSource = 'preset'
 
 export const DEFAULT_CUSTOM_PARTS: CustomThemeParts = {
   primary: '#409eff',
-  sidebarBg: '#409eff',
-  headerBg: '#409eff',
+  sidebarBg: '#337ecc',
+  headerBg: mixHex('#337ecc', '#ffffff', 0.14),
 }
 
-/** 外观模式：亮色 / 暗色各为完整主题（侧栏、顶栏、主色、页面一并切换） */
+/** 从完整主题提取个性化三项 */
+export function themeToCustomParts(theme: AppTheme): CustomThemeParts {
+  return {
+    primary: theme.colors.primary,
+    sidebarBg: theme.colors.sidebar.bg,
+    headerBg: theme.colors.header.bg,
+  }
+}
+
+/** 品牌色侧栏 */
+function brandSider(bg: string): ThemeColors['sidebar'] {
+  return {
+    bg,
+    bgElevated: mixHex(bg, '#000000', 0.1),
+    text: 'rgba(255, 255, 255, 0.85)',
+    textActive: '#ffffff',
+    active: '#ffffff',
+    activeBg: 'rgba(255, 255, 255, 0.22)',
+    hoverBg: 'rgba(255, 255, 255, 0.12)',
+    border: 'rgba(255, 255, 255, 0.14)',
+    railBg: mixHex(bg, '#000000', 0.2),
+  }
+}
+
+/** 深色侧栏：选中用主色块 */
+function darkSider(primary: string, siderBg: string): ThemeColors['sidebar'] {
+  return {
+    bg: siderBg,
+    bgElevated: mixHex(siderBg, '#ffffff', 0.06),
+    text: 'rgba(255, 255, 255, 0.75)',
+    textActive: '#ffffff',
+    active: '#ffffff',
+    activeBg: primary,
+    hoverBg: 'rgba(255, 255, 255, 0.1)',
+    border: 'rgba(255, 255, 255, 0.1)',
+    railBg: mixHex(siderBg, '#000000', 0.25),
+  }
+}
+
+/** 浅色侧栏 */
+function softSider(primary: string, siderBg: string): ThemeColors['sidebar'] {
+  return {
+    bg: siderBg,
+    bgElevated: mixHex(siderBg, '#ffffff', 0.45),
+    text: '#64748b',
+    textActive: '#0f172a',
+    active: primary,
+    activeBg: `rgba(${hexToRgbCss(primary)}, 0.12)`,
+    hoverBg: 'rgba(15, 23, 42, 0.05)',
+    border: mixHex(siderBg, '#000000', 0.1),
+    railBg: mixHex(siderBg, '#000000', 0.05),
+  }
+}
+
+/** 顶栏：相对侧栏只略提亮，色差保持很小 */
+function liftHeader(siderBg: string, whiteMix = 0.14): ThemeColors['header'] {
+  const bg = mixHex(siderBg, '#ffffff', whiteMix)
+  const light = isLightColor(bg)
+  return {
+    bg,
+    text: light ? '#334155' : 'rgba(255, 255, 255, 0.92)',
+    border: light ? mixHex(bg, '#000000', 0.08) : 'rgba(255, 255, 255, 0.12)',
+  }
+}
+
+/** 外观模式：亮色 / 暗色各为完整主题 */
 export const appearanceThemes: Record<AppearanceMode, AppTheme> = {
   light: {
     id: 'appearance-light',
     name: '亮色',
-    swatches: ['#ffffff', '#409eff'],
+    swatches: ['#d9ecff', mixHex('#d9ecff', '#ffffff', 0.12)],
     colors: {
       primary: '#409eff',
-      sidebar: {
-        bg: '#ffffff',
-        bgElevated: '#f5f7fa',
-        text: '#606266',
-        textActive: '#303133',
-        active: '#409eff',
-        activeBg: 'rgba(64, 158, 255, 0.12)',
-        hoverBg: 'rgba(0, 0, 0, 0.04)',
-        border: '#ebeef5',
-        railBg: '#f5f7fa',
-      },
-      header: {
-        bg: '#ffffff',
-        text: '#303133',
-        border: '#ebeef5',
-      },
+      sidebar: softSider('#409eff', '#d9ecff'),
+      header: liftHeader('#d9ecff', 0.12),
     },
   },
   dark: {
     id: 'appearance-dark',
     name: '暗色',
-    swatches: ['#1d1e1f', '#409eff'],
+    swatches: ['#141414', '#1d1e1f'],
     colors: {
       primary: '#409eff',
       sidebar: {
@@ -96,11 +147,7 @@ export const appearanceThemes: Record<AppearanceMode, AppTheme> = {
         border: '#414243',
         railBg: '#0a0a0a',
       },
-      header: {
-        bg: '#1d1e1f',
-        text: 'rgba(255, 255, 255, 0.9)',
-        border: '#414243',
-      },
+      header: liftHeader('#141414', 0.12),
     },
   },
 }
@@ -136,145 +183,91 @@ export const builtinThemes: AppTheme[] = [
   {
     id: 'blue',
     name: '经典蓝',
-    swatches: ['#409eff', '#409eff'],
+    swatches: ['#337ecc', mixHex('#337ecc', '#ffffff', 0.14)],
     colors: {
       primary: '#409eff',
-      sidebar: {
-        bg: '#409eff',
-        bgElevated: '#337ecc',
-        text: 'rgba(255, 255, 255, 0.85)',
-        textActive: '#ffffff',
-        active: '#ffffff',
-        activeBg: 'rgba(255, 255, 255, 0.22)',
-        hoverBg: 'rgba(255, 255, 255, 0.14)',
-        border: 'rgba(255, 255, 255, 0.18)',
-        railBg: '#337ecc',
-      },
-      header: {
-        bg: '#409eff',
-        text: 'rgba(255, 255, 255, 0.95)',
-        border: 'rgba(255, 255, 255, 0.15)',
-      },
+      sidebar: brandSider('#337ecc'),
+      header: liftHeader('#337ecc'),
     },
   },
   {
     id: 'indigo',
     name: '靛蓝',
-    swatches: ['#312e81', '#4f46e5'],
+    swatches: ['#312e81', mixHex('#312e81', '#ffffff', 0.14)],
     colors: {
       primary: '#4f46e5',
-      sidebar: {
-        bg: '#312e81',
-        bgElevated: '#1e1b4b',
-        text: 'rgba(255, 255, 255, 0.75)',
-        textActive: '#ffffff',
-        active: '#ffffff',
-        activeBg: 'rgba(255, 255, 255, 0.16)',
-        hoverBg: 'rgba(255, 255, 255, 0.1)',
-        border: 'rgba(255, 255, 255, 0.1)',
-        railBg: '#1e1b4b',
-      },
-      header: {
-        bg: '#4f46e5',
-        text: 'rgba(255, 255, 255, 0.9)',
-        border: 'rgba(255, 255, 255, 0.12)',
-      },
+      sidebar: darkSider('#4f46e5', '#312e81'),
+      header: liftHeader('#312e81'),
     },
   },
   {
     id: 'teal',
     name: '青绿',
-    swatches: ['#0f766e', '#14b8a6'],
+    swatches: ['#115e59', mixHex('#115e59', '#ffffff', 0.14)],
     colors: {
       primary: '#0d9488',
-      sidebar: {
-        bg: '#0f766e',
-        bgElevated: '#115e59',
-        text: 'rgba(255, 255, 255, 0.75)',
-        textActive: '#ffffff',
-        active: '#ffffff',
-        activeBg: 'rgba(255, 255, 255, 0.18)',
-        hoverBg: 'rgba(255, 255, 255, 0.1)',
-        border: 'rgba(255, 255, 255, 0.1)',
-        railBg: '#134e4a',
-      },
-      header: {
-        bg: '#14b8a6',
-        text: 'rgba(255, 255, 255, 0.95)',
-        border: 'rgba(255, 255, 255, 0.15)',
-      },
+      sidebar: brandSider('#115e59'),
+      header: liftHeader('#115e59'),
     },
   },
   {
     id: 'emerald',
     name: '翠绿',
-    swatches: ['#166534', '#22c55e'],
+    swatches: ['#14532d', mixHex('#14532d', '#ffffff', 0.14)],
     colors: {
       primary: '#16a34a',
-      sidebar: {
-        bg: '#166534',
-        bgElevated: '#14532d',
-        text: 'rgba(255, 255, 255, 0.75)',
-        textActive: '#ffffff',
-        active: '#ffffff',
-        activeBg: 'rgba(255, 255, 255, 0.18)',
-        hoverBg: 'rgba(255, 255, 255, 0.1)',
-        border: 'rgba(255, 255, 255, 0.1)',
-        railBg: '#14532d',
-      },
-      header: {
-        bg: '#16a34a',
-        text: 'rgba(255, 255, 255, 0.95)',
-        border: 'rgba(255, 255, 255, 0.15)',
-      },
+      sidebar: brandSider('#14532d'),
+      header: liftHeader('#14532d'),
+    },
+  },
+  {
+    id: 'orange',
+    name: '日落橙',
+    swatches: ['#9a3412', mixHex('#9a3412', '#ffffff', 0.14)],
+    colors: {
+      primary: '#ea580c',
+      sidebar: brandSider('#9a3412'),
+      header: liftHeader('#9a3412'),
+    },
+  },
+  {
+    id: 'rose',
+    name: '玫红',
+    swatches: ['#9f1239', mixHex('#9f1239', '#ffffff', 0.14)],
+    colors: {
+      primary: '#e11d48',
+      sidebar: brandSider('#9f1239'),
+      header: liftHeader('#9f1239'),
     },
   },
   {
     id: 'slate',
     name: '深空灰',
-    swatches: ['#334155', '#64748b'],
+    swatches: ['#1e293b', mixHex('#1e293b', '#ffffff', 0.14)],
     colors: {
       primary: '#475569',
-      sidebar: {
-        bg: '#334155',
-        bgElevated: '#1e293b',
-        text: 'rgba(255, 255, 255, 0.75)',
-        textActive: '#ffffff',
-        active: '#ffffff',
-        activeBg: 'rgba(255, 255, 255, 0.16)',
-        hoverBg: 'rgba(255, 255, 255, 0.1)',
-        border: 'rgba(255, 255, 255, 0.1)',
-        railBg: '#1e293b',
-      },
-      header: {
-        bg: '#475569',
-        text: 'rgba(255, 255, 255, 0.9)',
-        border: 'rgba(255, 255, 255, 0.12)',
-      },
+      sidebar: darkSider('#64748b', '#1e293b'),
+      header: liftHeader('#1e293b'),
+    },
+  },
+  {
+    id: 'sky',
+    name: '晴空',
+    swatches: ['#93c5fd', mixHex('#93c5fd', '#ffffff', 0.14)],
+    colors: {
+      primary: '#2563eb',
+      sidebar: softSider('#2563eb', '#93c5fd'),
+      header: liftHeader('#93c5fd'),
     },
   },
   {
     id: 'dawn',
     name: '拂晓',
-    swatches: ['#e8eef7', '#1e4d8c'],
+    swatches: ['#cbd5e1', mixHex('#cbd5e1', '#ffffff', 0.14)],
     colors: {
       primary: '#1e4d8c',
-      sidebar: {
-        bg: '#e8eef7',
-        bgElevated: '#dbe4f0',
-        text: '#64748b',
-        textActive: '#0f172a',
-        active: '#1e4d8c',
-        activeBg: 'rgba(30, 77, 140, 0.12)',
-        hoverBg: 'rgba(15, 23, 42, 0.05)',
-        border: '#d0d9e8',
-        railBg: '#dbe4f0',
-      },
-      header: {
-        bg: '#f1f5f9',
-        text: '#334155',
-        border: '#e2e8f0',
-      },
+      sidebar: softSider('#1e4d8c', '#cbd5e1'),
+      header: liftHeader('#cbd5e1'),
     },
   },
 ]

@@ -6,7 +6,10 @@ import {
   DEFAULT_THEME_ID,
   DEFAULT_THEME_SOURCE,
   builtinThemes,
+  findAppearanceTheme,
+  findTheme,
   resolveActiveTheme,
+  themeToCustomParts,
   type AppearanceMode,
   type CustomThemeParts,
   type ThemeSource,
@@ -106,10 +109,13 @@ export const useThemeStore = defineStore('theme', () => {
     })
   }
 
-  /** 预设主题：完整切换到某一套内置配色 */
+  /** 预设主题：完整切换到某一套内置配色（含侧栏），并同步个性化取色器 */
   function setTheme(id: string) {
     themeId.value = id
     localStorage.setItem(STORAGE_THEME_ID, id)
+    const parts = themeToCustomParts(findTheme(id))
+    customParts.value = parts
+    localStorage.setItem(STORAGE_CUSTOM, JSON.stringify(parts))
     persistSource('preset')
     applyCurrent()
   }
@@ -118,6 +124,9 @@ export const useThemeStore = defineStore('theme', () => {
   function setAppearance(mode: AppearanceMode) {
     appearance.value = mode
     localStorage.setItem(STORAGE_APPEARANCE, mode)
+    const parts = themeToCustomParts(findAppearanceTheme(mode))
+    customParts.value = parts
+    localStorage.setItem(STORAGE_CUSTOM, JSON.stringify(parts))
     persistSource('appearance')
     applyCurrent()
   }

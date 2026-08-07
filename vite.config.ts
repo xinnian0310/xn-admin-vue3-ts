@@ -24,7 +24,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     // 与本机 Nacos 默认 8848 错开；API 走下方代理
-    port: 1800,
+    port: 1803,
     open: true,
     proxy: {
       // 微服务网关（xn-admin-cloud）

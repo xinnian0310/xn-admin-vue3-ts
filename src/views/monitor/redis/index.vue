@@ -73,7 +73,7 @@ interface RedisKeyRow {
   key: string
 }
 
-/** 权限内容：redis:view/update/delete；table-view/table-edit/table-delete */
+/** 权限内容：redis:view/delete；table-view/table-delete */
 const { searchItems, buttonItems, tableButtonItems } = usePageUi('/monitor/redis')
 
 const loading = ref(false)

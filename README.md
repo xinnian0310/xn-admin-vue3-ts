@@ -31,15 +31,17 @@ npm install           # 安装依赖
 npm run dev           # 启动开发服务
 ```
 
-开发地址：http://localhost:5173
+开发地址：http://localhost:1803（与 react-ts `1800` / vue2-js `1801` / vue3-js `1802` 错开，便于同时联调）
 
 Vite 已代理到网关：
 
-| 前缀       | 目标                                 |
-| ---------- | ------------------------------------ |
-| `/api`     | `http://localhost:8088`              |
-| `/uploads` | `http://localhost:8088`              |
-| `/ws`      | `http://localhost:8088`（WebSocket） |
+| 前缀           | 目标                                 |
+| -------------- | ------------------------------------ |
+| `/api`         | `http://localhost:8088`              |
+| `/uploads`     | `http://localhost:8088`              |
+| `/ws`          | `http://localhost:8088`（WebSocket） |
+| `/swagger-ui`  | `http://localhost:8088`              |
+| `/v3/api-docs` | `http://localhost:8088`              |
 
 ```bash
 npm run build         # vue-tsc 类型检查 + vite 生产构建
@@ -129,6 +131,8 @@ xnPageLayout
 配置通常来自后端 page-ui（`usePageUi`）与路由权限。
 
 ## 界面预览
+
+截图放在 [`docs/images/`](./docs/images/)，按模块命名（如 `login.png`、`users.png`）。其它前端工程沿用同一目录与文件名约定。
 
 ### 登录与首页
 

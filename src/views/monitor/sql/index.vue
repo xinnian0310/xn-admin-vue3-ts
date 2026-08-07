@@ -75,7 +75,7 @@ import { formatDateTime } from '@/utils/datetime'
 
 defineOptions({ name: 'MonitorSql' })
 
-/** 权限内容：sql:view/update/delete；table-view/table-edit/table-delete */
+/** 权限内容：sql:view/delete；table-view/table-delete */
 const { searchItems, buttonItems, tableButtonItems } = usePageUi('/monitor/sql')
 
 const loading = ref(false)
