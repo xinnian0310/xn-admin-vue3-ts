@@ -1,4 +1,15 @@
-# 工程规范
+# 贡献指南
+
+感谢关注本仓库。本工程为独立开源前端；配套后端为独立仓库 **xn-admin-cloud**。
+
+## 如何贡献
+
+1. Fork 本仓库并创建功能分支
+2. 本地按下方命令完成检查
+3. 提交信息遵循 Conventional Commits
+4. 发起 Pull Request，说明动机与验证方式
+
+安全相关问题请优先阅读 [SECURITY.md](./SECURITY.md)。
 
 ## 本地命令
 
@@ -34,3 +45,4 @@ feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert
 ## CI
 
 - Gitee Go：`.workflow/ci.yml`（需在控制台启用流水线）
+- 若仓库同步到 GitHub，可自行补充 Actions
