@@ -1,4 +1,4 @@
-/** 内置主题：侧栏 / 顶栏 / 主色（各预设侧栏色明显区分） */
+/** 内置主题：侧栏 / 顶栏 / 主色（与 xn-admin-react-ts 共享预设；默认 blue 保留 Element Plus 原生色） */
 
 import { hexToRgbCss, isLightColor, mixHex } from '@/utils/color'
 
@@ -35,7 +35,7 @@ export interface CustomThemeParts {
 export interface AppTheme {
   id: string
   name: string
-  /** 预览色块（侧栏色 + 主色） */
+  /** 预览色块（侧栏色 + 顶栏色） */
   swatches: [string, string]
   colors: ThemeColors
 }
@@ -47,10 +47,26 @@ export type ThemeSource = 'preset' | 'appearance' | 'custom'
 
 export const DEFAULT_THEME_SOURCE: ThemeSource = 'preset'
 
+/** Element Plus 默认主色 / 经典蓝侧栏 */
+export const EP_PRIMARY = '#409eff'
+export const EP_SIDER_BG = '#337ecc'
+
 export const DEFAULT_CUSTOM_PARTS: CustomThemeParts = {
-  primary: '#409eff',
-  sidebarBg: '#337ecc',
-  headerBg: mixHex('#337ecc', '#ffffff', 0.14),
+  primary: EP_PRIMARY,
+  sidebarBg: EP_SIDER_BG,
+  headerBg: mixHex(EP_SIDER_BG, '#ffffff', 0.14),
+}
+
+/** 旧主题 id → 新共享 id（两栈统一后兼容 localStorage） */
+const THEME_ID_ALIASES: Record<string, string> = {
+  'tech-blue': 'indigo',
+  cyan: 'teal',
+  green: 'emerald',
+  purple: 'violet',
+  orange: 'amber',
+  magenta: 'rose',
+  daybreak: 'sky',
+  dawn: 'sky',
 }
 
 /** 从完整主题提取个性化三项 */
@@ -62,7 +78,22 @@ export function themeToCustomParts(theme: AppTheme): CustomThemeParts {
   }
 }
 
-/** 品牌色侧栏 */
+/** Pro 深色侧栏：选中用主色块 */
+function darkSider(primary: string, siderBg: string): ThemeColors['sidebar'] {
+  return {
+    bg: siderBg,
+    bgElevated: mixHex(siderBg, '#ffffff', 0.06),
+    text: 'rgba(255, 255, 255, 0.65)',
+    textActive: '#ffffff',
+    active: '#ffffff',
+    activeBg: primary,
+    hoverBg: 'rgba(255, 255, 255, 0.08)',
+    border: 'transparent',
+    railBg: mixHex(siderBg, '#000000', 0.35),
+  }
+}
+
+/** 品牌色侧栏：侧栏即主色系，选中用半透明白 */
 function brandSider(bg: string): ThemeColors['sidebar'] {
   return {
     bg,
@@ -73,37 +104,22 @@ function brandSider(bg: string): ThemeColors['sidebar'] {
     activeBg: 'rgba(255, 255, 255, 0.22)',
     hoverBg: 'rgba(255, 255, 255, 0.12)',
     border: 'rgba(255, 255, 255, 0.14)',
-    railBg: mixHex(bg, '#000000', 0.2),
+    railBg: mixHex(bg, '#000000', 0.22),
   }
 }
 
-/** 深色侧栏：选中用主色块 */
-function darkSider(primary: string, siderBg: string): ThemeColors['sidebar'] {
-  return {
-    bg: siderBg,
-    bgElevated: mixHex(siderBg, '#ffffff', 0.06),
-    text: 'rgba(255, 255, 255, 0.75)',
-    textActive: '#ffffff',
-    active: '#ffffff',
-    activeBg: primary,
-    hoverBg: 'rgba(255, 255, 255, 0.1)',
-    border: 'rgba(255, 255, 255, 0.1)',
-    railBg: mixHex(siderBg, '#000000', 0.25),
-  }
-}
-
-/** 浅色侧栏 */
+/** 浅色侧栏：浅底 + 主色高亮 */
 function softSider(primary: string, siderBg: string): ThemeColors['sidebar'] {
   return {
     bg: siderBg,
     bgElevated: mixHex(siderBg, '#ffffff', 0.45),
-    text: '#64748b',
-    textActive: '#0f172a',
+    text: 'rgba(15, 23, 42, 0.65)',
+    textActive: 'rgba(15, 23, 42, 0.92)',
     active: primary,
     activeBg: `rgba(${hexToRgbCss(primary)}, 0.12)`,
     hoverBg: 'rgba(15, 23, 42, 0.05)',
-    border: mixHex(siderBg, '#000000', 0.1),
-    railBg: mixHex(siderBg, '#000000', 0.05),
+    border: mixHex(siderBg, '#000000', 0.08),
+    railBg: mixHex(siderBg, '#000000', 0.04),
   }
 }
 
@@ -113,20 +129,20 @@ function liftHeader(siderBg: string, whiteMix = 0.14): ThemeColors['header'] {
   const light = isLightColor(bg)
   return {
     bg,
-    text: light ? '#334155' : 'rgba(255, 255, 255, 0.92)',
-    border: light ? mixHex(bg, '#000000', 0.08) : 'rgba(255, 255, 255, 0.12)',
+    text: light ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.92)',
+    border: light ? mixHex(bg, '#000000', 0.06) : 'rgba(255, 255, 255, 0.1)',
   }
 }
 
-/** 外观模式：亮色 / 暗色各为完整主题 */
+/** 外观模式：亮色 / 暗色各为完整主题（主色保留 Element 默认） */
 export const appearanceThemes: Record<AppearanceMode, AppTheme> = {
   light: {
     id: 'appearance-light',
     name: '亮色',
     swatches: ['#d9ecff', mixHex('#d9ecff', '#ffffff', 0.12)],
     colors: {
-      primary: '#409eff',
-      sidebar: softSider('#409eff', '#d9ecff'),
+      primary: EP_PRIMARY,
+      sidebar: softSider(EP_PRIMARY, '#d9ecff'),
       header: liftHeader('#d9ecff', 0.12),
     },
   },
@@ -135,15 +151,15 @@ export const appearanceThemes: Record<AppearanceMode, AppTheme> = {
     name: '暗色',
     swatches: ['#141414', '#1d1e1f'],
     colors: {
-      primary: '#409eff',
+      primary: EP_PRIMARY,
       sidebar: {
         bg: '#141414',
         bgElevated: '#1d1e1f',
         text: 'rgba(255, 255, 255, 0.65)',
         textActive: '#ffffff',
-        active: '#409eff',
-        activeBg: 'rgba(64, 158, 255, 0.2)',
-        hoverBg: 'rgba(255, 255, 255, 0.06)',
+        active: EP_PRIMARY,
+        activeBg: 'rgba(64, 158, 255, 0.25)',
+        hoverBg: 'rgba(255, 255, 255, 0.08)',
         border: '#414243',
         railBg: '#0a0a0a',
       },
@@ -163,31 +179,32 @@ export function buildThemeColorsFromParts(parts: CustomThemeParts): ThemeColors 
     sidebar: {
       bg: sidebarBg,
       bgElevated: mixHex(sidebarBg, sidebarLight ? '#000000' : '#ffffff', 0.08),
-      text: sidebarLight ? '#64748b' : 'rgba(255, 255, 255, 0.75)',
-      textActive: sidebarLight ? '#0f172a' : '#ffffff',
+      text: sidebarLight ? 'rgba(15, 23, 42, 0.65)' : 'rgba(255, 255, 255, 0.65)',
+      textActive: sidebarLight ? 'rgba(15, 23, 42, 0.92)' : '#ffffff',
       active: sidebarLight ? primary : '#ffffff',
-      activeBg: sidebarLight ? `rgba(${hexToRgbCss(primary)}, 0.12)` : 'rgba(255, 255, 255, 0.16)',
-      hoverBg: sidebarLight ? 'rgba(15, 23, 42, 0.05)' : 'rgba(255, 255, 255, 0.1)',
-      border: sidebarLight ? mixHex(sidebarBg, '#000000', 0.12) : 'rgba(255, 255, 255, 0.12)',
+      activeBg: sidebarLight ? `rgba(${hexToRgbCss(primary)}, 0.12)` : primary,
+      hoverBg: sidebarLight ? 'rgba(15, 23, 42, 0.05)' : 'rgba(255, 255, 255, 0.08)',
+      border: sidebarLight ? mixHex(sidebarBg, '#000000', 0.08) : 'transparent',
       railBg: mixHex(sidebarBg, sidebarLight ? '#000000' : '#ffffff', 0.1),
     },
     header: {
       bg: headerBg,
-      text: headerLight ? '#334155' : 'rgba(255, 255, 255, 0.95)',
-      border: headerLight ? mixHex(headerBg, '#000000', 0.08) : 'rgba(255, 255, 255, 0.15)',
+      text: headerLight ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.92)',
+      border: headerLight ? mixHex(headerBg, '#000000', 0.06) : 'rgba(255, 255, 255, 0.1)',
     },
   }
 }
 
+/** 共享预设（与 React 端 id / 色值一致；blue 为各自框架默认） */
 export const builtinThemes: AppTheme[] = [
   {
     id: 'blue',
     name: '经典蓝',
-    swatches: ['#337ecc', mixHex('#337ecc', '#ffffff', 0.14)],
+    swatches: [EP_SIDER_BG, mixHex(EP_SIDER_BG, '#ffffff', 0.14)],
     colors: {
-      primary: '#409eff',
-      sidebar: brandSider('#337ecc'),
-      header: liftHeader('#337ecc'),
+      primary: EP_PRIMARY,
+      sidebar: brandSider(EP_SIDER_BG),
+      header: liftHeader(EP_SIDER_BG),
     },
   },
   {
@@ -195,39 +212,49 @@ export const builtinThemes: AppTheme[] = [
     name: '靛蓝',
     swatches: ['#312e81', mixHex('#312e81', '#ffffff', 0.14)],
     colors: {
-      primary: '#4f46e5',
-      sidebar: darkSider('#4f46e5', '#312e81'),
+      primary: '#6366f1',
+      sidebar: darkSider('#6366f1', '#312e81'),
       header: liftHeader('#312e81'),
     },
   },
   {
     id: 'teal',
-    name: '青绿',
-    swatches: ['#115e59', mixHex('#115e59', '#ffffff', 0.14)],
+    name: '青碧',
+    swatches: ['#0f766e', mixHex('#0f766e', '#ffffff', 0.14)],
     colors: {
-      primary: '#0d9488',
-      sidebar: brandSider('#115e59'),
-      header: liftHeader('#115e59'),
+      primary: '#14b8a6',
+      sidebar: brandSider('#0f766e'),
+      header: liftHeader('#0f766e'),
     },
   },
   {
     id: 'emerald',
     name: '翠绿',
-    swatches: ['#14532d', mixHex('#14532d', '#ffffff', 0.14)],
+    swatches: ['#065f46', mixHex('#065f46', '#ffffff', 0.14)],
     colors: {
-      primary: '#16a34a',
-      sidebar: brandSider('#14532d'),
-      header: liftHeader('#14532d'),
+      primary: '#10b981',
+      sidebar: brandSider('#065f46'),
+      header: liftHeader('#065f46'),
     },
   },
   {
-    id: 'orange',
-    name: '日落橙',
-    swatches: ['#9a3412', mixHex('#9a3412', '#ffffff', 0.14)],
+    id: 'violet',
+    name: '紫罗兰',
+    swatches: ['#5b21b6', mixHex('#5b21b6', '#ffffff', 0.14)],
     colors: {
-      primary: '#ea580c',
-      sidebar: brandSider('#9a3412'),
-      header: liftHeader('#9a3412'),
+      primary: '#8b5cf6',
+      sidebar: brandSider('#5b21b6'),
+      header: liftHeader('#5b21b6'),
+    },
+  },
+  {
+    id: 'amber',
+    name: '琥珀',
+    swatches: ['#92400e', mixHex('#92400e', '#ffffff', 0.14)],
+    colors: {
+      primary: '#f59e0b',
+      sidebar: brandSider('#92400e'),
+      header: liftHeader('#92400e'),
     },
   },
   {
@@ -245,7 +272,7 @@ export const builtinThemes: AppTheme[] = [
     name: '深空灰',
     swatches: ['#1e293b', mixHex('#1e293b', '#ffffff', 0.14)],
     colors: {
-      primary: '#475569',
+      primary: '#64748b',
       sidebar: darkSider('#64748b', '#1e293b'),
       header: liftHeader('#1e293b'),
     },
@@ -253,21 +280,11 @@ export const builtinThemes: AppTheme[] = [
   {
     id: 'sky',
     name: '晴空',
-    swatches: ['#93c5fd', mixHex('#93c5fd', '#ffffff', 0.14)],
+    swatches: ['#bae6fd', mixHex('#bae6fd', '#ffffff', 0.14)],
     colors: {
-      primary: '#2563eb',
-      sidebar: softSider('#2563eb', '#93c5fd'),
-      header: liftHeader('#93c5fd'),
-    },
-  },
-  {
-    id: 'dawn',
-    name: '拂晓',
-    swatches: ['#cbd5e1', mixHex('#cbd5e1', '#ffffff', 0.14)],
-    colors: {
-      primary: '#1e4d8c',
-      sidebar: softSider('#1e4d8c', '#cbd5e1'),
-      header: liftHeader('#cbd5e1'),
+      primary: '#0ea5e9',
+      sidebar: softSider('#0ea5e9', '#bae6fd'),
+      header: liftHeader('#bae6fd'),
     },
   },
 ]
@@ -275,7 +292,8 @@ export const builtinThemes: AppTheme[] = [
 export const DEFAULT_THEME_ID = 'blue'
 
 export function findTheme(id: string): AppTheme {
-  return builtinThemes.find((t) => t.id === id) ?? builtinThemes[0]
+  const resolved = THEME_ID_ALIASES[id] ?? id
+  return builtinThemes.find((t) => t.id === resolved) ?? builtinThemes[0]
 }
 
 export function findAppearanceTheme(mode: AppearanceMode): AppTheme {

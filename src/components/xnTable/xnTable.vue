@@ -195,6 +195,7 @@
 <script setup lang="ts">
 import {
   computed,
+  getCurrentInstance,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -305,6 +306,7 @@ const emit = defineEmits<{
   'update:page': [value: number]
   'update:pageSize': [value: number]
   'page-change': []
+  refresh: []
   'selection-change': [rows: unknown[]]
   'switch-change': [
     payload: { row: Record<string, unknown>; prop: string; value: string | number | boolean },
@@ -772,7 +774,13 @@ async function loadColumnSettings() {
 
 function handleRefresh() {
   if (isApiMode.value) {
-    loadData()
+    void loadData()
+    return
+  }
+  // 有 @refresh 时优先走真正重新拉数；否则回退 page-change（多数页面绑定了 loadData）
+  const hasRefreshListener = !!getCurrentInstance()?.vnode.props?.onRefresh
+  if (hasRefreshListener) {
+    emit('refresh')
     return
   }
   emit('page-change')

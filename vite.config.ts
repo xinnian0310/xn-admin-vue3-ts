@@ -21,6 +21,10 @@ export default defineConfig({
   optimizeDeps: {
     include: ['exceljs'],
   },
+  build: {
+    outDir: '../www/xn-admin-vue3-ts',
+    emptyOutDir: true,
+  },
   server: {
     host: '0.0.0.0',
     // 与本机 Nacos 默认 8848 错开；API 走下方代理

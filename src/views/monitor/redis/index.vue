@@ -4,6 +4,7 @@
     v-model:page-size="size"
     :total="total"
     @page-change="applyLocalPage"
+    @refresh="loadData"
   >
     <template #search>
       <xnSearch :search-item="searchItems" @query-form="inquires" @reset="reset" />
@@ -32,6 +33,7 @@
         stripe
         @selection-change="selectionChangeHandle"
         @page-change="applyLocalPage"
+        @refresh="loadData"
       >
         <template #actions="{ row }">
           <xnTableActions :items="tableButtonItems" :row="row" @action-click="onTableAction" />
@@ -73,7 +75,7 @@ interface RedisKeyRow {
   key: string
 }
 
-/** 权限内容：redis:view/delete；table-view/table-delete */
+/** 权限内容：redis:view/delete/flush；table-view/table-delete */
 const { searchItems, buttonItems, tableButtonItems } = usePageUi('/monitor/redis')
 
 const loading = ref(false)
@@ -91,7 +93,10 @@ const detailTitle = ref('缓存详情')
 
 const toolbarButtons = computed(() =>
   buttonItems.value.map((item) => {
-    if (item.action === 'delete' && monitor.value?.status !== 'ENABLED') {
+    if (
+      (item.action === 'delete' || item.action === 'flush') &&
+      monitor.value?.status !== 'ENABLED'
+    ) {
       return { ...item, disabled: true }
     }
     return item
@@ -162,20 +167,21 @@ async function buttonClick(action: string) {
     }
     openDetail(selected.value[0].key, action === 'edit')
   } else if (action === 'delete') {
-    if (selected.value.length) {
-      await ElMessageBox.confirm(
-        `确定删除选中的 ${selected.value.length} 个 Key 吗？`,
-        '删除确认',
-        { type: 'warning' },
-      )
-      for (const row of selected.value) {
-        await deleteRedisKey(row.key)
-      }
-      ElMessage.success('删除成功')
-      loadData()
-    } else {
-      await handleFlush()
+    if (!selected.value.length) {
+      ElMessage.warning('请至少选择一个 Key')
+      return
     }
+    await ElMessageBox.confirm(`确定删除选中的 ${selected.value.length} 个 Key 吗？`, '删除确认', {
+      type: 'warning',
+    })
+    for (const row of selected.value) {
+      await deleteRedisKey(row.key)
+    }
+    ElMessage.success('删除成功')
+    selected.value = []
+    loadData()
+  } else if (action === 'flush') {
+    await handleFlush()
   }
 }
 

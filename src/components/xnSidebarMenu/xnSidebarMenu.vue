@@ -11,7 +11,7 @@
     :text-color="textColor"
     :active-text-color="activeColor"
   >
-    <xnSidebarMenuItem :menus="resolvedMenus" />
+    <xnSidebarMenuItem :menus="resolvedMenus" :highlight-ids="highlightIds" />
   </el-menu>
 </template>
 
@@ -31,9 +31,12 @@ const props = withDefaults(
     mode?: 'vertical' | 'horizontal'
     /** 传入则只渲染该菜单树，默认用全局菜单 */
     menus?: MenuItem[]
+    /** 搜索命中的菜单 id，用于高亮 */
+    highlightIds?: string[]
   }>(),
   {
     mode: 'vertical',
+    highlightIds: () => [],
   },
 )
 
@@ -74,6 +77,14 @@ watch(
   },
   { immediate: true },
 )
+
+function openMenus(ids: string[]) {
+  for (const id of ids) {
+    menuRef.value?.open(id)
+  }
+}
+
+defineExpose({ openMenus })
 </script>
 
 <style scoped>
@@ -138,5 +149,14 @@ watch(
 
 .sidebar-menu:not(.is-horizontal) :deep(.el-sub-menu.is-opened > .el-sub-menu__title) {
   color: var(--app-sidebar-text-active);
+}
+
+/* 菜单搜索命中高亮（不跳转、不抢占当前路由激活态） */
+.sidebar-menu:not(.is-horizontal) :deep(.el-menu-item.is-search-hit),
+.sidebar-menu:not(.is-horizontal) :deep(.el-sub-menu.is-search-hit > .el-sub-menu__title) {
+  color: var(--app-sidebar-text-active) !important;
+  background-color: color-mix(in srgb, var(--app-sidebar-active) 28%, transparent) !important;
+  box-shadow: inset 3px 0 0 var(--app-sidebar-active);
+  font-weight: 600;
 }
 </style>
