@@ -175,8 +175,8 @@ const slideStartX = ref(0)
 const slideStartPercent = ref(0)
 
 const form = reactive({
-  username: 'SuperAdmin',
-  password: '',
+  username: 'admin',
+  password: 'admin',
   captcha: '',
   sliderOk: false,
 })
