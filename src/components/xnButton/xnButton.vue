@@ -1,11 +1,7 @@
 <template>
   <div v-if="visibleList.length" class="xn-button">
     <template v-for="item in visibleList" :key="item.name">
-      <el-dropdown
-        v-if="item.type === 'down'"
-        trigger="click"
-        @command="(cmd: string) => handleDropdownCommand(item, cmd)"
-      >
+      <el-dropdown v-if="item.type === 'down'" trigger="click" @command="bindDropdownCommand(item)">
         <el-button
           :type="item.typeColor || 'primary'"
           :icon="resolveBtnIcon(item.icon)"
@@ -114,6 +110,10 @@ function isDisabled(item: ButtonListItem) {
 
 function emitAction(item: ButtonListItem) {
   emit('buttonClick', item.action || item.name)
+}
+
+function bindDropdownCommand(item: ButtonListItem) {
+  return (cmd: string) => handleDropdownCommand(item, cmd)
 }
 
 function handleDropdownCommand(item: ButtonListItem, cmd: string) {

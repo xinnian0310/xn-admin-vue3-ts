@@ -17,7 +17,7 @@
         :key="tag.path"
         trigger="contextmenu"
         placement="bottom-start"
-        @command="(cmd: string | number | object) => onMenuCommand(cmd, tag)"
+        @command="bindMenuCommand(tag)"
       >
         <el-tag
           class="tags-view__item"
@@ -180,6 +180,10 @@ async function handleFullscreen(tag: TagView) {
 function handleOpenWindow(tag: TagView) {
   const { href } = router.resolve(tag.path)
   window.open(href, '_blank')
+}
+
+function bindMenuCommand(tag: TagView) {
+  return (command: string | number | object) => onMenuCommand(command, tag)
 }
 
 async function onMenuCommand(command: string | number | object, tag: TagView) {
@@ -368,6 +372,7 @@ onBeforeUnmount(() => {
    .el-tag--dark / .el-tag--plain 规则，避免样式注入顺序影响结果 */
 .tags-view__scroll .tags-view__item {
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   border-radius: 4px;
   transition:

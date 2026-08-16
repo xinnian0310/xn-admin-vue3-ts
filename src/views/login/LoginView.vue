@@ -940,6 +940,7 @@ body.login-no-scroll {
   position: relative;
   width: 100%;
   height: 42px;
+  -webkit-user-select: none;
   user-select: none;
   touch-action: none;
 }
