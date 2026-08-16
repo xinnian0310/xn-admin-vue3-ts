@@ -99,6 +99,7 @@ import {
   type SystemConfigPayload,
 } from '@/api/system-config'
 import { APP_CLIENT_ID } from '@/config/client'
+import { showCaughtError } from '@/utils/request'
 import type { SearchForm, SearchItem } from '@/types/search'
 import type { TableColumnItem } from '@/types/table'
 import type { ButtonListItem } from '@/types/button'
@@ -250,7 +251,7 @@ async function loadData() {
     const res = await getSystemConfigSection('storage')
     applySection(res.data)
   } catch (e: any) {
-    ElMessage.error(e?.message || '加载失败')
+    showCaughtError(e, '加载失败')
   } finally {
     loading.value = false
   }
@@ -304,7 +305,7 @@ async function persist(rows: StorageRow[], successText: string) {
     ElMessage.success(successText)
     return true
   } catch (e: any) {
-    ElMessage.error(e?.message || '保存失败')
+    showCaughtError(e, '保存失败')
     return false
   } finally {
     saving.value = false

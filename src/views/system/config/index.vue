@@ -430,6 +430,7 @@ import {
 import { APP_CLIENT_ID } from '@/config/client'
 import { useUiPreferenceStore } from '@/stores/uiPreference'
 import { parsePxInt, toPx } from '@/utils/px'
+import { showCaughtError } from '@/utils/request'
 
 defineOptions({ name: 'SystemConfig' })
 
@@ -696,7 +697,7 @@ async function loadConfig() {
     const res = await getSystemConfig()
     if (res.data) assignForm(res.data)
   } catch (e: any) {
-    ElMessage.error(e?.message || '加载失败')
+    showCaughtError(e, '加载失败')
   } finally {
     loading.value = false
   }
@@ -709,7 +710,7 @@ async function refreshSection(section: ConfigEditableSection) {
     applySectionData(section, res.data)
     ElMessage.success('已刷新')
   } catch (e: any) {
-    ElMessage.error(e?.message || '刷新失败')
+    showCaughtError(e, '刷新失败')
   } finally {
     loading.value = false
   }
@@ -749,7 +750,7 @@ async function saveSection(section: ConfigEditableSection) {
     editing[section] = false
     ElMessage.success('保存成功，已即时生效')
   } catch (e: any) {
-    ElMessage.error(e?.message || '保存失败')
+    showCaughtError(e, '保存失败')
   } finally {
     savingSection.value = ''
   }
@@ -765,7 +766,7 @@ async function uploadBrandIcon(opt: UploadRequestOptions) {
     ElMessage.success('上传成功')
     opt.onSuccess?.(res as any)
   } catch (e: any) {
-    ElMessage.error(e?.message || '上传失败')
+    showCaughtError(e, '上传失败')
     opt.onError?.(e)
   }
 }

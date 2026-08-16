@@ -59,6 +59,7 @@ import type { FormInstance, FormRules, UploadRequestOptions, UploadUserFile } fr
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { uploadDonationQrcode } from '@/api/site-contact'
+import { showCaughtError } from '@/utils/request'
 import { saveDialogTitle, type SaveMode } from '@/types/save'
 import type { SiteDonationQrcode } from '@/types/site-contact'
 
@@ -151,7 +152,7 @@ async function handleUpload(opt: UploadRequestOptions) {
   } catch (e: any) {
     form.src = ''
     fileList.value = []
-    ElMessage.error(e?.message || '上传失败')
+    showCaughtError(e, '上传失败')
     opt.onError?.(e)
   } finally {
     uploading.value = false

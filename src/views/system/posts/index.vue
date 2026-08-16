@@ -85,6 +85,7 @@ import XnImportDialog from '@/components/xnImport/xnImportDialog.vue'
 import PostSave from './save.vue'
 import { usePageUi } from '@/composables/usePageUi'
 import { batchRemove, exportPosts, importPosts, list, remove } from '@/api/post'
+import { showCaughtError } from '@/utils/request'
 import type { Post } from '@/types'
 import type { ExcelImportColumn } from '@/types/excel'
 import type { SearchForm } from '@/types/search'
@@ -179,7 +180,7 @@ async function buttonClick(action: string) {
       })
       ElMessage.success('导出成功')
     } catch (e: unknown) {
-      ElMessage.error(e instanceof Error ? e.message : '导出失败')
+      showCaughtError(e, '导出失败')
     }
   } else if (action === 'edit' && selected.value.length === 1)
     openSave('edit', selected.value[0].id)
