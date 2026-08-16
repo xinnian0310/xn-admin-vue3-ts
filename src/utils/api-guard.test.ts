@@ -14,6 +14,7 @@ describe('api-guard', () => {
 
   it('whitelists auth endpoints before registry load', () => {
     expect(isWhitelisted('/api/auth/login')).toBe(true)
+    expect(isWhitelisted('/api/auth/register')).toBe(true)
     expect(isWhitelisted('/api/auth/captcha')).toBe(true)
     expect(isWhitelisted('/api/users')).toBe(false)
     expect(isRegistryLoaded()).toBe(false)

@@ -212,10 +212,19 @@ export interface UserForm {
 
 export type NoticeStatus = 'DRAFT' | 'PUBLISHED' | 'REVOKED'
 
+/** 业务附件：展示名 + 存储路径 */
+export interface AttachmentItem {
+  name: string
+  path: string
+  size?: number
+  uploadedAt?: string
+}
+
 export interface Notice {
   id: number
   title: string
   content: string
+  attachments?: AttachmentItem[]
   status: NoticeStatus
   publisherId?: number
   publisherName?: string
@@ -230,6 +239,7 @@ export interface Notice {
 export interface NoticeForm {
   title: string
   content: string
+  attachments?: AttachmentItem[]
 }
 
 export interface NoticeReader {
@@ -243,6 +253,7 @@ export interface MyNotice {
   id: number
   title: string
   content: string
+  attachments?: AttachmentItem[]
   publishedAt?: string
   /** 接收时间 */
   receivedAt?: string
@@ -258,6 +269,7 @@ export interface Message {
   id: number
   title: string
   content: string
+  attachments?: AttachmentItem[]
   status: MessageStatus
   senderId?: number
   senderName?: string
@@ -271,6 +283,7 @@ export interface Message {
 export interface MessageForm {
   title: string
   content: string
+  attachments?: AttachmentItem[]
 }
 
 export interface MessageSendForm {
@@ -289,6 +302,7 @@ export interface MyMessage {
   id: number
   title: string
   content: string
+  attachments?: AttachmentItem[]
   status: MessageStatus
   sentAt?: string
   senderName?: string
@@ -299,16 +313,16 @@ export interface MyMessage {
 
 export interface FileInfo {
   id?: number
+  /** 存储侧路径（MinIO object key / 本地相对路径） */
   path: string
+  /** 原始文件名，列表与回显都用它 */
   name: string
-  storedName?: string
   extension?: string
   contentType?: string
   size: number
   directory: boolean
   lastModified?: string
   storage?: 'local' | 'minio' | string
-  bucket?: string
   url?: string
   previewUrl?: string
   uploader?: string

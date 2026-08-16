@@ -11,6 +11,7 @@ interface CompiledApi {
 /** 不受接口守卫约束的路径（登录、注册表本身） */
 const WHITELIST = new Set([
   '/api/auth/login',
+  '/api/auth/register',
   '/api/auth/logout',
   '/api/auth/captcha',
   '/api/auth/captcha/slider',

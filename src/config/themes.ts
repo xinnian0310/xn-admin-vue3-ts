@@ -45,7 +45,7 @@ export const CUSTOM_THEME_ID = 'custom'
 /** 三类主题互斥：同一时刻只生效一类 */
 export type ThemeSource = 'preset' | 'appearance' | 'custom'
 
-export const DEFAULT_THEME_SOURCE: ThemeSource = 'preset'
+export const DEFAULT_THEME_SOURCE: ThemeSource = 'appearance'
 
 /** Element Plus 默认主色 / 经典蓝侧栏 */
 export const EP_PRIMARY = '#409eff'
@@ -139,11 +139,25 @@ export const appearanceThemes: Record<AppearanceMode, AppTheme> = {
   light: {
     id: 'appearance-light',
     name: '亮色',
-    swatches: ['#d9ecff', mixHex('#d9ecff', '#ffffff', 0.12)],
+    swatches: ['#ffffff', '#f5f5f5'],
     colors: {
       primary: EP_PRIMARY,
-      sidebar: softSider(EP_PRIMARY, '#d9ecff'),
-      header: liftHeader('#d9ecff', 0.12),
+      sidebar: {
+        bg: '#ffffff',
+        bgElevated: '#fafafa',
+        text: 'rgba(0, 0, 0, 0.65)',
+        textActive: 'rgba(0, 0, 0, 0.88)',
+        active: EP_PRIMARY,
+        activeBg: '#ecf5ff',
+        hoverBg: 'rgba(0, 0, 0, 0.04)',
+        border: '#f0f0f0',
+        railBg: '#fafafa',
+      },
+      header: {
+        bg: '#ffffff',
+        text: 'rgba(0, 0, 0, 0.88)',
+        border: '#f0f0f0',
+      },
     },
   },
   dark: {

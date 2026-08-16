@@ -30,12 +30,27 @@ export function fetchFileTree() {
   return request.get<any, ApiResponse<FileTreeNode>>('/files/tree')
 }
 
-export function uploadFile(file: File, prefix?: string) {
+export type UploadFileOptions = {
+  signal?: AbortSignal
+  /** 已发送字节数回调，用于单请求直传的进度展示 */
+  onProgress?: (loaded: number) => void
+  /** 毫秒；0 表示不限制。大文件直传需要覆盖默认 15s 超时 */
+  timeout?: number
+  silentError?: boolean
+}
+
+export function uploadFile(file: File, prefix?: string, options?: UploadFileOptions) {
   const form = new FormData()
   form.append('file', file)
   if (prefix) form.append('prefix', prefix)
   return request.post<any, ApiResponse<FileInfo>>('/files/upload', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    signal: options?.signal,
+    timeout: options?.timeout,
+    silentError: options?.silentError,
+    onUploadProgress: options?.onProgress
+      ? (event) => options.onProgress?.(event.loaded)
+      : undefined,
   })
 }
 

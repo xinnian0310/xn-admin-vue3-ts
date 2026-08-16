@@ -58,13 +58,35 @@
         <span>发送人：{{ current.senderName || '—' }}</span>
         <span>发送时间：{{ formatDateTime(current.sentAt) }}</span>
       </div>
-      <div class="message-detail__content" v-html="current.content" />
+      <div v-if="currentAttachments.length" class="message-detail__attachment">
+        <span>附件：</span>
+        <div class="message-detail__attachment-list">
+          <div
+            v-for="item in currentAttachments"
+            :key="item.path"
+            class="message-detail__attachment-row"
+          >
+            <el-link
+              type="primary"
+              :href="resolveAttachmentUrl(item.path)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ item.name }}
+            </el-link>
+            <el-button link type="primary" @click="openKkFileViewPreview(item.path, item.name)">
+              查看
+            </el-button>
+          </div>
+        </div>
+      </div>
+      <div class="message-detail__content xn-rich-html" v-html="contentHtml" />
     </div>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import xnPageLayout from '@/components/xnPageLayout/xnPageLayout.vue'
 import xnSearch from '@/components/xnSearch/xnSearch.vue'
@@ -73,6 +95,10 @@ import xnTableActions from '@/components/xnButton/xnTableActions.vue'
 import xnTable from '@/components/xnTable/xnTable.vue'
 import { usePageUi } from '@/composables/usePageUi'
 import { batchRemoveMine, listMine, markRead, removeMine, unreadCount } from '@/api/message'
+import { resolveAttachmentUrl } from '@/config/app'
+import { openKkFileViewPreview } from '@/utils/kk-file-view'
+import { resolveAttachments } from '@/utils/attachment'
+import { decorateRichHtml } from '@/utils/rich-editor'
 import type { MyMessage } from '@/types'
 import type { SearchForm } from '@/types/search'
 import type { TableColumnItem } from '@/types/table'
@@ -94,6 +120,8 @@ const selected = ref<MyMessage[]>([])
 const unread = ref(0)
 const detailVisible = ref(false)
 const current = ref<MyMessage | null>(null)
+const currentAttachments = computed(() => resolveAttachments(current.value))
+const contentHtml = computed(() => decorateRichHtml(current.value?.content))
 
 const columns: TableColumnItem[] = [
   { type: 'selection', width: 50, fixed: true },
@@ -221,6 +249,28 @@ onMounted(loadData)
   margin-bottom: 16px;
   color: var(--el-text-color-secondary);
   font-size: 13px;
+}
+
+.message-detail__attachment {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.message-detail__attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.message-detail__attachment-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .message-detail__content {

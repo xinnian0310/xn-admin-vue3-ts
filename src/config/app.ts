@@ -53,7 +53,7 @@ export const defaultAppConfig = {
   },
   ui: {
     dialog: {
-      maxHeight: '95vh',
+      maxHeight: '80vh',
     },
     layout: {
       mode: 'side' as LayoutMode,
@@ -105,11 +105,9 @@ export const defaultAppConfig = {
     },
   },
   storage: {
-    minio: {
-      endpoint: '',
-      bucket: '',
-      region: '',
-    },
+    minio: 'http://127.0.0.1:9000/xn-admin/',
+    /** kkFileView 5.0 预览服务根地址 */
+    kkFileView: 'http://127.0.0.1:8012/',
   },
   logRetention: {
     loginDays: 90,
@@ -184,13 +182,8 @@ export type AppConfig = {
       }
     }
   }
-  storage: {
-    minio: {
-      endpoint: string
-      bucket: string
-      region: string
-    }
-  }
+  /** 对象存储访问前缀：key=名字，value=路径前缀 */
+  storage: Record<string, string>
   logRetention: {
     loginDays: number
     operDays: number
@@ -244,10 +237,24 @@ export function applyRemoteAppConfig(
   remote: Partial<AppConfig> | Record<string, unknown> | null | undefined,
 ) {
   if (!remote) return
-  deepMergeAppConfig(
-    appConfig as unknown as Record<string, unknown>,
-    remote as Record<string, unknown>,
-  )
+  const remoteObj = remote as Record<string, unknown>
+  const remoteStorage = remoteObj.storage
+  // storage：有有效键值则整段覆盖本地兜底；空则保留 app.ts 默认
+  const { storage: _ignored, ...rest } = remoteObj
+  deepMergeAppConfig(appConfig as unknown as Record<string, unknown>, rest)
+  if (remoteStorage && typeof remoteStorage === 'object' && !Array.isArray(remoteStorage)) {
+    const entries = Object.entries(remoteStorage as Record<string, unknown>).filter(
+      ([k, v]) => !!k?.trim() && typeof v === 'string' && !!v.trim(),
+    )
+    if (entries.length > 0) {
+      for (const key of Object.keys(appConfig.storage)) {
+        delete appConfig.storage[key]
+      }
+      for (const [k, v] of entries) {
+        appConfig.storage[k.trim()] = String(v).trim()
+      }
+    }
+  }
   const app = (remote as Partial<AppConfig>).app
   if (app) {
     if ('logoWidth' in app) appConfig.app.logoWidth = app.logoWidth ?? null
@@ -256,6 +263,38 @@ export function applyRemoteAppConfig(
   // 运行时只用投影后的 name/intro，不保留云端 clients 映射
   delete (appConfig.app as Record<string, unknown>).clients
   applyAppConfig(appConfig)
+}
+
+/** 拼接对象存储访问前缀；未配置时回落本地默认 */
+export function resolveStorageBase(name = 'minio'): string {
+  const fromRemote = appConfig.storage?.[name]?.trim()
+  if (fromRemote) {
+    return fromRemote.endsWith('/') ? fromRemote : `${fromRemote}/`
+  }
+  const fallback = (defaultAppConfig.storage as Record<string, string>)[name] || ''
+  if (!fallback) return ''
+  return fallback.endsWith('/') ? fallback : `${fallback}/`
+}
+
+/** 用相对对象路径拼完整访问 URL */
+export function resolveStorageUrl(objectPath: string, storageName = 'minio'): string {
+  const base = resolveStorageBase(storageName)
+  const rel = (objectPath || '').replace(/^\/+/, '')
+  if (!base) return rel
+  return `${base}${rel}`
+}
+
+/**
+ * 业务附件访问地址：优先远程连接配置 storage.minio；
+ * 已是绝对地址或 /uploads 路径时原样返回；再兜底本地 uploads。
+ */
+export function resolveAttachmentUrl(filePath: string, storageName = 'minio'): string {
+  const path = (filePath || '').trim()
+  if (!path) return ''
+  if (/^https?:\/\//i.test(path) || path.startsWith('/')) return path
+  const remote = resolveStorageUrl(path, storageName)
+  if (remote && /^https?:\/\//i.test(remote)) return remote
+  return `/uploads/${path.replace(/^\/+/, '')}`
 }
 
 /** 全局配置快照（个人偏好叠加前），用于重置个人配置后回退 */
@@ -386,12 +425,15 @@ export function applyAppConfig(config: AppConfig = appConfig) {
   applyLayoutTheme(active.colors, {
     appearance: source === 'appearance' ? appearance : 'light',
     mainBgImage: source === 'custom' ? mainBgImage : null,
+    source,
   })
 }
 
 export interface ApplyLayoutThemeOptions {
   appearance?: AppearanceMode
   mainBgImage?: string | null
+  /** 当前主题来源；外观模式下页签选中态改用侧栏强调色 */
+  source?: ThemeSource
 }
 
 /** 应用侧栏 / 顶栏 / 主色主题到 CSS 变量（含 Element Plus） */
@@ -477,6 +519,15 @@ export function applyLayoutTheme(colors: ThemeColors, options: ApplyLayoutThemeO
     root.style.setProperty('--app-surface-soft', scale['light-9'])
     root.style.setProperty('--app-surface-soft-border', scale['light-5'])
     root.style.setProperty('--app-card-hover-border', mixHex(colors.primary, '#ffffff', 0.45))
+  }
+
+  // 页签选中态：预设 / 个性化用实心主色；外观模式跟随侧栏强调色（更贴合亮 / 暗观感）
+  if (options.source === 'appearance') {
+    root.style.setProperty('--app-tags-item-active-bg', colors.sidebar.activeBg)
+    root.style.setProperty('--app-tags-item-active-text', colors.sidebar.active)
+    root.style.setProperty('--app-tags-item-active-border', colors.sidebar.active)
+  } else {
+    root.style.setProperty('--app-tags-item-active-border', scale.primary)
   }
 
   if (mainBgImage) {

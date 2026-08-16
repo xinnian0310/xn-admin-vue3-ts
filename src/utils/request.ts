@@ -1,9 +1,20 @@
 import axios from 'axios'
 import type { ApiResponse } from '@/types'
 import { ElMessage } from 'element-plus'
-import router from '@/router'
 import { isApiRegistered, isRegistryLoaded, isWhitelisted } from '@/utils/api-guard'
+import { handleForceLogout } from '@/utils/force-logout'
 import { normalizeDateTimes } from '@/utils/datetime'
+
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    /**
+     * 置 true 时不弹出错误提示，仅把错误抛给调用方自行处理。
+     * 用于分片上传这类「失败即自动重试」的请求，避免重试过程刷屏。
+     * 注意：401 强制下线仍会正常触发。
+     */
+    silentError?: boolean
+  }
+}
 
 const request = axios.create({
   baseURL: '/api',
@@ -146,7 +157,9 @@ request.interceptors.response.use(
   (response) => {
     const res = response.data as ApiResponse<unknown>
     if (res.code !== 200) {
-      showRequestError(res.message || '请求失败')
+      if (!response.config?.silentError) {
+        showRequestError(res.message || '请求失败')
+      }
       return Promise.reject(new Error(res.message || '请求失败'))
     }
     // 统一把 ISO 时间串格式化为 YYYY-MM-DD HH:mm:ss，避免页面直接展示 T/毫秒
@@ -164,13 +177,14 @@ request.interceptors.response.use(
     }
 
     if (status === 401) {
-      void import('@/stores/user').then(({ useUserStore }) => {
-        useUserStore().logout(false)
-      })
-      router.push('/login')
+      // 由强制下线弹窗接管清理与跳转，这里不再叠加一条 toast
+      handleForceLogout(message)
+      return Promise.reject(error)
     }
 
-    showRequestError(message)
+    if (!error.config?.silentError) {
+      showRequestError(message)
+    }
     return Promise.reject(error)
   },
 )

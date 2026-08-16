@@ -45,9 +45,11 @@
       <section class="login-panel">
         <div class="login-card">
           <header class="login-header">
-            <p class="welcome">欢迎回来</p>
+            <p class="welcome">{{ isRegister ? '创建账号' : '欢迎回来' }}</p>
             <h1>{{ appConfig.app.name }}</h1>
-            <p class="hint">登录以继续管理您的系统</p>
+            <p class="hint">
+              {{ isRegister ? '注册后将以游客身份使用系统' : '登录以继续管理您的系统' }}
+            </p>
           </header>
 
           <el-form
@@ -56,12 +58,20 @@
             :model="form"
             :rules="rules"
             size="large"
-            @submit.prevent="handleLogin"
+            @submit.prevent="handleSubmit"
           >
             <el-form-item prop="username">
               <el-input
                 v-model="form.username"
                 placeholder="请输入用户名"
+                :prefix-icon="User"
+                clearable
+              />
+            </el-form-item>
+            <el-form-item v-if="isRegister" prop="nickname">
+              <el-input
+                v-model="form.nickname"
+                placeholder="昵称（可选）"
                 :prefix-icon="User"
                 clearable
               />
@@ -73,7 +83,17 @@
                 placeholder="请输入密码"
                 show-password
                 :prefix-icon="Lock"
-                @keyup.enter="handleLogin"
+                @keyup.enter="handleSubmit"
+              />
+            </el-form-item>
+            <el-form-item v-if="isRegister" prop="confirmPassword">
+              <el-input
+                v-model="form.confirmPassword"
+                type="password"
+                placeholder="请确认密码"
+                show-password
+                :prefix-icon="Lock"
+                @keyup.enter="handleSubmit"
               />
             </el-form-item>
 
@@ -83,7 +103,7 @@
                   v-model="form.captcha"
                   placeholder="请输入验证码"
                   maxlength="6"
-                  @keyup.enter="handleLogin"
+                  @keyup.enter="handleSubmit"
                 />
                 <img
                   v-if="captchaImage"
@@ -127,12 +147,27 @@
                 class="login-btn"
                 :loading="loading"
                 native-type="submit"
-                @click="handleLogin"
+                @click="handleSubmit"
               >
-                登 录
+                {{ isRegister ? '注 册' : '登 录' }}
               </el-button>
             </el-form-item>
           </el-form>
+
+          <div class="login-switch">
+            <template v-if="isRegister">
+              已有账号？
+              <button type="button" class="login-switch-link" @click="switchMode('login')">
+                去登录
+              </button>
+            </template>
+            <template v-else>
+              没有账号？
+              <button type="button" class="login-switch-link" @click="switchMode('register')">
+                去注册
+              </button>
+            </template>
+          </div>
 
           <footer class="login-foot">
             {{ appConfig.app.footer || `${intro.title} · Copyright © 2026` }}
@@ -154,13 +189,17 @@ import { appConfig } from '@/config/app'
 import { homeConfig } from '@/config/home'
 import { useUserStore } from '@/stores/user'
 import { getActive } from '@/api/login-page'
-import { fetchCaptcha, verifySliderCaptcha } from '@/api/auth'
+import { fetchCaptcha, register as registerApi, verifySliderCaptcha } from '@/api/auth'
 import type { LoginCaptchaType } from '@/types'
+
+type AuthMode = 'login' | 'register'
 
 const router = useRouter()
 const userStore = useUserStore()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const mode = ref<AuthMode>('login')
+const isRegister = computed(() => mode.value === 'register')
 const intro = homeConfig.intro
 
 const captchaEnabled = ref(false)
@@ -177,6 +216,8 @@ const slideStartPercent = ref(0)
 const form = reactive({
   username: 'admin',
   password: 'admin',
+  nickname: '',
+  confirmPassword: '',
   captcha: '',
   sliderOk: false,
 })
@@ -188,8 +229,29 @@ function iconOf(name: string): Component {
 
 const rules = computed<FormRules>(() => {
   const base: FormRules = {
-    username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+    username: [
+      { required: true, message: '请输入用户名', trigger: 'blur' },
+      ...(isRegister.value
+        ? [{ min: 2, max: 50, message: '用户名长度需在2-50之间', trigger: 'blur' }]
+        : []),
+    ],
     password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  }
+  if (isRegister.value) {
+    base.nickname = [{ max: 50, message: '昵称长度不能超过50', trigger: 'blur' }]
+    base.confirmPassword = [
+      { required: true, message: '请再次输入密码', trigger: 'blur' },
+      {
+        validator: (_r, value, callback) => {
+          if (value !== form.password) {
+            callback(new Error('两次输入的密码不一致'))
+            return
+          }
+          callback()
+        },
+        trigger: 'blur',
+      },
+    ]
   }
   if (captchaEnabled.value && captchaType.value === 'IMAGE') {
     base.captcha = [{ required: true, message: '请输入验证码', trigger: 'blur' }]
@@ -235,6 +297,22 @@ function resetSlider() {
   sliderPercent.value = 0
   sliderOk.value = false
   form.sliderOk = false
+}
+
+function switchMode(next: AuthMode) {
+  mode.value = next
+  form.nickname = ''
+  form.confirmPassword = ''
+  form.captcha = ''
+  if (next === 'login') {
+    form.username = 'admin'
+    form.password = 'admin'
+  } else {
+    form.username = ''
+    form.password = ''
+  }
+  formRef.value?.clearValidate()
+  void refreshCaptcha()
 }
 
 function onSliderStart(e: PointerEvent) {
@@ -289,17 +367,31 @@ async function loadPageConfig() {
   }
 }
 
-async function handleLogin() {
+async function handleSubmit() {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
     loading.value = true
+    const captchaOpts = {
+      captchaId: captchaEnabled.value ? captchaId.value : undefined,
+      captchaCode: captchaEnabled.value && captchaType.value === 'IMAGE' ? form.captcha : undefined,
+    }
     try {
-      const data = await userStore.login(form.username, form.password, {
-        captchaId: captchaEnabled.value ? captchaId.value : undefined,
-        captchaCode:
-          captchaEnabled.value && captchaType.value === 'IMAGE' ? form.captcha : undefined,
-      })
+      if (isRegister.value) {
+        await registerApi({
+          username: form.username,
+          password: form.password,
+          nickname: form.nickname || undefined,
+          ...captchaOpts,
+        })
+        ElMessage.success('注册成功，请登录')
+        const username = form.username
+        switchMode('login')
+        form.username = username
+        form.password = ''
+        return
+      }
+      const data = await userStore.login(form.username, form.password, captchaOpts)
       if (data.user?.mustChangePassword) {
         ElMessage.warning('请先修改密码后再使用系统')
         router.push({ path: '/profile', query: { forcePwd: '1' } })
@@ -782,6 +874,29 @@ body.login-no-scroll {
 
 .login-btn:active {
   transform: translateY(0);
+}
+
+.login-switch {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--xn-muted);
+}
+
+.login-switch-link {
+  border: none;
+  background: none;
+  padding: 0;
+  margin-left: 4px;
+  color: var(--xn-teal);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-switch-link:hover {
+  color: var(--xn-teal-bright);
+  text-decoration: underline;
 }
 
 .login-foot {
