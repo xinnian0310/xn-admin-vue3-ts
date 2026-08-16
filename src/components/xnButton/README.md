@@ -2,6 +2,10 @@
 
 工具栏按钮组与表格行操作按钮。支持 page-ui 配置、权限控制、按选中行数启用/禁用。
 
+## 介绍
+
+`xnButton` 放在 `xnPageLayout` 的 `#toolbar`；`xnTableActions` 放在表格操作列。按钮列表通常来自 `usePageUi(routePath).buttonItems`。无权限的按钮不渲染。`index` 表示「需要选中的行数 - 1」（编辑/查看一般为 `0`，即恰好 1 行）。
+
 ## 文件
 
 | 文件                 | 说明               |
