@@ -28,8 +28,9 @@ Version: `1.0.0` · License: [Apache-2.0](./LICENSE) · Copyright 2026 XinNian
 ## Prerequisites
 
 1. Node.js 20+ (see `.nvmrc`)
-2. Backend **xn-admin-cloud** running, gateway at http://127.0.0.1:8088
-3. MySQL / Redis / Nacos / MinIO ready (same as the backend)
+2. Backend **xn-admin-cloud** running, gateway at http://127.0.0.1:8088  
+   (three-step start in that repo: `docker compose up -d` then `scripts/run-dev`)
+3. Middleware can come from the backend Docker Compose (or your own MySQL / Redis / Nacos / MinIO)
 
 ## Default accounts
 
@@ -149,6 +150,8 @@ Files live in [`docs/images/`](./docs/images/).
 | Operation logs | ![Operation logs](./docs/images/logs-oper.png)      |
 | Exception logs | ![Exception logs](./docs/images/logs-exception.png) |
 
+The job logs page is implemented at `/system/jobs/logs` (reachable from the jobs list).
+
 ### Organization
 
 | Page  | Screenshot                        |
@@ -204,6 +207,7 @@ Files live in [`docs/images/`](./docs/images/).
 - Excel import/export
 - Monitoring: online users / server / Redis / SQL
 - Files, jobs, recycle bin, codegen, API docs
+- Logs: login / operation / exception / job logs
 - Notice push over WebSocket (`/ws`)
 
 ## Production (summary)
