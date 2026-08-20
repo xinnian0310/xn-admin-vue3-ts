@@ -1,5 +1,7 @@
 # xn-admin-vue3-ts
 
+[简体中文](README.md) | [English](README.en.md)
+
 心念后台管理系统前端：Vue 3 + TypeScript + Vite + Element Plus。
 
 xn-admin-vue3-ts 是「心念后台」的基准管理端，基于 Vue 3、TypeScript 与 Element Plus，对接微服务后端 xn-admin-cloud。内置登录鉴权、动态菜单与路由、按钮级权限、page-ui 驱动 CRUD、多布局与主题、公告通知、系统监控、文件与定时任务等能力，可作为学习、自用系统或商业后台的起步模板。采用 Apache License 2.0 开源，**可商用、可自用**。
