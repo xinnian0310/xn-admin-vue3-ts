@@ -8,11 +8,15 @@
 
 ## 相关仓库
 
-| 仓库                                                          | 说明                     |
-| ------------------------------------------------------------- | ------------------------ |
-| `xn-admin-cloud`                                              | 微服务后端（必需）       |
-| `xn-admin-vue3-js` / `xn-admin-vue2-js` / `xn-admin-react-ts` | 其它技术栈管理端（可选） |
-| `xn-home`                                                     | 官网（可选）             |
+开源范围仅后端 + 四套管理端：
+
+| 仓库                | Gitee                                                | GitHub                                                     | 说明                              |
+| ------------------- | ---------------------------------------------------- | ---------------------------------------------------------- | --------------------------------- |
+| `xn-admin-cloud`    | [Gitee](https://gitee.com/jenning/xn-admin-cloud)    | [GitHub](https://github.com/xinnian0310/xn-admin-cloud)    | 微服务后端（必需）                |
+| `xn-admin-vue3-ts`  | [Gitee](https://gitee.com/jenning/xn-admin-vue3-ts)  | [GitHub](https://github.com/xinnian0310/xn-admin-vue3-ts)  | 本仓库（功能基准）                |
+| `xn-admin-vue3-js`  | [Gitee](https://gitee.com/jenning/xn-admin-vue3-js)  | [GitHub](https://github.com/xinnian0310/xn-admin-vue3-js)  | Vue 3 + JavaScript（Composition） |
+| `xn-admin-vue2-js`  | [Gitee](https://gitee.com/jenning/xn-admin-vue2-js)  | [GitHub](https://github.com/xinnian0310/xn-admin-vue2-js)  | Vue 3 + JavaScript（Options API） |
+| `xn-admin-react-ts` | [Gitee](https://gitee.com/jenning/xn-admin-react-ts) | [GitHub](https://github.com/xinnian0310/xn-admin-react-ts) | React + TypeScript + Ant Design   |
 
 本仓库为各管理端的**功能基准**。
 

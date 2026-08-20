@@ -1,12 +1,14 @@
 <template>
   <img
-    v-if="src"
+    v-if="!useIconFallback"
     class="app-brand-logo"
-    :src="src"
+    :key="displaySrc"
+    :src="displaySrc"
     :alt="alt"
     :width="width ?? undefined"
     :height="height ?? undefined"
     :style="sizeStyle"
+    @error="onImgError"
   />
   <el-icon v-else class="app-brand-logo is-fallback" :size="fallbackSize" :style="fallbackStyle">
     <Monitor />
@@ -14,9 +16,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Monitor } from '@element-plus/icons-vue'
-import { appConfig } from '@/config/app'
+import { appConfig, defaultAppConfig } from '@/config/app'
+
+const LOCAL_LOGO = defaultAppConfig.app.logo
 
 const props = withDefaults(
   defineProps<{
@@ -36,10 +40,33 @@ const props = withDefaults(
   },
 )
 
-const src = computed(() => {
+const configuredSrc = computed(() => {
   const value = props.src ?? appConfig.app.logo
   return value?.trim() || ''
 })
+
+const loadFailed = ref(false)
+const localFailed = ref(false)
+
+watch(configuredSrc, () => {
+  loadFailed.value = false
+  localFailed.value = false
+})
+
+const displaySrc = computed(() => {
+  if (loadFailed.value) return LOCAL_LOGO
+  return configuredSrc.value || LOCAL_LOGO
+})
+
+const useIconFallback = computed(() => localFailed.value)
+
+function onImgError() {
+  if (displaySrc.value !== LOCAL_LOGO) {
+    loadFailed.value = true
+    return
+  }
+  localFailed.value = true
+}
 
 const width = computed(() => (props.width !== undefined ? props.width : appConfig.app.logoWidth))
 const height = computed(() =>

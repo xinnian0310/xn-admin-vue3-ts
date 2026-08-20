@@ -13,11 +13,7 @@
         <div class="brand-glow" aria-hidden="true" />
         <div class="brand-inner">
           <div class="brand-logo-plate">
-            <img
-              class="brand-logo"
-              :src="appConfig.app.logo || '/xinnian-tech-logo.png'"
-              alt="心念科技"
-            />
+            <img class="brand-logo" :src="logoSrc" alt="心念科技" @error="onLogoError" />
           </div>
           <p class="brand-slogan">心有所念，码有所成</p>
           <p class="brand-desc">
@@ -185,7 +181,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { User, Lock } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { appConfig } from '@/config/app'
+import { appConfig, defaultAppConfig } from '@/config/app'
 import { homeConfig } from '@/config/home'
 import { useUserStore } from '@/stores/user'
 import { getActive } from '@/api/login-page'
@@ -201,6 +197,14 @@ const loading = ref(false)
 const mode = ref<AuthMode>('login')
 const isRegister = computed(() => mode.value === 'register')
 const intro = homeConfig.intro
+const localLogo = defaultAppConfig.app.logo
+const logoFailed = ref(false)
+const logoSrc = computed(() =>
+  logoFailed.value ? localLogo : appConfig.app.logo?.trim() || localLogo,
+)
+function onLogoError() {
+  if (logoSrc.value !== localLogo) logoFailed.value = true
+}
 
 const captchaEnabled = ref(false)
 const captchaType = ref<LoginCaptchaType | null>(null)

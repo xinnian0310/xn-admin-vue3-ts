@@ -2,7 +2,7 @@
   <el-aside v-show="visible" :width="width" class="layout-aside">
     <div v-if="showLogo" class="layout-aside__logo">
       <xnAppBrandLogo />
-      <span>{{ title }}</span>
+      <span>{{ brandTitle }}</span>
     </div>
     <div v-else-if="subtitle" class="layout-aside__subtitle">{{ subtitle }}</div>
     <div class="layout-aside__search">
@@ -47,10 +47,12 @@ const props = withDefaults(
   {
     visible: true,
     width: '220px',
-    title: appConfig.app.name,
+    title: undefined,
     showLogo: true,
   },
 )
+
+const brandTitle = computed(() => props.title?.trim() || appConfig.app.name)
 
 const menuStore = useMenuStore()
 const searchDraft = ref('')
